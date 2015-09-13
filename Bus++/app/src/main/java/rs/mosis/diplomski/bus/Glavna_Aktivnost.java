@@ -2,6 +2,7 @@ package rs.mosis.diplomski.bus;
 
 import java.util.Locale;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.TabListener {
 
@@ -40,9 +42,17 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_glavna__aktivnost);
 
+        this.setTitle("Bus++");
+
+
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+
+        Intent ii = getIntent();
+        int a = ii.getIntExtra("jblg", -1);
+
+        Toast.makeText(this,a + "  ",Toast.LENGTH_LONG).show();
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -67,7 +77,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             // Create a tab with text corresponding to the page title defined by
             // the adapter. Also specify this Activity object, which implements
             // the TabListener interface, as the callback (listener) for when
-            // this tab is selected.
+            // this tab is selected.https://github.com/FilipStamenkovic/Klijent-BusPlusPlus
             actionBar.addTab(
                     actionBar.newTab()
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
@@ -75,6 +85,14 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -103,6 +121,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         // When the given tab is selected, switch to the corresponding page in
         // the ViewPager.
         mViewPager.setCurrentItem(tab.getPosition());
+
     }
 
     @Override
@@ -161,25 +180,34 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private int sekcija;
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
          */
         public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
+            PlaceholderFragment fragment = new PlaceholderFragment(sectionNumber);
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
             return fragment;
         }
 
-        public PlaceholderFragment() {
+        public PlaceholderFragment(int sectionNumber) {
+
+            sekcija = sectionNumber;
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_glavna__aktivnost, container, false);
+                                 Bundle savedInstanceState)
+        {
+            View rootView;
+            if(sekcija == 2)
+                rootView = inflater.inflate(R.layout.fragment_mapa, container, false);
+            else
+                rootView = inflater.inflate(R.layout.fragment_glavna__aktivnost, container, false);
             return rootView;
         }
     }

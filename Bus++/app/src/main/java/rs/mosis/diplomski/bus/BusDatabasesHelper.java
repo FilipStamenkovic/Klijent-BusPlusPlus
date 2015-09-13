@@ -43,6 +43,8 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
     {
 
         String []files = checkDatabase();
+        if(files == null)
+            return null;
         double [] niz = new double[files.length];
 
         for(int i = 0;i < files.length; i++ )
@@ -70,7 +72,8 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
     }
 
     @Override
-    public synchronized void close() {
+    public synchronized void close()
+    {
         if(database != null)
             database.close();
         super.close();
