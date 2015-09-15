@@ -127,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Intent i = new Intent(getApplicationContext(),Glavna_Aktivnost.class);
+                        finish();
                         startActivity(i);
                     }
                 });
