@@ -23,70 +23,15 @@ public class Graf
 		gl = new GradskeLinije(grafDBName, redVoznjeDBName);
 		
 		// load the sqlite-JDBC driver using the current class loader
-	    Class.forName("org.sqlite.JDBC");
-	    
-	    Connection connection = null;
-	    
-	    // create a database connection
-	    connection = DriverManager.getConnection("jdbc:sqlite:" + grafDBName);
-	    Statement statement = connection.createStatement();
-	    statement.setQueryTimeout(30);  // set timeout to 30 sec.
-	    
-	    ResultSet rs = statement.executeQuery("select max(id) from STANICA");
-	    
-	    if(rs.next())
-	    {
-	    	maxId = rs.getInt(1);
-	    }
-	    else
-	    {
-	    	System.out.println("select max(id) from STANICA; query nije vratio rezultat");
-	    	throw new Exception("select max(id) from STANICA; query nije vratio rezultat");
-	    }
-	    
-	    tempArray = new Cvor[maxId + 1];
-	    
-	    rs = statement.executeQuery("select * from STANICA");
-	    
-	    while(rs.next())
-	    {
-	    	// read the result set
-	    	int id = rs.getInt("id");
-	    	String naziv = rs.getString("naziv");
-	    	double lat = rs.getDouble("lat");
-	    	double lon = rs.getDouble("lon");
-
-	    	tempArray[id] = new Cvor(id, naziv, lat, lon);
-	    }
+	    tempArray = BusDBAdapter.getAllCvorovi();
 	    
 	    for(int i = 0; i < gl.linije.length; ++i)
 	    {
 	    	if(gl.linije[i] != null)
 	    		gl.linije[i].pocetnaStanica = tempArray[gl.linije[i].pocetnaStanica.id];
 	    }
-	    
-	    rs = statement.executeQuery("select * from VEZA");
-	    
-	    while(rs.next())
-	    {
-	    	// read the result set
-	    	int sourceId = rs.getInt("polazna_stanica_id");
-	    	int destId = rs.getInt("dolazna_stanica_id");
-	    	int weight = rs.getInt("udaljenost");
-	    	int linijaId = rs.getInt("linija_id");
+	    boolean b = BusDBAdapter.podesiVeze(tempArray,gl.linije);
 
-	    	tempArray[sourceId].dodajVezu(gl.linije[linijaId], weight, tempArray[destId]);;
-	    }
-	    
-	    try
-	    {
-	    	if(connection != null)
-	    		connection.close();
-	    } catch(SQLException e)
-	    {
-	    	// connection close failed.
-	    	//ServerLog.getInstance().write(e.getMessage());
-	    }
 	    
 	    for(int i = 0; i < tempArray.length; ++i)
 	    {

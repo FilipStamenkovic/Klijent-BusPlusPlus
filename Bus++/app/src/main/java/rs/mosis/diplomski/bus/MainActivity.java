@@ -42,158 +42,153 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void proveriVerzije(final char baza)
-    {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
-                    String[] files = busDatabasesHelper.checkDatabase();
-                    double[] verzije = busDatabasesHelper.getVersions();
-                    String strukture, red;
-                    strukture = "0.0";
-                    red = "0.0";
-                    if (files != null)
-                        for (int i = 0; i < files.length; i++) {
-                            if (files[i].charAt(0) == 'S')
-                                strukture = verzije[i] + "";
-                            else if (files[i].charAt(0) == 'R')
-                                red = verzije[i] + "";
-                        }
-                    Request request;
-                    if (baza == 'S')
-                        request = new Request(0, null, null, null, null, null, null, new Double(strukture));
-                    else
-                        request = new Request(1, null, null, null, null, null, null, new Double(red));
-                    String poruka = request.toString();
-                    InetAddress inetAddress = InetAddress.getByName(Constants.IP);
-                    Socket socket = new Socket(inetAddress, Constants.PORT);
-                    // Socket socket = new Socket();
-                    //socket.connect(new InetSocketAddress(inetAddress,Constants.PORT),Constants.TIMEOUT);
-                    int bytesRead = 0;
-                    int current = 0;
+    private void proveriVerzije(final char baza) {
+        try {
+            BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
+            String[] files = busDatabasesHelper.checkDatabase();
+            double[] verzije = busDatabasesHelper.getVersions();
+            String strukture, red;
+            strukture = "0.0";
+            red = "0.0";
+            if (files != null)
+                for (int i = 0; i < files.length; i++) {
+                    if (files[i].charAt(0) == 'S')
+                        strukture = verzije[i] + "";
+                    else if (files[i].charAt(0) == 'R')
+                        red = verzije[i] + "";
+                }
+            Request request;
+            if (baza == 'S')
+                request = new Request(0, null, null, null, null, null, null, new Double(strukture));
+            else
+                request = new Request(1, null, null, null, null, null, null, new Double(red));
+            String poruka = request.toString();
+            InetAddress inetAddress = InetAddress.getByName(Constants.IP);
+            Socket socket = new Socket(inetAddress, Constants.PORT);
+            // Socket socket = new Socket();
+            //socket.connect(new InetSocketAddress(inetAddress,Constants.PORT),Constants.TIMEOUT);
+            int bytesRead = 0;
+            int current = 0;
 
-                    InputStream is = socket.getInputStream();
-                    OutputStream out = socket.getOutputStream();
-                    PrintWriter printWriter = new PrintWriter(out);
-                   // printWriter.print("kurac");
-                    //printWriter.flush();
+            InputStream is = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
+            PrintWriter printWriter = new PrintWriter(out);
+            // printWriter.print("kurac");
+            //printWriter.flush();
 
-                    printWriter.print(poruka + "\n");
-                    printWriter.flush();
+            printWriter.print(poruka + "\n");
+            printWriter.flush();
 
 
-                    BufferedReader input = new BufferedReader(new InputStreamReader(is));
-                    poruka = input.readLine();
-                    if(poruka == null)
-                    {
-                        is.close();
-                        printWriter.close();
-                        out.close();
-                        socket.close();
-                        return;
+            BufferedReader input = new BufferedReader(new InputStreamReader(is));
+            poruka = input.readLine();
+            if (poruka == null) {
+                is.close();
+                printWriter.close();
+                out.close();
+                socket.close();
+                return;
+            }
+
+            Gson gson = new GsonBuilder().create();
+            Response odgovor = gson.fromJson(poruka, Response.class);
+            //poruka = input.readLine();
+            if (odgovor.size == -1) {
+                is.close();
+                printWriter.close();
+                out.close();
+                socket.close();
+                return;
+            }
+            int filesize = odgovor.size;
+            String imeBaze;
+            if (baza == 'S')
+                imeBaze = "Strukture_" + odgovor.dbVer + ".db";
+            else
+                imeBaze = "Red_Voznje" + odgovor.dbVer + ".db";
+
+            if (files != null)
+                for (int i = 0; i < files.length; i++)
+                    if (baza == files[i].charAt(0)) {
+                        File f = new File(busDatabasesHelper.getDatabasePath() + files[i]);
+                        if (f.exists())
+                            f.delete();
                     }
 
-                    Gson gson = new GsonBuilder().create();
-                    Response odgovor = gson.fromJson(poruka, Response.class);
-                    //poruka = input.readLine();
-                    if (odgovor.size == -1) {
-                        is.close();
-                        printWriter.close();
-                        out.close();
-                        socket.close();
-                        return;
-                    }
-                    int filesize = odgovor.size;
-                    String imeBaze;
-                    if (baza == 'S')
-                        imeBaze = "Strukture_" + odgovor.dbVer + ".db";
-                    else
-                        imeBaze = "Red_Voznje" + odgovor.dbVer + ".db";
+            File f = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
+            f.getParentFile().mkdirs();
+            f.createNewFile();
+            FileOutputStream fos = new FileOutputStream(
+                    busDatabasesHelper.getDatabasePath() + imeBaze);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            byte[] mybytearray = new byte[filesize];
 
-                    if(files != null)
-                    for(int i = 0; i < files.length; i++)
-                        if(baza == files[i].charAt(0))
-                        {
-                            File f = new File(busDatabasesHelper.getDatabasePath() + files[i]);
-                            if(f.exists())
-                                f.delete();
-                        }
+            while (current < filesize) {
+                int preostalo = filesize - current;
+                bytesRead = is.read(mybytearray, current, preostalo);
+                current += bytesRead;
 
-                    File f = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
-                    f.getParentFile().mkdirs();
-                    f.createNewFile();
-                    FileOutputStream fos = new FileOutputStream(
-                            busDatabasesHelper.getDatabasePath() + imeBaze);
-                    BufferedOutputStream bos = new BufferedOutputStream(fos);
-                    byte[] mybytearray = new byte[filesize];
-
-                    while(current<filesize) {
-                        int preostalo = filesize - current;
-                        bytesRead = is.read(mybytearray, current, preostalo);
-                        current += bytesRead;
-
-                        if(bytesRead == -1)
-                        {
-                            break;
-                        }
+                if (bytesRead == -1) {
+                    break;
+                }
 
                        /* while ((current < filesize) && (bytesRead > 0)) {
                             bytesRead = is.read(mybytearray, current, (mybytearray.length - current));
                             if (bytesRead >= 0)
                                 current += bytesRead;
                         }*/
-                    }
-
-                    if(bytesRead != -1)
-                        bos.write(mybytearray, 0, current);
-                    bos.flush();
-                    bos.close();
-                    printWriter.close();
-                    out.close();
-                    socket.close();
-                } catch (SocketTimeoutException e) {
-                    e.printStackTrace();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
-        }).start();
+
+            if (bytesRead != -1)
+                bos.write(mybytearray, 0, current);
+            bos.flush();
+            bos.close();
+            printWriter.close();
+            out.close();
+            socket.close();
+        } catch (SocketTimeoutException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        proveriVerzije('S');
 
-        loadGraf();
-        //proveriVerzije('R');
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                proveriVerzije('S');
+                //proveriVerzije('R');
+                loadGraf();
+            }
+        }).start();
+
 
     }
 
     private void loadGraf()
     {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
-                String baza = busDatabasesHelper.checkDatabase()[0];
-                BusDatabasesHelper.setDbName(baza);
-                baza = busDatabasesHelper.getDatabasePath() + baza;
 
-                try {
-                    graf = new Graf(baza,"");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                //graf = new Graf()
-            }
-        }).start();
+        BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
+        String baza = busDatabasesHelper.checkDatabase()[0];
+        BusDatabasesHelper.setDbName(baza);
+        baza = busDatabasesHelper.getDatabasePath() + baza;
+
+        try {
+            graf = new Graf(baza, "");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //graf = new Graf()
     }
 
     private void startApplication()
