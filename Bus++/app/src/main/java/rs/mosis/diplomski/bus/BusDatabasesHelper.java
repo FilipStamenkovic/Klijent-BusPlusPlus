@@ -14,9 +14,9 @@ import java.io.File;
 public class BusDatabasesHelper extends SQLiteOpenHelper
 {
     private static String DB_PATH = "";
-    private SQLiteDatabase database;
+    private static SQLiteDatabase database = null;
     private final Context mContext;
-    private String DB_NAME = "";
+    private static String DB_NAME = "";
 
     public BusDatabasesHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -59,16 +59,27 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
             broj = broj.substring(0, broj.length()-1);
 
             double br = Double.parseDouble(broj);
-           //niz[i] = br;
+            niz[i] = br;
         }
         return niz;
     }
 
-    public boolean openDatabase()
+    public static void setDbName(String dbName) {
+        DB_NAME = dbName;
+    }
+
+    private static boolean openDatabase()
     {
         String path = DB_PATH + DB_NAME;
-        database = SQLiteDatabase.openDatabase(path,null,SQLiteDatabase.OPEN_READONLY);
+        database = SQLiteDatabase.openDatabase(path,null,SQLiteDatabase.OPEN_READWRITE);
         return database != null;
+    }
+
+    public static SQLiteDatabase getDatabase() {
+        if(openDatabase())
+            return database;
+        else
+            return null;
     }
 
     @Override
@@ -85,7 +96,7 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
 
     }
 
-    public String getDatabasePath()
+    public static String getDatabasePath()
     {
 
         return DB_PATH;

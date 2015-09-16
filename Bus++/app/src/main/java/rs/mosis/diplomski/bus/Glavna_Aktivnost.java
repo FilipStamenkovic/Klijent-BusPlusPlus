@@ -1,6 +1,13 @@
 package rs.mosis.diplomski.bus;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -30,14 +37,18 @@ import android.support.v7.widget.SearchView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.CursorAdapter;
+import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,10 +59,15 @@ import com.google.android.gms.drive.internal.AddEventListenerRequest;
 import com.google.android.gms.location.places.AutocompletePredictionBuffer;
 import com.google.android.gms.location.places.GeoDataApi;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.TabListener {
 
@@ -95,6 +111,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         int a = ii.getIntExtra("jblg", -1);
 
         Toast.makeText(this, a + "  ", Toast.LENGTH_LONG).show();
+
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -148,11 +165,12 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ArrayAdapter<?> adapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.simple_suggest,strings);
+                ArrayAdapter<?> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.simple_suggest, strings);
 
 
                 textView.setAdapter(adapter);
-                
+                //textView.setDropDownHeight(textView.getHeight());
+
 
 
                 adapter.notifyDataSetChanged();
@@ -317,8 +335,42 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState)
         {
-            View rootView;
+            final View rootView;
             rootView = inflater.inflate(R.layout.fragment_glavna__aktivnost, container, false);
+
+            Button button = (Button) rootView.findViewById(R.id.salji);
+
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    final String podatak = ((EditText) rootView.findViewById(R.id.edit_je)).getText().toString() + "\n";
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            InetAddress inetAddress = null;
+                            try {
+                                inetAddress = InetAddress.getByName("192.168.1.2");
+                                Socket socket = new Socket();
+                                socket.connect(new InetSocketAddress(inetAddress,4000),1000);
+
+                                OutputStream out = socket.getOutputStream();
+                                PrintWriter printWriter = new PrintWriter(out);
+                                printWriter.print(podatak);
+                                printWriter.flush();
+                                printWriter.close();
+                                out.close();
+                                socket.close();
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            //Socket socket = new Socket(inetAddress, 8001);
+
+                        }
+                    }).start();
+                }
+            });
 
             return rootView;
         }
@@ -331,7 +383,10 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public static GoogleMap googleMap;
 
-        private static GoogleApiClient apiClient;
+        public static Marker cilj = null;
+
+        public static Marker start = null;
+
 
         public static MapaFragment newInstance(int sectionNumber) {
             MapaFragment fragment = new MapaFragment();
@@ -345,107 +400,174 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
+        private void addMarker(double lat,double lon, String s)
+        {
+
+            if(cilj != null)
+            {
+                cilj.remove();
+            }
+            cilj = googleMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(lat, lon))
+                    .title("Odrediste")
+                    .snippet(s)
+                    .draggable(true));
+        }
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState)
         {
             View rootView;
 
-                rootView = inflater.inflate(R.layout.fragment_mapa, container, false);
-                setUpMap(rootView);
+            rootView = inflater.inflate(R.layout.fragment_mapa, container, false);
+            setUpMap(rootView);
+            setUpSearch(rootView);
             return rootView;
         }
 
+        private void setUpSearch(View root)
+        {
+            final SearchManager searchManager = (SearchManager) getContext().getSystemService(Context.SEARCH_SERVICE);
+            //SearchView searchView = (SearchView) root.findViewById(R.id.search_adresa);
+            final AutoCompleteTextView searchView = (AutoCompleteTextView) ((ViewGroup) root).getChildAt(0);
+            //SearchView.SearchAutoComplete
+
+            searchView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
+                    if (searchView.getAdapter() != null)
+                        if (searchView.getAdapter().getCount() > 0) {
+                            // searchView.setText((String) searchView.getAdapter().getItem(0));
+                            // searchView.setAdapter(null);
+
+                            Geocoder geocoder = new Geocoder(getContext(), Locale.US);
+                            String s = searchView.getText().toString();
+                            double lat, lon;
+
+                            try {
+                                List<Address> adrese = geocoder.getFromLocationName(s, 1, jugozapad.latitude, jugozapad.longitude, severoistok.latitude, severoistok.longitude);
+                                s = adrese.get(0).getLocality();
+                                lat = adrese.get(0).getLatitude();
+                                lon = adrese.get(0).getLongitude();
+                                addMarker(lat, lon, s);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+
+                    return false;
+                }
+
+                public boolean onKey(View v, int keyCode, KeyEvent event) {
+                    return false;
+
+                }
+            });
+
+            searchView.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    final String polje = s.toString();
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Geocoder geocoder = new Geocoder(getContext(), Locale.US);
+                            List<Address> addresses;
+                            try {
+                                addresses = geocoder.getFromLocationName(polje, 10, jugozapad.latitude, jugozapad.longitude, severoistok.latitude, severoistok.longitude);
+
+
+                                ArrayList<String> stringovi = new ArrayList<String>();
+                                for (int i = 0; i < addresses.size(); i++) {
+                                    boolean b = false;
+                                    String s = addresses.get(i).getFeatureName() + " - " + addresses.get(i).getLocality();
+                                    s = s.replace(" ", "");
+                                    for (int j = 0; j < stringovi.size(); j++) {
+                                        String s2 = stringovi.get(j);
+                                        s2 = s2.replace(" ", "");
+                                        if (s2.toLowerCase().equals(s.toLowerCase())) {
+                                            b = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!b)
+                                        stringovi.add(addresses.get(i).getFeatureName() + " - " + addresses.get(i).getLocality());
+                                }
+                                final String[] strings = stringovi.toArray(new String[stringovi.size()]);
+
+                                // ArrayAdapter<?> adapter = new ArrayAdapter<String>(getActivity(),R.layout.simple_suggest,strings);
+
+
+                                ((Glavna_Aktivnost) getActivity()).postaviComplete(strings, searchView);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+
+                            //searchView.setAdapter(adapter);
+
+
+                            //adapter.notifyDataSetChanged();
+                        }
+                    }).start();
+
+
+                    // Toast.makeText(getContext(),lokacija.getLatitude()+ "     " + lokacija.getLongitude(),Toast.LENGTH_LONG).show();
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
+
+            SearchView.OnQueryTextListener queryTextListener = new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    Geocoder geocoder = new Geocoder(getContext());
+                    List<Address> addresses;
+                    try {
+                        addresses = geocoder.getFromLocationName(query,5);
+                        Address lokacija = addresses.get(0);
+                        Toast.makeText(getContext(),lokacija.getLatitude()+ "     " + lokacija.getLongitude(),Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+
+                    return true;
+                }
+            };
+        }
         private void setUpMap(View root)
         {
-            if(googleMap == null)
-            {
+            if(googleMap == null) {
 
                 View view = root.findViewById(R.id.mapa);
                 googleMap = ((SupportMapFragment) this.getChildFragmentManager().findFragmentById(R.id.mapa)).getMap();
-                if(googleMap != null)
+                if (googleMap != null)
                     googleMap.setMyLocationEnabled(true);
 
-                final SearchManager searchManager = (SearchManager) getContext().getSystemService(Context.SEARCH_SERVICE);
-                //SearchView searchView = (SearchView) root.findViewById(R.id.search_adresa);
-                final AutoCompleteTextView searchView = (AutoCompleteTextView) ((ViewGroup) root).getChildAt(0);
-                //SearchView.SearchAutoComplete
-
-                searchView.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        final String polje = s.toString();
-                        if (polje.length() < 4)
-                            return;
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Geocoder geocoder = new Geocoder(getContext(),Locale.US);
-                                List<Address> addresses;
-                                try {
-                                    addresses = geocoder.getFromLocationName(polje,5,jugozapad.latitude,jugozapad.longitude,severoistok.latitude,severoistok.longitude);
-
-                                    final String[] strings = new String [addresses.size()];
-                                    for(int i = 0; i < strings.length; i++)
-                                        strings[i] = addresses.get(i).getFeatureName();
-
-                                    // ArrayAdapter<?> adapter = new ArrayAdapter<String>(getActivity(),R.layout.simple_suggest,strings);
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(MyLocation,15));
+            }
 
 
-                                    ((Glavna_Aktivnost) getActivity()).postaviComplete(strings,searchView);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-
-                                //searchView.setAdapter(adapter);
-
-                                
-                                //adapter.notifyDataSetChanged();
-                            }
-                        }).start();
-
-                        
-                           // Toast.makeText(getContext(),lokacija.getLatitude()+ "     " + lokacija.getLongitude(),Toast.LENGTH_LONG).show();
-
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-
-                    }
-                });
-
-
-                SearchView.OnQueryTextListener queryTextListener = new SearchView.OnQueryTextListener() {
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        Geocoder geocoder = new Geocoder(getContext());
-                        List<Address> addresses;
-                        try {
-                            addresses = geocoder.getFromLocationName(query,5);
-                            Address lokacija = addresses.get(0);
-                            Toast.makeText(getContext(),lokacija.getLatitude()+ "     " + lokacija.getLongitude(),Toast.LENGTH_LONG).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onQueryTextChange(String newText) {
-
-                        return true;
-                    }
-                };
 
                // searchView.setOnQueryTextListener(queryTextListener);
-            }
         }
 
         @Override
@@ -454,7 +576,19 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
             if(googleMap != null)
             {
+                if(cilj != null)
+                {
+                    cilj.remove();
+                    cilj = null;
+                }
+                if(start != null)
+                {
+                    start.remove();
+                    start = null;
+                }
+                googleMap.clear();
                 googleMap = null;
+
             }
         }
     }
