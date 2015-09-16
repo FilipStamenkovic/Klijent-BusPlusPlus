@@ -1,11 +1,6 @@
 package strukture;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
 
 
 public class GradskeLinije
@@ -23,9 +18,9 @@ public class GradskeLinije
 		int maxId = 0;
 
 
-        LinijeDBAdapter.getAllLinije();
+        BusDBAdapter.getAllLinije();
 		// load the sqlite-JDBC driver using the current class loader
-	    Class.forName("org.sqlite.JDBC");
+	   /* Class.forName("org.sqlite.JDBC");
 	    
 	    Connection connection = null;
 	    
@@ -72,7 +67,7 @@ public class GradskeLinije
 	    {
 	    	// connection close failed.
 	    	//ServerLog.getInstance().write(e.getMessage());
-	    }
+	    }*/
 	}
 
 }
