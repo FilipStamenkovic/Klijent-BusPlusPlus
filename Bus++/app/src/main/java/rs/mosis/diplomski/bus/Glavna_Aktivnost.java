@@ -345,6 +345,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
 
 
+
             Linija[] linije = MainActivity.graf.getGl().linije;
             ArrayList<Linija> listaLinija = new ArrayList<>();
 
@@ -367,11 +368,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 textView = (TextView) red.findViewWithTag("smerB");
                 textView.setText(listaLinija.get(i + 1).naziv);
 
-                views.add(red);
+                container.addView(red);
 
             }
 
-            rootView.addChildrenForAccessibility(views);
+            //rootView.addChildrenForAccessibility(views);
             return rootView;
         }
 

@@ -66,9 +66,9 @@ public class MainActivity extends AppCompatActivity {
                 request = new Request(1, null, null, null, null, null, null, new Double(red));
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
-            Socket socket = new Socket(inetAddress, Constants.PORT);
-            // Socket socket = new Socket();
-            //socket.connect(new InetSocketAddress(inetAddress,Constants.PORT),Constants.TIMEOUT);
+//            Socket socket = new Socket(inetAddress, Constants.PORT);
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(inetAddress,Constants.PORT),Constants.TIMEOUT);
             int bytesRead = 0;
             int current = 0;
 
