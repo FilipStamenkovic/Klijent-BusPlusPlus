@@ -4,22 +4,25 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="0px"
         android:layout_height="match_parent"
-        android:layout_weight="0.25"
+        android:layout_weight="1"
         android:textAlignment="center"
+        android:text="LINIJA"
+        android:textSize="20sp"
         android:tag="linija"
         />
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0px"
         android:layout_height="match_parent"
-        android:layout_weight="0.25"
+        android:layout_weight="1.5"
         android:orientation="vertical"
         >
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
+            android:text="smera"
             android:textAlignment="center"
             android:tag="smerA"
             />
@@ -27,6 +30,8 @@
             android:layout_width="match_parent"
             android:layout_weight="0.5"
             android:layout_height="wrap_content"
+            android:text="smera"
+            android:textSize="16sp"
             android:textAlignment="center"
             android:tag="smerB"
             />
@@ -34,9 +39,9 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0px"
         android:layout_height="match_parent"
-        android:layout_weight="0.25"
+        android:layout_weight="1"
         android:orientation="vertical"
         >
         <Button
@@ -59,9 +64,9 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0px"
         android:layout_height="match_parent"
-        android:layout_weight="0.25"
+        android:layout_weight="0.8"
         android:orientation="vertical"
         >
         <Button
@@ -71,6 +76,7 @@
             android:text="@string/show_linija"
             android:textAlignment="center"
             android:tag="prikaziA"
+            android:onClick="prikaziNaMapi"
             />
         <Button
             android:layout_width="match_parent"
@@ -79,6 +85,7 @@
             android:text="@string/show_linija"
             android:textAlignment="center"
             android:tag="prikaziB"
+            android:onClick="prikaziNaMapi"
             />
 
     </LinearLayout>

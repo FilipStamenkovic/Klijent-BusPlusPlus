@@ -4,7 +4,24 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
+    android:id="@+id/kontenjer"
     tools:context="rs.mosis.diplomski.bus.Glavna_Aktivnost$PlaceholderFragment">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/skrol"
+
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:id="@+id/linije_scroll"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+
+        </LinearLayout>
+
+    </ScrollView>
 
 
 </RelativeLayout>

@@ -50,6 +50,9 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -318,6 +321,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private static LinearLayout linearLayout = null;
+
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -355,34 +360,60 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 else
                     listaLinija.add(linije[i]);
 
-            //linije = (Linija [])listaLinija.toArray();
-
-            ArrayList<View> views = new ArrayList<>();
-            for(int i = 0; i < 1; i += 2)
+            if(linearLayout == null)
             {
-                View red = inflater.inflate(R.layout.red_voznje_layout,container,false);
-                TextView textView = (TextView) red.findViewWithTag("linija");
-                textView.setText("Linija " + listaLinija.get(i).broj);
-                textView = (TextView) red.findViewWithTag("smerA");
-                textView.setText(listaLinija.get(i).naziv);
-                textView = (TextView) red.findViewWithTag("smerB");
-                textView.setText(listaLinija.get(i + 1).naziv);
 
-                container.addView(red);
+                linearLayout = (LinearLayout) rootView.findViewById(R.id.linije_scroll);
 
+                for (int i = 0; i < listaLinija.size(); i += 2) {
+                    View red = inflater.inflate(R.layout.red_voznje_layout, container, false);
+                    TextView textView = (TextView) red.findViewWithTag("linija");
+                    textView.setText("Linija " + listaLinija.get(i).broj);
+                    textView = (TextView) red.findViewWithTag("smerA");
+                    textView.setText(listaLinija.get(i).naziv);
+                    textView = (TextView) red.findViewWithTag("smerB");
+                    textView.setText(listaLinija.get(i + 1).naziv);
+                    red.findViewWithTag("prikaziA").setId(listaLinija.get(i).id);
+                    red.findViewWithTag("prikaziB").setId(listaLinija.get(i + 1).id);
+                    // container.addView(red);
+                    linearLayout.addView(red, i / 2);
+
+                }
+            }
+            else
+            {
+                ScrollView skrol = (ScrollView) rootView.findViewById(R.id.skrol);
+                //lin = linearLayout;
+
+                //skrol.removeAllViewsInLayout();
+                //skrol.removeAllViews();
+                skrol.removeViewAt(0);
+                //rootView.findViewById(R.id.linije_scroll).remove
+                ((ScrollView)linearLayout.getParent()).removeAllViews();
+                skrol.addView(linearLayout);
             }
 
-            //rootView.addChildrenForAccessibility(views);
+
             return rootView;
         }
 
+    }
+
+    public void prikaziNaMapi(View v)
+    {
+        int id = v.getId();
+
+
+
+
+        int a =3;
     }
 
     public static class MapaFragment extends Fragment
     {
         private static final String ARG_SECTION_NUMBER = "section_number";
 
-        public static GoogleMap googleMap;
+        public static GoogleMap googleMap = null;
 
         public static Marker cilj = null;
 
