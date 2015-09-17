@@ -73,6 +73,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import strukture.Cvor;
 import strukture.Graf;
 import strukture.Linija;
 
@@ -403,7 +404,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         int id = v.getId();
 
-
+        MapaFragment.pratiLiniju(id);
 
 
         int a =3;
@@ -429,6 +430,17 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         }
 
         public MapaFragment() {
+
+        }
+
+        public static void pratiLiniju(int id)
+        {
+            Linija linija = MainActivity.graf.getGl().linije[id];
+
+            ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id);
+
+            //if(linija.broj.eq)
+
 
         }
 

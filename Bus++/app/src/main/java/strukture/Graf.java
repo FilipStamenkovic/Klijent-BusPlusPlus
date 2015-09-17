@@ -46,16 +46,19 @@ public class Graf
 	    }
 	}
 	
-	public void pratiLiniju(int linijaId)
+	public ArrayList<Cvor> pratiLiniju(int linijaId)
 	{
 		Linija l = gl.linije[linijaId];
+		ArrayList<Cvor> cvorovi = new ArrayList<>();
+
 		int udaljenost = 0;
 		if(l == null)
-			return;
+			return null;
 
 
 		
 		Cvor c = l.pocetnaStanica;
+		cvorovi.add(c);
 		Cvor pocetna = c;
 		Veza v = null;
 		
@@ -66,12 +69,15 @@ public class Graf
 		while((v = c.vratiVezu(l)) != null)
 		{
 			c = v.destination;
+			cvorovi.add(c);
 			udaljenost += v.weight;
 			//System.out.println(c.toString() + " udaljenost = " + udaljenost);
 			Log.i("TAG",c.toString() + " udaljenost = " + udaljenost);
 			if(c == pocetna)
 				break;
 		}
+
+		return cvorovi;
 	}
 
 	public GradskeLinije getGl() {
