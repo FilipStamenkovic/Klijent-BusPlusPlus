@@ -1,5 +1,8 @@
 package strukture;
 
+import android.util.Log;
+
+import java.io.Console;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -49,20 +52,29 @@ public class Graf
 		int udaljenost = 0;
 		if(l == null)
 			return;
+
+
 		
 		Cvor c = l.pocetnaStanica;
 		Cvor pocetna = c;
 		Veza v = null;
 		
-		System.out.println("Linija:> " + l.toString());
-		System.out.println(c.toString() + " udaljenost = " + udaljenost);
+		//System.out.println("Linija:> " + l.toString());
+		//System.out.println(c.toString() + " udaljenost = " + udaljenost);
+		Log.i("TAG","Linija:> " + l.toString());
+		Log.i("TAG",c.toString() + " udaljenost = " + udaljenost);
 		while((v = c.vratiVezu(l)) != null)
 		{
 			c = v.destination;
 			udaljenost += v.weight;
-			System.out.println(c.toString() + " udaljenost = " + udaljenost);
+			//System.out.println(c.toString() + " udaljenost = " + udaljenost);
+			Log.i("TAG",c.toString() + " udaljenost = " + udaljenost);
 			if(c == pocetna)
 				break;
 		}
+	}
+
+	public GradskeLinije getGl() {
+		return gl;
 	}
 }

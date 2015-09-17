@@ -42,8 +42,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void proveriVerzije(final char baza) {
+    private boolean proveriVerzije(final char baza) {
+        boolean b = false;
         try {
+
             BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
             String[] files = busDatabasesHelper.checkDatabase();
             double[] verzije = busDatabasesHelper.getVersions();
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 printWriter.close();
                 out.close();
                 socket.close();
-                return;
+                return false;
             }
 
             Gson gson = new GsonBuilder().create();
@@ -98,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 printWriter.close();
                 out.close();
                 socket.close();
-                return;
+                return true;
             }
             int filesize = odgovor.size;
             String imeBaze;
@@ -107,13 +109,6 @@ public class MainActivity extends AppCompatActivity {
             else
                 imeBaze = "Red_Voznje" + odgovor.dbVer + ".db";
 
-            if (files != null)
-                for (int i = 0; i < files.length; i++)
-                    if (baza == files[i].charAt(0)) {
-                        File f = new File(busDatabasesHelper.getDatabasePath() + files[i]);
-                        if (f.exists())
-                            f.delete();
-                    }
 
             File f = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
             f.getParentFile().mkdirs();
@@ -132,20 +127,28 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
 
-                       /* while ((current < filesize) && (bytesRead > 0)) {
-                            bytesRead = is.read(mybytearray, current, (mybytearray.length - current));
-                            if (bytesRead >= 0)
-                                current += bytesRead;
-                        }*/
             }
 
             if (bytesRead != -1)
+            {
                 bos.write(mybytearray, 0, current);
+                b = true;
+                if (files != null)
+                    for (int i = 0; i < files.length; i++)
+                        if (baza == files[i].charAt(0)) {
+                            File ff = new File(busDatabasesHelper.getDatabasePath() + files[i]);
+                            if (ff.exists())
+                                ff.delete();
+                        }
+            }
+            else
+                b = false;
             bos.flush();
             bos.close();
             printWriter.close();
             out.close();
             socket.close();
+
         } catch (SocketTimeoutException e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
@@ -156,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
+        return b;
     }
 
     @Override
@@ -168,40 +171,50 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 proveriVerzije('S');
                 //proveriVerzije('R');
-                loadGraf();
+                final boolean b = loadGraf();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(!b)
+                            Toast.makeText(getApplicationContext(),"Greska, konektuj se na internet",Toast.LENGTH_LONG).show();
+                        else
+                        {
+                            Intent i = new Intent(getApplicationContext(),Glavna_Aktivnost.class);
+                            finish();
+                            startActivity(i);
+                        }
+                    }
+                });
+
             }
         }).start();
 
 
     }
 
-    private void loadGraf()
+    private boolean loadGraf()
     {
 
         BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
-        String baza = busDatabasesHelper.checkDatabase()[0];
+        String []files = busDatabasesHelper.checkDatabase();
+        if(files == null)
+            return false;
+
+        String baza = files[0];
         BusDatabasesHelper.setDbName(baza);
         baza = busDatabasesHelper.getDatabasePath() + baza;
+
+        File f = new File(baza);
 
         try {
             graf = new Graf(baza, "");
         } catch (Exception e) {
             e.printStackTrace();
+
+            return false;
         }
-        //graf = new Graf()
-    }
 
-    private void startApplication()
-    {
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Intent i = new Intent(getApplicationContext(),Glavna_Aktivnost.class);
-                finish();
-                startActivity(i);
-            }
-        });
+        return true;
     }
 
     @Override

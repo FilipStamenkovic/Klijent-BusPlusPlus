@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -68,6 +69,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import strukture.Graf;
+import strukture.Linija;
 
 public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.TabListener {
 
@@ -155,8 +159,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
         disconnect();
     }
 
@@ -331,47 +335,43 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
+        @SuppressLint("NewApi")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState)
         {
             final View rootView;
-            rootView = inflater.inflate(R.layout.fragment_glavna__aktivnost, container, false);
+            rootView = inflater.inflate(R.layout.fragment_red_voznje, container, false);
 
-            Button button = (Button) rootView.findViewById(R.id.salji);
 
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    final String podatak = ((EditText) rootView.findViewById(R.id.edit_je)).getText().toString() + "\n";
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            InetAddress inetAddress = null;
-                            try {
-                                inetAddress = InetAddress.getByName("192.168.1.2");
-                                Socket socket = new Socket();
-                                socket.connect(new InetSocketAddress(inetAddress,4000),1000);
 
-                                OutputStream out = socket.getOutputStream();
-                                PrintWriter printWriter = new PrintWriter(out);
-                                printWriter.print(podatak);
-                                printWriter.flush();
-                                printWriter.close();
-                                out.close();
-                                socket.close();
-                            } catch (UnknownHostException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            //Socket socket = new Socket(inetAddress, 8001);
+            Linija[] linije = MainActivity.graf.getGl().linije;
+            ArrayList<Linija> listaLinija = new ArrayList<>();
 
-                        }
-                    }).start();
-                }
-            });
+            for(int i = 1; i < linije.length; i++)
+                if(linije[i].broj.charAt(linije[i].broj.length() - 1) == '*')
+                    continue;
+                else
+                    listaLinija.add(linije[i]);
 
+            //linije = (Linija [])listaLinija.toArray();
+
+            ArrayList<View> views = new ArrayList<>();
+            for(int i = 0; i < 1; i += 2)
+            {
+                View red = inflater.inflate(R.layout.red_voznje_layout,container,false);
+                TextView textView = (TextView) red.findViewWithTag("linija");
+                textView.setText("Linija " + listaLinija.get(i).broj);
+                textView = (TextView) red.findViewWithTag("smerA");
+                textView.setText(listaLinija.get(i).naziv);
+                textView = (TextView) red.findViewWithTag("smerB");
+                textView.setText(listaLinija.get(i + 1).naziv);
+
+                views.add(red);
+
+            }
+
+            rootView.addChildrenForAccessibility(views);
             return rootView;
         }
 

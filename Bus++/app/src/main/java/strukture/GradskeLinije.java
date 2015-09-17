@@ -18,7 +18,7 @@ public class GradskeLinije
 		int maxId = 0;
 
 
-        BusDBAdapter.getAllLinije();
+        linije = BusDBAdapter.getAllLinije();
 		// load the sqlite-JDBC driver using the current class loader
 	   /* Class.forName("org.sqlite.JDBC");
 	    
