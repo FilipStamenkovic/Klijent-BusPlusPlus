@@ -10,7 +10,7 @@ public class Linija
 	public String smer = null;
 	public String naziv = null;
 	public transient Cvor pocetnaStanica = null;
-	
+
 	public Linija() {}
 	
 	public Linija(Integer id, String broj, String smer, String naziv, Cvor pocetnaStanica)

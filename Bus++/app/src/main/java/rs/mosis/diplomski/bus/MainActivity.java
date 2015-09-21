@@ -1,5 +1,6 @@
 package rs.mosis.diplomski.bus;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
@@ -34,11 +35,14 @@ public class MainActivity extends AppCompatActivity {
 
     private SQLiteOpenHelper sqLiteOpenHelper;
     public static Graf graf;
+    public static Context aplikacija;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        aplikacija = this.getApplicationContext();
 
     }
 

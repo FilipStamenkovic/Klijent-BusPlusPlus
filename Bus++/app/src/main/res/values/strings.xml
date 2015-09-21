@@ -5,10 +5,12 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_glavna__aktivnost">Glavna_Aktivnost</string>
 
-    <string name="title_section1">Section 1</string>
-    <string name="title_section2">Section 2</string>
+    <string name="title_section1">Linije</string>
+    <string name="title_section2">Mapa</string>
     <string name="title_section3">Section 3</string>
 
     <string name="view_red_voznje">Pogledaj Red Vožnje</string>
     <string name="show_linija">Prikaži Liniju</string>
+    <string name="pocetak">Pocetak</string>
+    <string name="finish_marker">Odrediste</string>
 </resources>

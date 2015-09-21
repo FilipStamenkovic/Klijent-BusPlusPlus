@@ -21,11 +21,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -67,11 +70,15 @@ import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import strukture.Cvor;
 import strukture.Graf;
@@ -92,8 +99,10 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     public static LatLng MyLocation = new LatLng(43.319425, 21.899487);
     public static final LatLng jugozapad = new LatLng(43.2659128,21.7123964);
     public static final LatLng severoistok = new LatLng(43.4381218,22.1044385);
+    public static Handler UIHandler = new Handler(Looper.getMainLooper());
     LocationManager locationManager;
     LocationListener listener;
+    public static Geocoder geocoder;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -108,6 +117,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         setContentView(R.layout.activity_glavna__aktivnost);
 
         this.setTitle("Bus++");
+        geocoder = new Geocoder(this, Locale.US);
 
         fragmentManager = getSupportFragmentManager();
 
@@ -124,6 +134,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+
+
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -244,6 +256,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            MapaFragment.pocetak = true;
             return true;
         }
 
@@ -251,10 +264,18 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     }
 
     @Override
-    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction)
+    {
         // When the given tab is selected, switch to the corresponding page in
         // the ViewPager.
         mViewPager.setCurrentItem(tab.getPosition());
+
+        if (MapaFragment.searchView != null)
+            if (MapaFragment.searchView.isFocused())
+            {
+                InputMethodManager inputMethodManager = (InputMethodManager) MainActivity.aplikacija.getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(MapaFragment.searchView.getWindowToken(), 0);
+            }
 
     }
 
@@ -286,6 +307,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 fragment = MapaFragment.newInstance(position + 1);
             else
                 fragment = PlaceholderFragment.newInstance(position + 1);
+
 
 
             return fragment;
@@ -404,7 +426,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         int id = v.getId();
 
-        MapaFragment.pratiLiniju(id);
+        MapaFragment.pratiLiniju(id, getSupportActionBar());
 
 
         int a =3;
@@ -416,9 +438,17 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public static GoogleMap googleMap = null;
 
+        public static ArrayList<Marker> stanice = null;
+
+        public static Polyline ruta = null;
+
+        public static boolean pocetak = false;
+
         public static Marker cilj = null;
 
         public static Marker start = null;
+
+        public static AutoCompleteTextView searchView;
 
 
         public static MapaFragment newInstance(int sectionNumber) {
@@ -433,14 +463,116 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
-        public static void pratiLiniju(int id)
+
+
+        public static void nacrtajRutu(final ArrayList<Cvor> cvorovi)
+        {
+            new Thread(new Runnable() {
+                @Override
+                public void run()
+                {
+                    DirectionsHelper directionsHelper = new DirectionsHelper(cvorovi,geocoder);
+                    final List<LatLng> lista = directionsHelper.getTacke();
+
+                    UIHandler.post(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                            if (ruta != null)
+                                ruta.remove();
+
+                            ruta = googleMap.addPolyline(new PolylineOptions()
+                            .addAll(lista)
+                            .width(12)
+                            .color(Color.parseColor("#05b1fb"))//Google maps blue color
+                            .geodesic(true)
+                            );
+
+                        }
+                    });
+
+
+
+
+                }
+            }).start();
+
+
+
+        }
+
+        public static void pratiLiniju(int id,ActionBar actionBar)
         {
             Linija linija = MainActivity.graf.getGl().linije[id];
 
             ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id);
 
-            //if(linija.broj.eq)
+            if(stanice != null)
+            {
+                int size = stanice.size();
+                for(int i = 0; i < size; i++) {
+                    stanice.get(0).remove();
+                    stanice.remove(0);
+                }
 
+            }
+
+            stanice = new ArrayList<>();
+            int brojac = 0;
+            for(int i = 0; i < cvorovi.size(); i++)
+            {
+                brojac++;
+                BitmapDescriptor ikonica;
+                if(i == 0)
+                    ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_pocetak);
+                else if (i == cvorovi.size() - 1)
+                    ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_kraj);
+                else
+                     ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_stajaliste);
+                Cvor cvor = cvorovi.get(i);
+                Marker marker = googleMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(cvor.lat, cvor.lon))
+                        .title(cvor.naziv)
+                        .icon(ikonica)
+                        .snippet(linija.naziv)
+                        .draggable(false));
+
+                stanice.add(marker);
+            }
+
+            Linija nextLine = MainActivity.graf.getGl().linije[linija.id];
+            nacrtajRutu(cvorovi);
+/*            while(nextLine.broj.equals(linija.broj + "*"))
+            {
+                linija = nextLine;
+
+                ArrayList<Cvor> novi = MainActivity.graf.pratiLiniju(linija.id);
+                int size = novi.size();
+
+                for(int i = 0; i < novi.size(); i++)
+                    if(cvorovi.contains(novi.get(i)))
+                    {
+                        novi.remove(i);
+                        i--;
+                    }else
+                        cvorovi.add(novi.get(i));
+
+                for(int i = 0; i < novi.size(); i++)
+                {
+                    brojac++;
+                    Cvor cvor = cvorovi.get(i);
+                    Marker marker = googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(cvor.lat,cvor.lon))
+                            .title(cvor.naziv)
+                            .snippet(linija.naziv)
+                            .draggable(false));
+
+                    stanice.add(marker);
+                }
+            }*/
+
+           // getContext();
+            actionBar.setSelectedNavigationItem(1);
 
         }
 
@@ -451,10 +583,13 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             {
                 cilj.remove();
             }
+
+            BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_odrediste);
             cilj = googleMap.addMarker(new MarkerOptions()
                     .position(new LatLng(lat, lon))
                     .title("Odrediste")
                     .snippet(s)
+                    .icon(ikonica)
                     .draggable(true));
         }
 
@@ -474,29 +609,35 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             final SearchManager searchManager = (SearchManager) getContext().getSystemService(Context.SEARCH_SERVICE);
             //SearchView searchView = (SearchView) root.findViewById(R.id.search_adresa);
-            final AutoCompleteTextView searchView = (AutoCompleteTextView) ((ViewGroup) root).getChildAt(0);
+            searchView = (AutoCompleteTextView) ((ViewGroup) root).getChildAt(0);
             //SearchView.SearchAutoComplete
 
-            searchView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+
+            searchView.setOnEditorActionListener(new TextView.OnEditorActionListener()
+            {
                 @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+                {
 
                     if (searchView.getAdapter() != null)
-                        if (searchView.getAdapter().getCount() > 0) {
+                        if (searchView.getAdapter().getCount() > 0)
+                        {
                             // searchView.setText((String) searchView.getAdapter().getItem(0));
                             // searchView.setAdapter(null);
 
-                            Geocoder geocoder = new Geocoder(getContext(), Locale.US);
+
                             String s = searchView.getText().toString();
                             double lat, lon;
 
-                            try {
+                            try
+                            {
                                 List<Address> adrese = geocoder.getFromLocationName(s, 1, jugozapad.latitude, jugozapad.longitude, severoistok.latitude, severoistok.longitude);
                                 s = adrese.get(0).getLocality();
                                 lat = adrese.get(0).getLatitude();
                                 lon = adrese.get(0).getLongitude();
                                 addMarker(lat, lon, s);
-                            } catch (IOException e) {
+                            } catch (IOException e)
+                            {
                                 e.printStackTrace();
                             }
 
@@ -505,39 +646,49 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     return false;
                 }
 
-                public boolean onKey(View v, int keyCode, KeyEvent event) {
+                public boolean onKey(View v, int keyCode, KeyEvent event)
+                {
                     return false;
 
                 }
             });
 
-            searchView.addTextChangedListener(new TextWatcher() {
+            searchView.addTextChangedListener(new TextWatcher()
+            {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                public void beforeTextChanged(CharSequence s, int start, int count, int after)
+                {
 
                 }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                public void onTextChanged(CharSequence s, int start, int before, int count)
+                {
                     final String polje = s.toString();
-                    new Thread(new Runnable() {
+                    new Thread(new Runnable()
+                    {
                         @Override
-                        public void run() {
+                        public void run()
+                        {
                             Geocoder geocoder = new Geocoder(getContext(), Locale.US);
                             List<Address> addresses;
-                            try {
+                            try
+                            {
                                 addresses = geocoder.getFromLocationName(polje, 10, jugozapad.latitude, jugozapad.longitude, severoistok.latitude, severoistok.longitude);
 
 
                                 ArrayList<String> stringovi = new ArrayList<String>();
-                                for (int i = 0; i < addresses.size(); i++) {
+                                for (int i = 0; i < addresses.size(); i++)
+                                {
                                     boolean b = false;
                                     String s = addresses.get(i).getFeatureName() + " - " + addresses.get(i).getLocality();
                                     s = s.replace(" ", "");
-                                    for (int j = 0; j < stringovi.size(); j++) {
+                                    for (int j = 0; j < stringovi.size(); j++)
+                                    {
                                         String s2 = stringovi.get(j);
                                         s2 = s2.replace(" ", "");
-                                        if (s2.toLowerCase().equals(s.toLowerCase())) {
+                                        if (s2.toLowerCase().equals(s.toLowerCase()))
+                                        {
                                             b = true;
                                             break;
                                         }
@@ -551,7 +702,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
 
                                 ((Glavna_Aktivnost) getActivity()).postaviComplete(strings, searchView);
-                            } catch (IOException e) {
+                            } catch (IOException e)
+                            {
                                 e.printStackTrace();
                             }
 
@@ -569,7 +721,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 }
 
                 @Override
-                public void afterTextChanged(Editable s) {
+                public void afterTextChanged(Editable s)
+                {
 
                 }
             });
@@ -606,12 +759,60 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 if (googleMap != null)
                     googleMap.setMyLocationEnabled(true);
 
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(MyLocation,15));
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(MyLocation, 15));
+
+
+                googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+                    @Override
+                    public void onMapLongClick(LatLng latLng)
+                    {
+                        if (searchView.isFocused())
+                        {
+                            InputMethodManager inputMethodManager = (InputMethodManager) MainActivity.aplikacija.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputMethodManager.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+                        }
+                        if(!pocetak)
+                        {
+                            if (cilj != null)
+                                cilj.remove();
+                            BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_odrediste);
+                            cilj = googleMap.addMarker(new MarkerOptions()
+                                    .position(latLng)
+                                    .title(getString(R.string.finish_marker))
+                                    .icon(ikonica)
+                                    .draggable(true));
+                        }else
+                        {
+                            if (start != null)
+                                start.remove();
+                            //BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_odrediste);
+                            start = googleMap.addMarker(new MarkerOptions()
+                                    .position(latLng)
+                                    .title(getString(R.string.pocetak))
+                                  //  .icon(ikonica)
+                                    .draggable(true));
+                        }
+                        if (ruta != null)
+                        {
+                            ruta.remove();
+                            ruta = null;
+                        }
+                        if (stanice != null)
+                        {
+                            int size = stanice.size();
+                            for (int i = 0; i < size; i++)
+                            {
+                                stanice.get(0).remove();
+                                stanice.remove(0);
+                            }
+
+                            stanice = null;
+                        }
+                    }
+                });
+
             }
 
-
-
-               // searchView.setOnQueryTextListener(queryTextListener);
         }
 
         @Override
