@@ -17,6 +17,7 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
     private static SQLiteDatabase database = null;
     private final Context mContext;
     private static String DB_NAME = "";
+    private static BusDatabasesHelper busDatabasesHelper = null;
 
     public BusDatabasesHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -30,38 +31,50 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
         {
             DB_PATH = "/data/data/" + context.getPackageName() + "/databases/";
         }
+        busDatabasesHelper = this;
     }
 
-    public String[] checkDatabase()
+   public static BusDatabasesHelper getInstance()
+   {
+       return busDatabasesHelper;
+   }
+
+    public String checkDatabase(char baza)
     {
         File dbFile = new File(DB_PATH );
-        return dbFile.list();
+        String povratak = null;
+        for(int i = 0; i < dbFile.list().length; i++)
+            if(dbFile.list()[i].charAt(0) == baza)
+            {
+                povratak = dbFile.list()[i];
+                break;
+            }
+        return povratak;
         //return dbFile.exists();
     }
 
-    public double[] getVersions()
+    public double getVersions(char baza)
     {
 
-        String []files = checkDatabase();
-        if(files == null)
-            return null;
-        double [] niz = new double[files.length];
+        String file = checkDatabase(baza);
+        if (file == null)
+            return 0.0;
+        //double [] niz = new double[files.length];
+        double verzija = 0.0;
 
-        for(int i = 0;i < files.length; i++ )
-        {
-            File f = new File(files[i]);
-            String broj = files[i].replaceAll("[^0-9 .]", "");
-            if(broj.charAt(0) == '.')
+        File f = new File(file);
+        String broj = file.replaceAll("[^0-9 .]", "");
+          /*  if(broj.charAt(0) == '.')
             {
                 niz[i] = -1.0;
                 continue;
-            }
-            broj = broj.substring(0, broj.length()-1);
+            }*/
+        broj = broj.substring(0, broj.length() - 1);
 
-            double br = Double.parseDouble(broj);
-            niz[i] = br;
-        }
-        return niz;
+        verzija = Double.parseDouble(broj);
+        //    niz[i] = br;
+
+        return verzija;
     }
 
     public static void setDbName(String dbName) {

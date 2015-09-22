@@ -55,6 +55,7 @@ public class BusDBAdapter
             database.beginTransaction();
 
             cursor = database.query(LINIJA_TABLE, null, null, null, null, null, null);
+
             database.setTransactionSuccessful();
             if(cursor.getCount() > 0)
             {
@@ -140,18 +141,6 @@ public class BusDBAdapter
 
     public static boolean podesiVeze(Cvor[] cvorovi,Linija[] linije)
     {
-       /* rs = statement.executeQuery("select * from VEZA");
-
-        while(rs.next())
-        {
-            // read the result set
-            int sourceId = rs.getInt("polazna_stanica_id");
-            int destId = rs.getInt("dolazna_stanica_id");
-            int weight = rs.getInt("udaljenost");
-            int linijaId = rs.getInt("linija_id");
-
-            tempArray[sourceId].dodajVezu(gl.linije[linijaId], weight, tempArray[destId]);;
-        }*/
 
         SQLiteDatabase database = BusDatabasesHelper.getDatabase();
 
@@ -191,6 +180,107 @@ public class BusDBAdapter
         if(database.isOpen())
             database.close();
 
+        return b;
+    }
+
+    public static boolean podesiRedVoznje(Linija linija)
+    {
+        boolean b = false;
+        SQLiteDatabase database = BusDatabasesHelper.getDatabase();
+        Cursor radni_dan = null;
+        Cursor subota = null;
+        Cursor nedelja = null;
+        database.beginTransaction();
+        try
+        {
+
+            String[] whereArgs = new String[] {
+                    linija.broj,
+                    linija.smer
+            };
+
+
+            radni_dan = database.rawQuery("select RED_VOZNJE.cas, RADNI_DAN_MINUTA.radni_dan_minuta from " +
+                    "RED_VOZNJE, RADNI_DAN_MINUTA where RED_VOZNJE.id = RADNI_DAN_MINUTA.red_voznje_id and " +
+                    "RED_VOZNJE.linija= ? and RED_VOZNJE.smer= ? ORDER BY RED_VOZNJE.cas, " +
+                    "RADNI_DAN_MINUTA.radni_dan_minuta",whereArgs);
+
+            subota = database.rawQuery("select RED_VOZNJE.cas, SUBOTA_MINUTA.subota_minuta from " +
+                    "RED_VOZNJE, SUBOTA_MINUTA where RED_VOZNJE.id = SUBOTA_MINUTA.red_voznje_id and " +
+                    "RED_VOZNJE.linija= ? and RED_VOZNJE.smer= ? " +
+                    "ORDER BY RED_VOZNJE.cas, SUBOTA_MINUTA.subota_minuta",whereArgs);
+            nedelja = database.rawQuery("select RED_VOZNJE.cas, NEDELJA_MINUTA.nedelja_minuta from " +
+                    "RED_VOZNJE, NEDELJA_MINUTA where RED_VOZNJE.id = NEDELJA_MINUTA.red_voznje_id and " +
+                    "RED_VOZNJE.linija= ? and RED_VOZNJE.smer= ? " +
+                    "ORDER BY RED_VOZNJE.cas, NEDELJA_MINUTA.nedelja_minuta",whereArgs);
+
+            database.setTransactionSuccessful();
+            if((radni_dan.getCount() > 0) || (subota.getCount() > 0) || (nedelja.getCount() > 0))
+            {
+
+                int matRadni[][] = new int[25][60];
+                int matSubota[][] = new int[25][60];
+                int matNedelja[][] = new int[25][60];
+
+                for(int k = 0; k < 25; ++k)
+                    for(int q = 0; q < 60; ++q)
+                    {
+                        matRadni[k][q] = -1;
+                        matSubota[k][q] = -1;
+                        matNedelja[k][q] = -1;
+                    }
+                int index;
+                while(radni_dan.moveToNext())
+                {
+
+                    index = 0;
+                    int cas = radni_dan.getInt(radni_dan.getColumnIndex("cas"));
+                    int radni_dan_minuta = radni_dan.getInt(radni_dan.getColumnIndex("radni_dan_minuta"));
+                    while(matRadni[cas][index] != -1)
+                        ++index;
+                    matRadni[cas][index] = radni_dan_minuta;
+                    // int id = cursor.getInt(cursor.getColumnIndex(ID));
+
+                }
+                linija.setMatRadni(matRadni);
+                while(subota.moveToNext())
+                {
+
+                    index = 0;
+                    int cas = subota.getInt(subota.getColumnIndex("cas"));
+                    int radni_dan_minuta = subota.getInt(subota.getColumnIndex("subota_minuta"));
+                    while(matSubota[cas][index] != -1)
+                        ++index;
+                    matSubota[cas][index] = radni_dan_minuta;
+                    // int id = cursor.getInt(cursor.getColumnIndex(ID));
+
+                }
+                linija.setMatSubota(matSubota);
+                while(nedelja.moveToNext())
+                {
+
+                    index = 0;
+                    int cas = nedelja.getInt(nedelja.getColumnIndex("cas"));
+                    int radni_dan_minuta = nedelja.getInt(nedelja.getColumnIndex("nedelja_minuta"));
+                    while(matNedelja[cas][index] != -1)
+                        ++index;
+                    matNedelja[cas][index] = radni_dan_minuta;
+                    // int id = cursor.getInt(cursor.getColumnIndex(ID));
+
+                }
+                linija.setMatNedelja(matNedelja);
+                b = true;
+            }
+        }catch (SQLiteException e)
+        {
+            Log.v("MyPlacesDBAdapter", e.getMessage());
+            b = false;
+        }finally {
+            database.endTransaction();
+        }
+
+        if(database.isOpen())
+            database.close();
         return b;
     }
 

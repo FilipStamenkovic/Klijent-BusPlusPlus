@@ -13,4 +13,10 @@
     <string name="show_linija">Prikaži Liniju</string>
     <string name="pocetak">Pocetak</string>
     <string name="finish_marker">Odrediste</string>
+    <string name="vreme_dolaska">Vreme dolaska</string>
+    <string name="vreme_polaska">Vreme polaska</string>
+    <string name="napomena">Napomena</string>
+    <string name="linija">Linija</string>
+    <string name="smer">Smer</string>
+    <string name="naziv">Naziv</string>
 </resources>

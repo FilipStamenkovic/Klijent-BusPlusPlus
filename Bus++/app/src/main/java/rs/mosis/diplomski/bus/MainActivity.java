@@ -44,126 +44,11 @@ public class MainActivity extends AppCompatActivity {
 
         aplikacija = this.getApplicationContext();
 
-    }
-
-    private boolean proveriVerzije(final char baza) {
-        boolean b = false;
-        try {
-
-            BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
-            String[] files = busDatabasesHelper.checkDatabase();
-            double[] verzije = busDatabasesHelper.getVersions();
-            String strukture, red;
-            strukture = "0.0";
-            red = "0.0";
-            if (files != null)
-                for (int i = 0; i < files.length; i++) {
-                    if (files[i].charAt(0) == 'S')
-                        strukture = verzije[i] + "";
-                    else if (files[i].charAt(0) == 'R')
-                        red = verzije[i] + "";
-                }
-            Request request;
-            if (baza == 'S')
-                request = new Request(0, null, null, null, null, null, null, new Double(strukture));
-            else
-                request = new Request(1, null, null, null, null, null, null, new Double(red));
-            String poruka = request.toString();
-            InetAddress inetAddress = InetAddress.getByName(Constants.IP);
-//            Socket socket = new Socket(inetAddress, Constants.PORT);
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(inetAddress,Constants.PORT),Constants.TIMEOUT);
-            int bytesRead = 0;
-            int current = 0;
-
-            InputStream is = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
-            PrintWriter printWriter = new PrintWriter(out);
-            // printWriter.print("kurac");
-            //printWriter.flush();
-
-            printWriter.print(poruka + "\n");
-            printWriter.flush();
-
-
-            BufferedReader input = new BufferedReader(new InputStreamReader(is));
-            poruka = input.readLine();
-            if (poruka == null) {
-                is.close();
-                printWriter.close();
-                out.close();
-                socket.close();
-                return false;
-            }
-
-            Gson gson = new GsonBuilder().create();
-            Response odgovor = gson.fromJson(poruka, Response.class);
-            //poruka = input.readLine();
-            if (odgovor.size == -1) {
-                is.close();
-                printWriter.close();
-                out.close();
-                socket.close();
-                return true;
-            }
-            int filesize = odgovor.size;
-            String imeBaze;
-            if (baza == 'S')
-                imeBaze = "Strukture_" + odgovor.dbVer + ".db";
-            else
-                imeBaze = "Red_Voznje" + odgovor.dbVer + ".db";
-
-
-            File f = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
-            f.getParentFile().mkdirs();
-            f.createNewFile();
-            FileOutputStream fos = new FileOutputStream(
-                    busDatabasesHelper.getDatabasePath() + imeBaze);
-            BufferedOutputStream bos = new BufferedOutputStream(fos);
-            byte[] mybytearray = new byte[filesize];
-
-            while (current < filesize) {
-                int preostalo = filesize - current;
-                bytesRead = is.read(mybytearray, current, preostalo);
-                current += bytesRead;
-
-                if (bytesRead == -1) {
-                    break;
-                }
-
-            }
-
-            if (bytesRead != -1)
-            {
-                bos.write(mybytearray, 0, current);
-                b = true;
-                if (files != null)
-                    for (int i = 0; i < files.length; i++)
-                        if (baza == files[i].charAt(0)) {
-                            File ff = new File(busDatabasesHelper.getDatabasePath() + files[i]);
-                            if (ff.exists())
-                                ff.delete();
-                        }
-            }
-            else
-                b = false;
-            bos.flush();
-            bos.close();
-            printWriter.close();
-            out.close();
-            socket.close();
-
-        } catch (SocketTimeoutException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(BusDatabasesHelper.getInstance() == null)
+        {
+            new BusDatabasesHelper(aplikacija,"",null,1);
         }
 
-        return b;
     }
 
     @Override
@@ -173,13 +58,13 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                proveriVerzije('S');
-                //proveriVerzije('R');
-                final boolean b = loadGraf();
+                Komunikacija_Server.proveriVerzije('S');
+                Komunikacija_Server.proveriVerzije('R');
+                graf = Komunikacija_Server.loadGraf();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(!b)
+                        if(graf == null)
                             Toast.makeText(getApplicationContext(),"Greska, konektuj se na internet",Toast.LENGTH_LONG).show();
                         else
                         {
@@ -196,30 +81,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private boolean loadGraf()
-    {
-
-        BusDatabasesHelper busDatabasesHelper = new BusDatabasesHelper(getApplicationContext(), "", null, 1);
-        String []files = busDatabasesHelper.checkDatabase();
-        if(files == null)
-            return false;
-
-        String baza = files[0];
-        BusDatabasesHelper.setDbName(baza);
-        baza = busDatabasesHelper.getDatabasePath() + baza;
-
-        File f = new File(baza);
-
-        try {
-            graf = new Graf(baza, "");
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            return false;
-        }
-
-        return true;
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -13,7 +13,7 @@ public class GradskeLinije
 		linije = new Linija[size];
 	}
 			
-	public GradskeLinije(String grafDBName, String redVoznjeDBName) throws ClassNotFoundException, SQLException, Exception
+	public GradskeLinije() throws ClassNotFoundException, SQLException, Exception
 	{
 		int maxId = 0;
 

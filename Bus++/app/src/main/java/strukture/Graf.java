@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import rs.mosis.diplomski.bus.BusDatabasesHelper;
+
 
 public class Graf
 {
@@ -22,8 +24,10 @@ public class Graf
 	{
 		int maxId = 0;
 		Cvor tempArray[] = null;
+
+		BusDatabasesHelper.setDbName(grafDBName);
 		
-		gl = new GradskeLinije(grafDBName, redVoznjeDBName);
+		gl = new GradskeLinije();
 		
 		// load the sqlite-JDBC driver using the current class loader
 	    tempArray = BusDBAdapter.getAllCvorovi();
@@ -44,6 +48,12 @@ public class Graf
 	    		tempArray[i] = null;
 	    	}
 	    }
+
+		BusDatabasesHelper.setDbName(redVoznjeDBName);
+
+		for(int i = 0; i < gl.linije.length; ++i)
+			if(gl.linije[i] != null)
+				BusDBAdapter.podesiRedVoznje(gl.linije[i]);
 	}
 	
 	public ArrayList<Cvor> pratiLiniju(int linijaId)
@@ -64,7 +74,7 @@ public class Graf
 		
 		//System.out.println("Linija:> " + l.toString());
 		//System.out.println(c.toString() + " udaljenost = " + udaljenost);
-		Log.i("TAG","Linija:> " + l.toString());
+		Log.i("TAG", "Linija:> " + l.toString());
 		Log.i("TAG",c.toString() + " udaljenost = " + udaljenost);
 		while((v = c.vratiVezu(l)) != null)
 		{

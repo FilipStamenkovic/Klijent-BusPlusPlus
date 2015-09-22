@@ -51,6 +51,7 @@
             android:textAlignment="center"
             android:text="@string/view_red_voznje"
             android:tag="pogledajA"
+            android:onClick="redVoznje"
             />
         <Button
             android:layout_width="match_parent"
@@ -59,6 +60,7 @@
             android:text="@string/view_red_voznje"
             android:tag="pogledajB"
             android:textAlignment="center"
+            android:onClick="redVoznje"
             />
 
     </LinearLayout>
