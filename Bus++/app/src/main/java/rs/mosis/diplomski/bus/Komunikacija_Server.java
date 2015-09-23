@@ -21,6 +21,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import strukture.Graf;
 
@@ -224,7 +225,7 @@ public class Komunikacija_Server
 
         return odgovor;
     }
-    public static ArrayList<String> vremenaDolaska(Response odgovor)
+    public static ArrayList<String> vremenaPolaska(Response odgovor)
     {
         List<List<Integer>> vremena= new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
@@ -233,9 +234,15 @@ public class Komunikacija_Server
             vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i]));
 
 
+        for(int i = 0; i < vremena.size(); i++)
+        {
+            if(vremena.get(i).size() == 0)
+                odgovor.linije[i] = -1;
+        }
+
         int pocetak = 0;
         int kraj;
-        while(pocetak < odgovor.stanice.length - 1)
+        while(pocetak <= odgovor.stanice.length - 1)
         {
             kraj = pocetak;
             for (int i = pocetak; i < odgovor.stanice.length - 1; i++)
@@ -244,10 +251,11 @@ public class Komunikacija_Server
                 else
                     break;
 
+            String s = "";
 
             for(int j = pocetak; j <= kraj; j++)
             {
-                String s = "";
+
                 while(!vremena.get(j).isEmpty())
                 {
                     int niz[] = new int[kraj - pocetak + 1];
@@ -270,7 +278,7 @@ public class Komunikacija_Server
                             indeks = k;
 
                         }
-                    if((min % 100) > 10)
+                    if((min % 100) >= 10)
                         s += min / 100 + ":" + min %100;
                     else
                         s += min / 100 + ":0" + min %100;
@@ -281,12 +289,69 @@ public class Komunikacija_Server
 
 
                 }
-                povratniString.add(s);
+
 
             }
-
+            povratniString.add(s);
             pocetak = kraj + 1;
         }
+        return povratniString;
+    }
+
+    public static ArrayList<String> vremenaDolaska(Response odgovor,ArrayList<String> vremenaDolaska)
+    {
+        ArrayList<String> povratniString = new ArrayList<>();
+
+        int[] minuti_korekcija = new int[odgovor.korekcije.length];
+        int[] sati_korekcija = new int[odgovor.korekcije.length];
+
+        for (int i = 0; i < sati_korekcija.length; i++)
+        {
+            int sekunde = odgovor.korekcije[i].intValue();
+            sati_korekcija[i] = sekunde / 3600;
+            minuti_korekcija[i] = (sekunde % 3600) / 60;
+            minuti_korekcija[i]++;
+            while (minuti_korekcija[i] > 59)
+            {
+                sati_korekcija[i]++;
+                minuti_korekcija[i] -= 60;
+            }
+        }
+
+        int size = vremenaDolaska.size();
+        for (int i = 0; i < size; i++)
+            if (!vremenaDolaska.get(i).equals(""))
+            {
+                StringTokenizer tokenizer = new StringTokenizer(vremenaDolaska.get(i), "\n");
+                String s = "";
+                while (tokenizer.hasMoreTokens())
+                {
+                    String token = tokenizer.nextToken();
+                    int sati, minuti, korekcija_id;
+                    sati = Integer.parseInt(token.substring(0, 2));
+                    minuti = Integer.parseInt(token.substring(3, 5));
+                    korekcija_id = token.length() - 5;
+
+                    sati += sati_korekcija[korekcija_id];
+                    minuti += minuti_korekcija[korekcija_id];
+                    while (minuti > 59)
+                    {
+                        sati++;
+                        minuti -= 60;
+                    }
+                    if (minuti >= 10)
+                        s += sati + ":" + minuti;
+                    else
+                        s += sati + ":0" + minuti;
+                    for (int l = 0; l < korekcija_id; l++)
+                        s += "*";
+                    s += "\n";
+                }
+                povratniString.add(s);
+            } else
+                povratniString.add("");
+
+
         return povratniString;
     }
 }

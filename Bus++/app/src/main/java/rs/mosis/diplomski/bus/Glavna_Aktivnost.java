@@ -32,6 +32,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -109,6 +110,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     LocationListener listener;
     public static Geocoder geocoder;
 
+    public static Glavna_Aktivnost otac;
+
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -167,6 +170,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+
+        otac = this;
     }
 
     @Override
@@ -298,32 +303,56 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
+        public static final int brojFragmenta = 3;
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        public SectionsPagerAdapter(FragmentManager fm)
+        {
             super(fm);
         }
 
+        private void createFragment(int position)
+        {
+            /*switch (position)
+            {
+                case 0 :
+                    fragmenti[position] = PlaceholderFragment.newInstance(position + 1);
+                    break;
+                case 1 :
+                    fragmenti[position] = MapaFragment.newInstance(position + 1);
+                    break;
+                case 2:
+                    fragmenti[position] = Odgovor_Servera.newInstance(position + 1);
+                    break;
+            }*/
+        }
+
         @Override
-        public Fragment getItem(int position) {
+        public Fragment getItem(int position)
+        {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            Fragment fragment;
-            if(position == 1)
-                fragment = MapaFragment.newInstance(position + 1);
-            else if (position == 0)
-                fragment = PlaceholderFragment.newInstance(position + 1);
-            else
-                fragment = Odgovor_Servera.newInstance(position + 1);
 
+            Fragment fragment = null;
+            switch (position)
+            {
+                case 0 :
+                    fragment = PlaceholderFragment.newInstance();
+                    break;
+                case 1 :
+                    fragment = MapaFragment.newInstance();
+                    break;
+                case 2:
+                    fragment = Odgovor_Servera.newInstance();
+                    break;
+            }
 
-
-            return fragment;
+            return  fragment;
         }
 
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return brojFragmenta;
         }
 
         @Override
@@ -358,11 +387,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
+        public static PlaceholderFragment newInstance() {
             PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
             return fragment;
         }
 
@@ -470,7 +496,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     @Override
                     public void run()
                     {
-                        Odgovor_Servera.popuniTabelu(odgovor, Komunikacija_Server.vremenaDolaska(odgovor));
+                        ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor);
+                        ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
+                        Odgovor_Servera.popuniTabelu(odgovor, vremena, korekcije);
                     }
                 });
 
@@ -481,8 +509,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
     public static class MapaFragment extends Fragment
     {
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
         public static GoogleMap googleMap = null;
 
         public static ArrayList<Marker> stanice = null;
@@ -498,11 +524,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public static AutoCompleteTextView searchView;
 
 
-        public static MapaFragment newInstance(int sectionNumber) {
+        public static MapaFragment newInstance() {
             MapaFragment fragment = new MapaFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
             return fragment;
         }
 
@@ -881,21 +904,15 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
     public static class Odgovor_Servera extends Fragment
     {
-
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        private static View v;
+        private static View v = null;
 
         private static LayoutInflater layoutInflater;
 
 
 
-        public static Odgovor_Servera newInstance(int sectionNumber)
+        public static Odgovor_Servera newInstance()
         {
             Odgovor_Servera fragment = new Odgovor_Servera();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
             return fragment;
         }
 
@@ -904,30 +921,75 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState)
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             View rootView;
+            if(v != null)
+                return v;
             rootView = inflater.inflate(R.layout.fragment_odgovor_servera, container, false);
             v = rootView;
             layoutInflater = inflater;
             return rootView;
         }
 
-        public static void popuniTabelu(Response odgovor,ArrayList<String> vremena)
+        public static void popuniTabelu(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
         {
+            otac.getSupportActionBar().setSelectedNavigationItem(2);
             v.findViewById(R.id.zaglavlje).setVisibility(View.VISIBLE);
             v.findViewById(R.id.info_o_liniji).setVisibility(View.VISIBLE);
-            for(int i = 0; i < odgovor.linije.length; i++)
+            LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije,null);
+            ((LinearLayout)v.findViewById(R.id.info_o_liniji)).addView(info);
+            int pocetak,kraj;
+            pocetak = 0;
+            kraj = 0;
+            for(int i = 0; i < vremenaDolaska.size(); i++)
             {
-             //popravi ovo odma   LinearLayout vreme_layout = (LinearLayout) layoutInflater.inflate(R.id.zaglavlje,null);
-                ((TextView)vreme_layout.findViewWithTag("vreme_dolaska")).setText(vremena.get(i));
-                ((TextView)vreme_layout.findViewWithTag("vreme_polaska")).setText("Proba");
+                LinearLayout vreme_layout = (LinearLayout) layoutInflater.inflate(R.layout.fragment_vremena,null);
+                ((TextView)vreme_layout.findViewWithTag("vreme_dolaska")).setText(vremenaDolaska.get(i));
+                ((TextView)vreme_layout.findViewWithTag("vreme_polaska")).setText(vremenaPolaska.get(i));
 
                 ((LinearLayout)v.findViewById(R.id.vremena)).addView(vreme_layout);
 
-                LinearLayout info = (LinearLayout) v.findViewById(R.id.info_o_liniji);
+
+                int j = pocetak;
+                for (; j < odgovor.stanice.length - 1; j++)
+                    if (odgovor.stanice[j].intValue() == odgovor.stanice[j + 1].intValue())
+                        kraj++;
+                    else
+                        break;
+                /*while(!vremenaDolaska.get(brojac++).equals(""))
+                {
+                    i++;
+                    if(brojac == odgovor.linije.length)
+                    {
+                        brojac--;
+                        break;
+                    }
+                }*/
+
+                j = pocetak;
+                pocetak = kraj;
+
+                for(; j <= kraj; j++)
+                {
+                    if(odgovor.linije[j] != -1)
+                    {
+                        info = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
+                        ((TextView) info.findViewById(R.id.linija_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].broj);
+                        ((TextView) info.findViewById(R.id.smer_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].smer);
+                        ((TextView) info.findViewById(R.id.naziv_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv);
+                        ((LinearLayout) v.findViewById(R.id.info_o_liniji)).addView(info);
+                    }
+                }
             }
+
+
+
+
+
+
+         //   View v2 =  otac.mSectionsPagerAdapter.fragmenti[2].getView();
+
         }
 
     }

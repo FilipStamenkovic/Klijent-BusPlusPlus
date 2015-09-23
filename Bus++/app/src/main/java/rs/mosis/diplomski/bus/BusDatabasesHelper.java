@@ -43,12 +43,15 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
     {
         File dbFile = new File(DB_PATH );
         String povratak = null;
-        for(int i = 0; i < dbFile.list().length; i++)
-            if(dbFile.list()[i].charAt(0) == baza)
-            {
-                povratak = dbFile.list()[i];
-                break;
-            }
+        if(dbFile.exists())
+        {
+            for (int i = 0; i < dbFile.list().length; i++)
+                if (dbFile.list()[i].charAt(0) == baza)
+                {
+                    povratak = dbFile.list()[i];
+                    break;
+                }
+        }
         return povratak;
         //return dbFile.exists();
     }
