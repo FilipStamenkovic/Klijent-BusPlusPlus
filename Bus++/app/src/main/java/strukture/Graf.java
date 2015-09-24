@@ -102,11 +102,14 @@ public class Graf
     {
         Cvor cvor = null;
         for(int i = 0; i < cvorovi.size(); i++)
-            if(cvorovi.get(i).id == stanicaId)
-            {
-                cvor = cvorovi.get(i);
-                break;
-            }
+		{
+			Cvor cvor2 = cvorovi.get(i);
+			if (cvor2.id == stanicaId)
+			{
+				cvor = cvor2;
+				break;
+			}
+		}
         return cvor;
     }
 }

@@ -88,6 +88,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import strukture.Cvor;
+import strukture.GradskeLinije;
 import strukture.Graf;
 import strukture.Linija;
 
@@ -266,9 +267,35 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_settings)
+        {
             MapaFragment.pocetak = !MapaFragment.pocetak;
             return true;
+        } else if (id == R.id.action_ekonomicni)
+        {
+            final LatLng source = MapaFragment.getMyPosition();
+            final LatLng destination = MapaFragment.cilj.getPosition();
+            new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    final Response odgovor = Komunikacija_Server.ekonomicniRezim(source,destination);
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor,5);
+                            ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
+                           // otac.getSupportActionBar().setSelectedNavigationItem(2);
+                            Odgovor_Servera.prikazEkonomicnog(odgovor, vremena, korekcije);
+                            int a = 2;
+                        }
+                    });
+
+                }
+            }).start();
         }
 
         return super.onOptionsItemSelected(item);
@@ -280,6 +307,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         // When the given tab is selected, switch to the corresponding page in
         // the ViewPager.
         mViewPager.setCurrentItem(tab.getPosition());
+        if(tab.getPosition() == 2)
+            Odgovor_Servera.zahtev.putInt("zahtev",0);
 
         if (MapaFragment.searchView != null)
             if (MapaFragment.searchView.isFocused())
@@ -471,20 +500,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         final int id = v.getId() - 1000;
 
-        LatLng sourceLatLng2 = null;
-        if(MapaFragment.start != null)
-            sourceLatLng2 = MapaFragment.start.getPosition();
-        if (sourceLatLng2 == null)
-        {
-            if (MapaFragment.googleMap != null)
-                if (MapaFragment.googleMap.getMyLocation() != null)
-                    sourceLatLng2 = new LatLng(MapaFragment.googleMap.getMyLocation().getLatitude(),
-                            MapaFragment.googleMap.getMyLocation().getLongitude());
-        }
-        if (sourceLatLng2 == null)
-            sourceLatLng2 = MyLocation;
 
-        final LatLng sourceLatLng = sourceLatLng2;
+
+        final LatLng sourceLatLng = MapaFragment.getMyPosition();
 
         new Thread(new Runnable()
         {
@@ -499,6 +517,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     {
                         ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor);
                         ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
+                        otac.getSupportActionBar().setSelectedNavigationItem(2);
                         Odgovor_Servera.popuniTabelu(odgovor, vremena, korekcije);
                     }
                 });
@@ -534,6 +553,24 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
+
+        public static LatLng getMyPosition()
+        {
+            LatLng sourceLatLng2 = null;
+            if(MapaFragment.start != null)
+                sourceLatLng2 = MapaFragment.start.getPosition();
+            if (sourceLatLng2 == null)
+            {
+                if (MapaFragment.googleMap != null)
+                    if (MapaFragment.googleMap.getMyLocation() != null)
+                        sourceLatLng2 = new LatLng(MapaFragment.googleMap.getMyLocation().getLatitude(),
+                                MapaFragment.googleMap.getMyLocation().getLongitude());
+            }
+            if (sourceLatLng2 == null)
+                sourceLatLng2 = MyLocation;
+
+            return sourceLatLng2;
+        }
 
 
         public static void nacrtajRutu(final ArrayList<Cvor> cvorovi)
@@ -830,7 +867,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             if(googleMap == null) {
 
-                View view = root.findViewById(R.id.mapa);
                 googleMap = ((SupportMapFragment) this.getChildFragmentManager().findFragmentById(R.id.mapa)).getMap();
                 if (googleMap != null)
                     googleMap.setMyLocationEnabled(true);
@@ -906,6 +942,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         private static LayoutInflater layoutInflater;
 
+        public static Bundle zahtev;
+
+        private static int tipZahteva = -1;
 
 
         public static Odgovor_Servera newInstance()
@@ -914,7 +953,10 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             return fragment;
         }
 
-        public Odgovor_Servera() {
+        public Odgovor_Servera()
+        {
+
+            zahtev = new Bundle();
 
         }
 
@@ -922,8 +964,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             View rootView;
-            if(v != null)
+            int noviZahtev = zahtev.getInt("zahtev");
+            if ((noviZahtev == 0) && (tipZahteva != -1))
                 return v;
+            else
+                tipZahteva = 0;
             rootView = inflater.inflate(R.layout.fragment_odgovor_servera, container, false);
             v = rootView;
             layoutInflater = inflater;
@@ -932,21 +977,34 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public static void popuniTabelu(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
         {
-            otac.getSupportActionBar().setSelectedNavigationItem(2);
+            zahtev.putInt("zahtev", 3);
+
+
             v.findViewById(R.id.zaglavlje).setVisibility(View.VISIBLE);
             v.findViewById(R.id.info_o_liniji).setVisibility(View.VISIBLE);
-            LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije,null);
-            ((LinearLayout)v.findViewById(R.id.info_o_liniji)).addView(info);
-            int pocetak,kraj;
+            LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
+            ((LinearLayout) v.findViewById(R.id.info_o_liniji)).addView(info);
+            int pocetak, kraj;
             pocetak = 0;
             kraj = 0;
-            for(int i = 0; i < vremenaDolaska.size(); i++)
+            for (int i = 0; i < vremenaDolaska.size(); i++)
             {
-                LinearLayout vreme_layout = (LinearLayout) layoutInflater.inflate(R.layout.fragment_vremena,null);
-                ((TextView)vreme_layout.findViewWithTag("vreme_dolaska")).setText(vremenaDolaska.get(i));
-                ((TextView)vreme_layout.findViewWithTag("vreme_polaska")).setText(vremenaPolaska.get(i));
+                LinearLayout vreme_layout = (LinearLayout) layoutInflater.inflate(R.layout.fragment_vremena, null);
+                LinearLayout kontenjer;
+                if (i == 0)
+                    kontenjer = (LinearLayout) v.findViewById(R.id.kontenjer);
+                else
+                {
+                    View kopija = layoutInflater.inflate(R.layout.fragment_odgovor_servera, null);
+                    kontenjer = (LinearLayout) kopija.findViewById(R.id.kontenjer);
+                    ((RelativeLayout) kopija).removeAllViewsInLayout();
+                    ((ScrollView) kontenjer.getParent()).removeAllViewsInLayout();
 
-                ((LinearLayout)v.findViewById(R.id.vremena)).addView(vreme_layout);
+                }
+                ((TextView) vreme_layout.findViewWithTag("vreme_dolaska")).setText(vremenaDolaska.get(i));
+                ((TextView) vreme_layout.findViewWithTag("vreme_polaska")).setText(vremenaPolaska.get(i));
+
+                ((LinearLayout) kontenjer.findViewById(R.id.vremena)).addView(vreme_layout);
 
 
                 int j = pocetak;
@@ -955,30 +1013,41 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         kraj++;
                     else
                         break;
-                /*while(!vremenaDolaska.get(brojac++).equals(""))
-                {
-                    i++;
-                    if(brojac == odgovor.linije.length)
-                    {
-                        brojac--;
-                        break;
-                    }
-                }*/
 
                 j = pocetak;
-                pocetak = kraj;
+                pocetak = kraj + 1;
 
-                Cvor cvor = MainActivity.graf.getStanica(odgovor.stanice[j]);
+                Cvor cvor = MainActivity.graf.getStanica(odgovor.stanice[i]);
 
-                String naziv = cvor.naziv;
                 LinearLayout stanica = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
                 ((TextView) stanica.findViewById(R.id.linija_id)).setVisibility(View.GONE);
                 ((TextView) stanica.findViewById(R.id.smer_id)).setVisibility(View.GONE);
+                ((TextView) stanica.findViewById(R.id.naziv_id)).setText(R.string.stanica);
+                ((LinearLayout) kontenjer.findViewById(R.id.blok_za_stanicu)).addView(stanica);
+
+                String naziv = cvor.naziv;
+                stanica = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
+                ((TextView) stanica.findViewById(R.id.linija_id)).setVisibility(View.GONE);
+                ((TextView) stanica.findViewById(R.id.smer_id)).setVisibility(View.GONE);
                 ((TextView) stanica.findViewById(R.id.naziv_id)).setText(Html.fromHtml("<u>" + naziv + "</u>"));
-                ((LinearLayout) v.findViewById(R.id.info_o_liniji)).addView(stanica);
+                ((LinearLayout) kontenjer.findViewById(R.id.blok_za_stanicu)).addView(stanica);
 
                 stanica.setId(cvor.id);
-                stanica.setTag(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv);
+
+                MapaFragment.clearStanice();
+
+                ArrayList<Marker> markers = MapaFragment.stanice;
+                markers = new ArrayList<>();
+
+                BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_pocetak);
+                Marker marker = MapaFragment.googleMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(cvor.lat, cvor.lon))
+                        .title(cvor.naziv)
+                        .icon(ikonica)
+                        .snippet(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv)
+                        .draggable(false));
+
+                markers.add(marker);
 
                 stanica.setOnClickListener(new View.OnClickListener()
                 {
@@ -987,46 +1056,117 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     {
 
                         otac.getSupportActionBar().setSelectedNavigationItem(1);
-                        MapaFragment.clearStanice();
+                        Cvor cvor = MainActivity.graf.getStanica(v.getId());
 
-                        ArrayList<Marker> markers = MapaFragment.stanice;
-                        markers = new ArrayList<Marker>(1);
-
-                        BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_pocetak);
-                        Cvor cvor = MainActivity.graf.getStanice().get(v.getId());
-                        Marker marker = MapaFragment.googleMap.addMarker(new MarkerOptions()
-                                .position(new LatLng(cvor.lat, cvor.lon))
-                                .title(cvor.naziv)
-                                .icon(ikonica)
-                                .snippet(v.getTag().toString())
-                                .draggable(false));
+                        MapaFragment.googleMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(cvor.lat, cvor.lon)));
 
 
                     }
                 });
 
-                for(; j <= kraj; j++)
+                for (; j <= kraj; j++)
                 {
-                    if(odgovor.linije[j] != -1)
+                    if (odgovor.linije[j] != -1)
                     {
                         info = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
                         ((TextView) info.findViewById(R.id.linija_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].broj);
                         ((TextView) info.findViewById(R.id.smer_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].smer);
                         ((TextView) info.findViewById(R.id.naziv_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv);
-                        ((LinearLayout) v.findViewById(R.id.info_o_liniji)).addView(info);
+                        ((LinearLayout) kontenjer.findViewById(R.id.info_o_liniji)).addView(info);
                     }
                 }
+
+                if (i > 0)
+                    ((LinearLayout) v.findViewById(R.id.kontenjer)).addView(kontenjer);
             }
 
 
-
-
-
-
-         //   View v2 =  otac.mSectionsPagerAdapter.fragmenti[2].getView();
-
         }
 
+        public static void prikazEkonomicnog(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
+        {
+            zahtev.putInt("zahtev",4);
+            ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
+            Cvor polazna = MainActivity.graf.getStanica(odgovor.stanice[0]);
+            Cvor dolazna = MainActivity.graf.getStanica(odgovor.stanice[1]);
+            View view = layoutInflater.inflate(R.layout.fragment_ekonomicni,container,false);
+            ((TextView)view.findViewById(R.id.polazna_stanica)).setText(Html.fromHtml("<u>" + polazna.naziv + "</u>"));
+            ((TextView)view.findViewById(R.id.zavrsna_stanica)).setText(Html.fromHtml("<u>" + dolazna.naziv + "</u>"));
+
+            view.findViewById(R.id.polazna_stanica).setId(polazna.id);
+            view.findViewById(R.id.zavrsna_stanica).setId(dolazna.id);
+
+            MapaFragment.clearStanice();
+            ArrayList<Marker> markers = MapaFragment.stanice;
+            markers = new ArrayList<>();
+
+            BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_pocetak);
+            Marker marker = MapaFragment.googleMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(polazna.lat, polazna.lon))
+                    .title(polazna.naziv)
+                    .icon(ikonica)
+                            //.snippet(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv)
+                    .draggable(false));
+
+            markers.add(marker);
+            ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_kraj);
+            marker = MapaFragment.googleMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(dolazna.lat, dolazna.lon))
+                    .title(dolazna.naziv)
+                    .icon(ikonica)
+                            //.snippet(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv)
+                    .draggable(false));
+
+            markers.add(marker);
+            int pocetak = 0;
+            int kraj = 0;
+            for(int i = 0; i < vremenaDolaska.size(); i++)
+            {
+                LinearLayout vreme_layout = (LinearLayout) layoutInflater.inflate(R.layout.fragment_vremena, null);
+                LinearLayout kontenjer;
+                if (i == 0)
+                    kontenjer = (LinearLayout) view.findViewById(R.id.kontenjer);
+                else
+                {
+                    View kopija = layoutInflater.inflate(R.layout.fragment_odgovor_servera, null);
+                    kontenjer = (LinearLayout) kopija.findViewById(R.id.kontenjer);
+                    ((ScrollView) kontenjer.getParent()).removeAllViewsInLayout();
+                }
+
+                    ((TextView) vreme_layout.findViewWithTag("vreme_dolaska")).setText(vremenaDolaska.get(i));
+                    ((TextView) vreme_layout.findViewWithTag("vreme_polaska")).setText(vremenaPolaska.get(i));
+                    ((LinearLayout) kontenjer.findViewById(R.id.vremena)).addView(vreme_layout);
+
+
+                    int j = pocetak;
+                    for (; j < odgovor.linije.length - 1; j++)
+                        if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
+                            kraj++;
+                        else
+                            break;
+
+                    j = pocetak;
+                    pocetak = kraj + 1;
+
+                    for (; j <= kraj; j++)
+                    {
+                        if (odgovor.linije[j] != -1)
+                        {
+                            LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
+                            ((TextView) info.findViewById(R.id.linija_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].broj);
+                            ((TextView) info.findViewById(R.id.smer_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].smer);
+                            ((TextView) info.findViewById(R.id.naziv_id)).setText(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv);
+                            ((LinearLayout) kontenjer.findViewById(R.id.info_o_liniji)).addView(info);
+                        }
+                    }
+
+                    if (i > 0)
+                        ((LinearLayout) view.findViewById(R.id.kontenjer)).addView(kontenjer);
+
+                }
+            v = view;
+            tipZahteva = 0;
+        }
     }
 
 }

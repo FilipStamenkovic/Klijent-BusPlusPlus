@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import strukture.GradskeLinije;
 import strukture.Graf;
+import strukture.OfflineRezim;
 
 /**
  * Created by filip on 9/22/15.
@@ -120,7 +122,13 @@ public class Komunikacija_Server
                     }
             }
             else
+            {
                 b = false;
+                File ff = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
+                if (ff.exists())
+                    ff.delete();
+            }
+
             bos.flush();
             bos.close();
             printWriter.close();
@@ -128,6 +136,7 @@ public class Komunikacija_Server
             socket.close();
 
         } catch (SocketTimeoutException e) {
+            b = true;
             e.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -180,11 +189,12 @@ public class Komunikacija_Server
     public static Response ObicanRedVoznje(LatLng latLng,int linija_id)
     {
         Response odgovor = null;
+        Request request = new Request(new Integer(3), new Double(latLng.latitude),
+                new Double(latLng.longitude), null, null, linija_id, null, null);
         try
         {
 
-            Request request = new Request(new Integer(3), new Double(latLng.latitude),
-                    new Double(latLng.longitude), null, null, linija_id, null, null);
+
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
 //            Socket socket = new Socket(inetAddress, Constants.PORT);
@@ -222,6 +232,9 @@ public class Komunikacija_Server
         {
             e.printStackTrace();
         }
+
+        if(odgovor == null)
+            return OfflineRezim.handleRequest3(request);
 
         return odgovor;
     }
@@ -278,10 +291,16 @@ public class Komunikacija_Server
                             indeks = k;
 
                         }
-                    if((min % 100) >= 10)
-                        s += min / 100 + ":" + min %100;
+                    String sati;
+                    if(((min / 100) % 24 ) < 10)
+                        sati = "0" + (min / 100) % 24;
                     else
-                        s += min / 100 + ":0" + min %100;
+                        sati = "" + (min / 100) % 24;
+
+                    if((min % 100) >= 10)
+                        s += sati + ":" + min % 100;
+                    else
+                        s += sati + ":0" + min % 100;
                     for(int l = 0; l < indeks + pocetak; l++)
                         s += "*";
                     s += "\n";
@@ -298,6 +317,81 @@ public class Komunikacija_Server
         return povratniString;
     }
 
+    public static ArrayList<String> vremenaPolaska(Response odgovor,int size)
+    {
+        List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
+        ArrayList<String> povratniString = new ArrayList<>();
+
+        for(int i = 0; i < odgovor.linije.length; i++)
+            vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i],size));
+
+
+
+
+        int pocetak = 0;
+        int kraj;
+        while(pocetak <= odgovor.linije.length - 1)
+        {
+            kraj = pocetak;
+            for (int i = pocetak; i < odgovor.linije.length - 1; i++)
+                if (GradskeLinije.istaOsnovna(odgovor.linije[i],odgovor.linije[i + 1]))
+                    kraj = i + 1;
+                else
+                    break;
+
+            String s = "";
+
+                int brojac = 0;
+                while(brojac < size)
+                {
+                    brojac++;
+                    int niz[] = new int[kraj - pocetak + 1];
+                    for (int i = pocetak; i <= kraj; i++)
+                    {
+                        if (vremena.get(i).size() > 0)
+                        {
+                            niz[i - pocetak] = vremena.get(i).get(0);
+                        }
+                        else
+                            niz[i - pocetak] = -1;
+                    }
+
+                    int min = 900000;
+                    int indeks = 0;
+                    for(int k = 0; k < niz.length; k++)
+                        if(min > niz[k] && (niz[k] != -1))
+                        {
+                            min = niz[k];
+                            indeks = k;
+
+                        }
+                    String sati;
+                    if(((min / 100) % 24 ) < 10)
+                        sati = "0" + (min / 100) % 24;
+                    else
+                        sati = "" + (min / 100) % 24;
+
+                    if((min % 100) >= 10)
+                        s += sati + ":" + min % 100;
+                    else
+                        s += sati + ":0" + min % 100;
+                    for(int l = 0; l < indeks; l++)
+                        s += "*";
+                    s += "\n";
+                    vremena.get(indeks + pocetak).remove(0);
+
+
+
+                }
+
+
+            povratniString.add(s);
+            pocetak = kraj + 1;
+        }
+        return povratniString;
+    }
+
+
     public static ArrayList<String> vremenaDolaska(Response odgovor,ArrayList<String> vremenaDolaska)
     {
         ArrayList<String> povratniString = new ArrayList<>();
@@ -310,7 +404,6 @@ public class Komunikacija_Server
             int sekunde = odgovor.korekcije[i].intValue();
             sati_korekcija[i] = sekunde / 3600;
             minuti_korekcija[i] = (sekunde % 3600) / 60;
-            minuti_korekcija[i]++;
             while (minuti_korekcija[i] > 59)
             {
                 sati_korekcija[i]++;
@@ -353,5 +446,54 @@ public class Komunikacija_Server
 
 
         return povratniString;
+    }
+
+    public static Response ekonomicniRezim(LatLng source, LatLng destionation)
+    {
+        Response odgovor = null;
+        try
+        {
+            Request request = new Request(new Integer(4), new Double(source.latitude),
+                    new Double(source.longitude), new Double(destionation.latitude),
+                    new Double(destionation.longitude), null, null, null);
+            String poruka = request.toString();
+            InetAddress inetAddress = InetAddress.getByName(Constants.IP);
+//            Socket socket = new Socket(inetAddress, Constants.PORT);
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
+            int bytesRead = 0;
+            int current = 0;
+
+            InputStream is = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
+            PrintWriter printWriter = new PrintWriter(out);
+
+
+            printWriter.print(poruka + "\n");
+            printWriter.flush();
+
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(is));
+            poruka = input.readLine();
+            if (poruka == null)
+            {
+                is.close();
+                printWriter.close();
+                out.close();
+                socket.close();
+                return null;
+            }
+
+            Gson gson = new GsonBuilder().create();
+            odgovor = gson.fromJson(poruka, Response.class);
+        } catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        return odgovor;
     }
 }

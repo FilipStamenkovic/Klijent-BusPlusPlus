@@ -2,6 +2,8 @@ package strukture;
 
 import java.sql.SQLException;
 
+import rs.mosis.diplomski.bus.MainActivity;
+
 
 public class GradskeLinije
 {
@@ -18,6 +20,16 @@ public class GradskeLinije
 		int maxId = 0;
 
         linije = BusDBAdapter.getAllLinije();
+	}
+
+	public static boolean istaOsnovna(int id1,int id2)
+	{
+		String prva = MainActivity.graf.getGl().linije[id1].broj;
+		String druga = MainActivity.graf.getGl().linije[id2].broj;
+		prva = prva.replace("*","");
+		druga = druga.replace("*","");
+		return prva.equals(druga);
+
 	}
 
 }

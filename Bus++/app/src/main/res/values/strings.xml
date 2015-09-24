@@ -19,4 +19,10 @@
     <string name="linija">Linija</string>
     <string name="smer">Smer</string>
     <string name="naziv">Naziv</string>
+    <string name="stanica">Stanica</string>
+
+    <string name="ekonomicni">Ekonimicni</string>
+    <string name="polazna_stanica">Polazna stanica</string>
+    <string name="zavrsna_stanica">Zavrsna stanica</string>
+
 </resources>

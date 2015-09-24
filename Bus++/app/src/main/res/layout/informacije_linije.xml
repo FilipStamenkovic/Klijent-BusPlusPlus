@@ -7,7 +7,7 @@
     <TextView
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:gravity="center"
         android:background="@drawable/pozadina"
         android:id="@+id/linija_id"
@@ -17,7 +17,7 @@
     <TextView
         android:layout_width="0dp"
         android:layout_weight="4"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@drawable/pozadina"
         android:gravity="center"
         android:id="@+id/naziv_id"
@@ -28,7 +28,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:id="@+id/smer_id"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@drawable/pozadina"
         android:gravity="center"
         android:text="@string/smer"

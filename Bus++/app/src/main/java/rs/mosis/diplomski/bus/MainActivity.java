@@ -58,9 +58,14 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Komunikacija_Server.proveriVerzije('S');
-                Komunikacija_Server.proveriVerzije('R');
-                graf = Komunikacija_Server.loadGraf();
+                graf = null;
+                boolean b = Komunikacija_Server.proveriVerzije('S');
+                if(b)
+                    b = Komunikacija_Server.proveriVerzije('R');
+                if(b)
+                    graf = Komunikacija_Server.loadGraf();
+                else
+                    graf = null;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
