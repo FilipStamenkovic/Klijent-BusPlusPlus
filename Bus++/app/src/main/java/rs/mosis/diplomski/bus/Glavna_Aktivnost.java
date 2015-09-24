@@ -43,6 +43,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -571,12 +572,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
-        public static void pratiLiniju(int id,ActionBar actionBar)
+        public static void clearStanice()
         {
-            Linija linija = MainActivity.graf.getGl().linije[id];
-
-            ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id);
-
             if(stanice != null)
             {
                 int size = stanice.size();
@@ -584,8 +581,17 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     stanice.get(0).remove();
                     stanice.remove(0);
                 }
-
+                stanice = null;
             }
+        }
+
+        public static void pratiLiniju(int id,ActionBar actionBar)
+        {
+            Linija linija = MainActivity.graf.getGl().linije[id];
+
+            ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id);
+
+            clearStanice();
 
             stanice = new ArrayList<>();
             int brojac = 0;
@@ -863,15 +869,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             ruta.remove();
                             ruta = null;
                         }
-                        if (stanice != null) {
-                            int size = stanice.size();
-                            for (int i = 0; i < size; i++) {
-                                stanice.get(0).remove();
-                                stanice.remove(0);
-                            }
-
-                            stanice = null;
-                        }
+                        clearStanice();
                     }
                 });
 
@@ -969,6 +967,43 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
                 j = pocetak;
                 pocetak = kraj;
+
+                Cvor cvor = MainActivity.graf.getStanica(odgovor.stanice[j]);
+
+                String naziv = cvor.naziv;
+                LinearLayout stanica = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
+                ((TextView) stanica.findViewById(R.id.linija_id)).setVisibility(View.GONE);
+                ((TextView) stanica.findViewById(R.id.smer_id)).setVisibility(View.GONE);
+                ((TextView) stanica.findViewById(R.id.naziv_id)).setText(Html.fromHtml("<u>" + naziv + "</u>"));
+                ((LinearLayout) v.findViewById(R.id.info_o_liniji)).addView(stanica);
+
+                stanica.setId(cvor.id);
+                stanica.setTag(MainActivity.graf.getGl().linije[odgovor.linije[j]].naziv);
+
+                stanica.setOnClickListener(new View.OnClickListener()
+                {
+                    @Override
+                    public void onClick(View v)
+                    {
+
+                        otac.getSupportActionBar().setSelectedNavigationItem(1);
+                        MapaFragment.clearStanice();
+
+                        ArrayList<Marker> markers = MapaFragment.stanice;
+                        markers = new ArrayList<Marker>(1);
+
+                        BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_pocetak);
+                        Cvor cvor = MainActivity.graf.getStanice().get(v.getId());
+                        Marker marker = MapaFragment.googleMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(cvor.lat, cvor.lon))
+                                .title(cvor.naziv)
+                                .icon(ikonica)
+                                .snippet(v.getTag().toString())
+                                .draggable(false));
+
+
+                    }
+                });
 
                 for(; j <= kraj; j++)
                 {

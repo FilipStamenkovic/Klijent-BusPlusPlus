@@ -227,7 +227,7 @@ public class Komunikacija_Server
     }
     public static ArrayList<String> vremenaPolaska(Response odgovor)
     {
-        List<List<Integer>> vremena= new ArrayList<List<Integer>>(odgovor.linije.length);
+        List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
 
         for(int i = 0; i < odgovor.linije.length; i++)

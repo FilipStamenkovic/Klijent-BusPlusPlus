@@ -79,7 +79,7 @@ public class Linija
 		int hour = now.get(Calendar.HOUR_OF_DAY);
 		int minute = now.get(Calendar.MINUTE);
 
-		hour = 14;
+		//hour = 14;
 		ArrayList<Integer> vremena = new ArrayList<>();
 		/*while(korekcija > 3600)
 		{

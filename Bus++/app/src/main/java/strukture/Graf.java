@@ -93,4 +93,20 @@ public class Graf
 	public GradskeLinije getGl() {
 		return gl;
 	}
+	public ArrayList<Cvor> getStanice()
+	{
+		return this.cvorovi;
+	}
+
+    public Cvor getStanica(int stanicaId)
+    {
+        Cvor cvor = null;
+        for(int i = 0; i < cvorovi.size(); i++)
+            if(cvorovi.get(i).id == stanicaId)
+            {
+                cvor = cvorovi.get(i);
+                break;
+            }
+        return cvor;
+    }
 }
