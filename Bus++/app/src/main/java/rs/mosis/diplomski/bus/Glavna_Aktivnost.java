@@ -269,7 +269,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings)
         {
-            MapaFragment.pocetak = !MapaFragment.pocetak;
+            //MapaFragment.pocetak = !MapaFragment.pocetak;
             return true;
         } else if (id == R.id.action_ekonomicni)
         {
@@ -286,16 +286,95 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         @Override
                         public void run()
                         {
-                            ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor,5);
-                            ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
-                           // otac.getSupportActionBar().setSelectedNavigationItem(2);
-                            Odgovor_Servera.prikazEkonomicnog(odgovor, vremena, korekcije);
-                            int a = 2;
+                            if(odgovor != null)
+                            {
+                                ArrayList<Cvor> cvorovi = new ArrayList<Cvor>();
+                                int index = 0;
+                                for(int i = 0; i < odgovor.linije.length - 1; i++)
+                                {
+
+                                    if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
+                                    {
+                                        ArrayList<Cvor> stanice1 =
+                                                MainActivity.graf.pratiLiniju(odgovor.linije[i],
+                                                        odgovor.stanice[0], odgovor.stanice[1]);
+
+                                        ArrayList<Cvor> stanice2 =
+                                                MainActivity.graf.pratiLiniju(odgovor.linije[i + 1],
+                                                        odgovor.stanice[0], odgovor.stanice[1]);
+
+                                        if (stanice1.size() == stanice2.size())
+                                        {
+                                            if (cvorovi.size() < stanice1.size())
+                                            {
+
+                                                cvorovi = stanice1;
+                                                index = i;
+                                            }
+                                        } else if (stanice1.size() > stanice2.size())
+                                        {
+                                            if (cvorovi.size() < stanice1.size())
+                                            {
+                                                cvorovi = stanice1;
+                                                index = i;
+                                            }
+                                        } else
+                                        {
+                                            cvorovi = stanice2;
+                                            index = i;
+                                        }
+                                    }else
+                                    {
+                                        MapaFragment.pratiLiniju(odgovor.linije[index],otac.getSupportActionBar(),cvorovi);
+                                        cvorovi = new ArrayList<Cvor>();
+                                    }
+                                }
+                                if(odgovor.linije.length == 1)
+                                {
+                                    cvorovi = MainActivity.graf.pratiLiniju(odgovor.linije[0],odgovor.stanice[0], odgovor.stanice[1]);
+                                }
+                                MapaFragment.pratiLiniju(odgovor.linije[index],otac.getSupportActionBar(),cvorovi);
+                                ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor, 5);
+                                ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
+                                // otac.getSupportActionBar().setSelectedNavigationItem(2);
+                                Odgovor_Servera.prikazEkonomicnog(odgovor, vremena, korekcije);
+                            }else
+                            {
+                                Toast.makeText(otac.getApplicationContext(),"UPS, greska",Toast.LENGTH_LONG).show();
+                            }
                         }
                     });
 
                 }
             }).start();
+        }else if(id == R.id.action_set_start)
+        {
+            if (MapaFragment.start != null)
+                MapaFragment.start.remove();
+            BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_start_position);
+            MapaFragment.start = MapaFragment.googleMap.addMarker(new MarkerOptions()
+                    .position(MyLocation)
+                    .title(getString(R.string.pocetak))
+                    .icon(ikonica)
+                    .draggable(true));
+        }else if (id == R.id.action_clean_map)
+        {
+            MapaFragment.clearStanice();
+            if (MapaFragment.start != null)
+            {
+                MapaFragment.start.remove();
+                MapaFragment.start = null;
+            }
+            if (MapaFragment.cilj != null)
+            {
+                MapaFragment.cilj.remove();
+                MapaFragment.cilj = null;
+            }
+            if (MapaFragment.ruta != null)
+            {
+                MapaFragment.ruta.remove();
+                MapaFragment.ruta = null;
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -490,7 +569,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         int id = v.getId();
 
-        MapaFragment.pratiLiniju(id, getSupportActionBar());
+        ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id,-1,-1);
+
+        MapaFragment.pratiLiniju(id, getSupportActionBar(),cvorovi);
 
 
         int a = 3;
@@ -517,8 +598,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     {
                         ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor);
                         ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
-                        otac.getSupportActionBar().setSelectedNavigationItem(2);
+
                         Odgovor_Servera.popuniTabelu(odgovor, vremena, korekcije);
+                        otac.getSupportActionBar().setSelectedNavigationItem(2);
                     }
                 });
 
@@ -534,8 +616,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public static ArrayList<Marker> stanice = null;
 
         public static Polyline ruta = null;
-
-        public static boolean pocetak = false;
 
         public static Marker cilj = null;
 
@@ -557,14 +637,14 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public static LatLng getMyPosition()
         {
             LatLng sourceLatLng2 = null;
-            if(MapaFragment.start != null)
+            if(start != null)
                 sourceLatLng2 = MapaFragment.start.getPosition();
             if (sourceLatLng2 == null)
             {
-                if (MapaFragment.googleMap != null)
-                    if (MapaFragment.googleMap.getMyLocation() != null)
-                        sourceLatLng2 = new LatLng(MapaFragment.googleMap.getMyLocation().getLatitude(),
-                                MapaFragment.googleMap.getMyLocation().getLongitude());
+                if (googleMap != null)
+                    if (googleMap.getMyLocation() != null)
+                        sourceLatLng2 = new LatLng(googleMap.getMyLocation().getLatitude(),
+                                googleMap.getMyLocation().getLongitude());
             }
             if (sourceLatLng2 == null)
                 sourceLatLng2 = MyLocation;
@@ -579,22 +659,25 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 @Override
                 public void run()
                 {
-                    DirectionsHelper directionsHelper = new DirectionsHelper(cvorovi,geocoder);
+                    DirectionsHelper directionsHelper = new DirectionsHelper(cvorovi);
                     final List<LatLng> lista = directionsHelper.getTacke();
 
                     UIHandler.post(new Runnable() {
                         @Override
                         public void run()
                         {
-                            if (ruta != null)
-                                ruta.remove();
+                            if(lista != null)
+                            {
+                                if (ruta != null)
+                                    ruta.remove();
 
-                            ruta = googleMap.addPolyline(new PolylineOptions()
-                            .addAll(lista)
-                            .width(12)
-                            .color(Color.parseColor("#05b1fb"))//Google maps blue color
-                            .geodesic(true)
-                            );
+                                ruta = googleMap.addPolyline(new PolylineOptions()
+                                                .addAll(lista)
+                                                .width(12)
+                                                .color(Color.parseColor("#05b1fb"))//Google maps blue color
+                                                .geodesic(true)
+                                );
+                            }
 
                         }
                     });
@@ -622,13 +705,13 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             }
         }
 
-        public static void pratiLiniju(int id,ActionBar actionBar)
+        public static void pratiLiniju(int id,ActionBar actionBar, ArrayList<Cvor> cvorovi)
         {
             Linija linija = MainActivity.graf.getGl().linije[id];
 
-            ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id);
+           // ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id,-1,-1);
 
-            clearStanice();
+           // clearStanice();
 
             stanice = new ArrayList<>();
             int brojac = 0;
@@ -874,38 +957,58 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(MyLocation, 15));
 
 
-                googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+                googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener()
+                {
                     @Override
-                    public void onMapLongClick(LatLng latLng) {
-                        if (searchView.isFocused()) {
+                    public void onMapLongClick(LatLng latLng)
+                    {
+                        if (searchView.isFocused())
+                        {
                             InputMethodManager inputMethodManager = (InputMethodManager) MainActivity.aplikacija.getSystemService(Context.INPUT_METHOD_SERVICE);
                             inputMethodManager.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
                         }
-                        if (!pocetak) {
-                            if (cilj != null)
-                                cilj.remove();
-                            BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_odrediste);
-                            cilj = googleMap.addMarker(new MarkerOptions()
-                                    .position(latLng)
-                                    .title(getString(R.string.finish_marker))
-                                    .icon(ikonica)
-                                    .draggable(true));
-                        } else {
-                            if (start != null)
-                                start.remove();
-                            //BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_odrediste);
-                            start = googleMap.addMarker(new MarkerOptions()
-                                    .position(latLng)
-                                    .title(getString(R.string.pocetak))
-                                            //  .icon(ikonica)
-                                    .draggable(true));
-                            pocetak = false;
-                        }
-                        if (ruta != null) {
+                        if (cilj != null)
+                            cilj.remove();
+                        BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_odrediste);
+                        cilj = googleMap.addMarker(new MarkerOptions()
+                                .position(latLng)
+                                .title(getString(R.string.finish_marker))
+                                .icon(ikonica)
+                                .draggable(true));
+                        if (ruta != null)
+                        {
                             ruta.remove();
                             ruta = null;
                         }
-                        clearStanice();
+                       // clearStanice();
+                    }
+                });
+                googleMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener()
+                {
+                    @Override
+                    public void onMarkerDragStart(Marker marker)
+                    {
+
+                    }
+
+                    @Override
+                    public void onMarkerDrag(Marker marker)
+                    {
+
+                    }
+
+                    @Override
+                    public void onMarkerDragEnd(Marker marker)
+                    {
+                        if (start != null)
+                        {
+                            if (start.getTitle().equals(marker.getTitle()))
+                                start = marker;
+                        }else if (cilj != null)
+                        {
+                            if(cilj.getTitle().equals(marker.getTitle()))
+                                cilj = marker;
+                        }
                     }
                 });
 
@@ -940,7 +1043,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         private static View v = null;
 
-        private static LayoutInflater layoutInflater;
+       // private static LayoutInflater layoutInflater;
 
         public static Bundle zahtev;
 
@@ -956,7 +1059,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public Odgovor_Servera()
         {
 
-            zahtev = new Bundle();
+            if(zahtev == null)
+                zahtev = new Bundle();
 
         }
 
@@ -965,20 +1069,30 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             View rootView;
             int noviZahtev = zahtev.getInt("zahtev");
-            if ((noviZahtev == 0) && (tipZahteva != -1))
+/*            if ((noviZahtev == 0) && (tipZahteva != -1))
                 return v;
             else
-                tipZahteva = 0;
-            rootView = inflater.inflate(R.layout.fragment_odgovor_servera, container, false);
-            v = rootView;
-            layoutInflater = inflater;
+                tipZahteva = 0;*/
+            rootView = inflater.inflate(R.layout.fragment_glavna__aktivnost, container, false);
+            //v = rootView;
+            if(v != null)
+            {
+                if(v.getParent() != null)
+                    ((RelativeLayout)v.getParent()).removeAllViewsInLayout();
+                ((RelativeLayout) rootView).addView(v);
+            }
+           // layoutInflater = inflater;
             return rootView;
         }
 
         public static void popuniTabelu(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
         {
+            if(zahtev == null)
+                zahtev = new Bundle();
             zahtev.putInt("zahtev", 3);
+            LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 
+            v = layoutInflater.inflate(R.layout.fragment_odgovor_servera,null);
 
             v.findViewById(R.id.zaglavlje).setVisibility(View.VISIBLE);
             v.findViewById(R.id.info_o_liniji).setVisibility(View.VISIBLE);
@@ -1086,6 +1200,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public static void prikazEkonomicnog(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
         {
             zahtev.putInt("zahtev",4);
+            LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
             ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
             Cvor polazna = MainActivity.graf.getStanica(odgovor.stanice[0]);
             Cvor dolazna = MainActivity.graf.getStanica(odgovor.stanice[1]);
@@ -1096,9 +1211,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             view.findViewById(R.id.polazna_stanica).setId(polazna.id);
             view.findViewById(R.id.zavrsna_stanica).setId(dolazna.id);
 
-            MapaFragment.clearStanice();
-            ArrayList<Marker> markers = MapaFragment.stanice;
-            markers = new ArrayList<>();
+            //MapaFragment.clearStanice();
+            ArrayList<Marker> markers = new ArrayList<>();
+            /*markers = new ArrayList<>();
 
             BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_pocetak);
             Marker marker = MapaFragment.googleMap.addMarker(new MarkerOptions()
@@ -1118,6 +1233,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     .draggable(false));
 
             markers.add(marker);
+
+            MapaFragment.stanice = markers;*/
             int pocetak = 0;
             int kraj = 0;
             for(int i = 0; i < vremenaDolaska.size(); i++)
@@ -1140,7 +1257,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
                     int j = pocetak;
                     for (; j < odgovor.linije.length - 1; j++)
-                        if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
+                        if (GradskeLinije.istaOsnovna(odgovor.linije[j], odgovor.linije[j + 1]))
                             kraj++;
                         else
                             break;
@@ -1165,6 +1282,16 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
                 }
             v = view;
+            if(otac.findViewById(R.id.wraper) != null)
+            {
+                if(v.getParent() != null)
+                {
+                    ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
+                    ((RelativeLayout) otac.findViewById(R.id.wraper)).removeAllViewsInLayout();
+                }
+
+                ((RelativeLayout) otac.findViewById(R.id.wraper)).addView(v);
+            }
             tipZahteva = 0;
         }
     }

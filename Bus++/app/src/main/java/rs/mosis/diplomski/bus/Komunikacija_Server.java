@@ -141,8 +141,10 @@ public class Komunikacija_Server
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (UnknownHostException e) {
+            b = true;
             e.printStackTrace();
         } catch (IOException e) {
+            b = true;
             e.printStackTrace();
         }
 
@@ -451,11 +453,12 @@ public class Komunikacija_Server
     public static Response ekonomicniRezim(LatLng source, LatLng destionation)
     {
         Response odgovor = null;
+        Request request = new Request(new Integer(4), new Double(source.latitude),
+                new Double(source.longitude), new Double(destionation.latitude),
+                new Double(destionation.longitude), null, null, null);
         try
         {
-            Request request = new Request(new Integer(4), new Double(source.latitude),
-                    new Double(source.longitude), new Double(destionation.latitude),
-                    new Double(destionation.longitude), null, null, null);
+
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
 //            Socket socket = new Socket(inetAddress, Constants.PORT);
@@ -493,6 +496,9 @@ public class Komunikacija_Server
         {
             e.printStackTrace();
         }
+
+        if (odgovor == null)
+            odgovor = OfflineRezim.handleRequest4(request);
 
         return odgovor;
     }

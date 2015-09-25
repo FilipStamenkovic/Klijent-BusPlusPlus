@@ -38,7 +38,7 @@ public class DirectionsHelper
 
     boolean [] uzmi;
 
-    public DirectionsHelper(ArrayList<Cvor> lista, Geocoder geocoder)
+    public DirectionsHelper(ArrayList<Cvor> lista)
     {
         cvorovi = new Cvor[lista.size()];
         ArrayList<String> listaUlica = new ArrayList<>();
@@ -80,6 +80,9 @@ public class DirectionsHelper
 
 
         }
+        int broj_tacaka = 10;
+        if(cvorovi.length < broj_tacaka)
+            broj_tacaka = cvorovi.length;
         ugao = new double[cvorovi.length];
         uzmi = new boolean[cvorovi.length];
         uzmi[0] = false;
@@ -101,7 +104,7 @@ public class DirectionsHelper
         }
 
        // indeks = new int[listaIndeksa.size()];
-        for(int i = 0; i < 8; i++)
+        for(int i = 0; i < broj_tacaka - 2; i++)
         {
             uzmi[listaIndeksa.get(0).intValue()] = true;
 
@@ -111,7 +114,7 @@ public class DirectionsHelper
 
         //latLngs.add(new LatLng(cvorovi[cvorovi.length - 1].lat, cvorovi[cvorovi.length - 1].lon));
 
-        ulice = new LatLng[10];
+        ulice = new LatLng[broj_tacaka];
         int j = 1;
         for(int i = 1; i < cvorovi.length; i++)
         {
@@ -120,7 +123,7 @@ public class DirectionsHelper
             //latLngs.remove(0);
         }
         ulice[0] = new LatLng(cvorovi[0].lat,cvorovi[0].lon);
-        ulice[9] = new LatLng(cvorovi[cvorovi.length - 1].lat,cvorovi[cvorovi.length - 1].lon);
+        ulice[broj_tacaka - 1] = new LatLng(cvorovi[cvorovi.length - 1].lat,cvorovi[cvorovi.length - 1].lon);
 
     }
 

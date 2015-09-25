@@ -24,5 +24,7 @@
     <string name="ekonomicni">Ekonimicni</string>
     <string name="polazna_stanica">Polazna stanica</string>
     <string name="zavrsna_stanica">Zavrsna stanica</string>
+    <string name="postavi_start">Postavi pocetnu poziciju</string>
+    <string name="clean_map">Ocisti mapu</string>
 
 </resources>

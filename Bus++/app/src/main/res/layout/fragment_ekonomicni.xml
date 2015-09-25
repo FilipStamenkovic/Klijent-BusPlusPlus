@@ -14,6 +14,7 @@
             android:layout_width="0px"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/pozadina"
             android:gravity="center"
             android:text="@string/polazna_stanica"
             />
@@ -21,6 +22,7 @@
             android:layout_width="0px"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/pozadina"
             android:gravity="center"
             android:text="@string/zavrsna_stanica"
             />
@@ -31,11 +33,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+
         >
         <TextView
             android:layout_width="0px"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/pozadina"
             android:gravity="center"
             android:id="@+id/polazna_stanica"
             />
@@ -44,6 +48,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
+            android:background="@drawable/pozadina"
             android:id="@+id/zavrsna_stanica"
             />
 
@@ -58,6 +63,7 @@
             android:layout_width="0dp"
             android:layout_weight="4"
             android:gravity="center"
+            android:background="@drawable/pozadina"
             android:layout_height="wrap_content"
             android:text="@string/vreme_dolaska"
             />
@@ -66,6 +72,7 @@
             android:layout_width="0dp"
             android:layout_weight="4"
             android:gravity="center"
+            android:background="@drawable/pozadina"
             android:layout_height="wrap_content"
             android:text="@string/vreme_polaska"
             />

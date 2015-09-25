@@ -7,4 +7,8 @@
 
     <item android:id="@+id/action_ekonomicni" android:title="@string/ekonomicni"
           android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_set_start" android:title="@string/postavi_start"
+          android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_clean_map" android:title="@string/clean_map"
+          android:orderInCategory="100" app:showAsAction="never" />
 </menu>

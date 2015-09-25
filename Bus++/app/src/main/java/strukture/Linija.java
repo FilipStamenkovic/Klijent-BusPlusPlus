@@ -215,6 +215,11 @@ public class Linija
             hour--;
             minute += 60;
         }
+        if(hour < 0)
+        {
+            day--;
+            hour+=24;
+        }
         int  dodatak = 0;
         while(brojac < size)
         {

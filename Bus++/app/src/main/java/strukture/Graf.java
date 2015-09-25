@@ -56,7 +56,7 @@ public class Graf
 				BusDBAdapter.podesiRedVoznje(gl.linije[i]);
 	}
 	
-	public ArrayList<Cvor> pratiLiniju(int linijaId)
+	public ArrayList<Cvor> pratiLiniju(int linijaId,int pocetna_id,int krajnja_id)
 	{
 		Linija l = gl.linije[linijaId];
 		ArrayList<Cvor> cvorovi = new ArrayList<>();
@@ -68,15 +68,33 @@ public class Graf
 
 		
 		Cvor c = l.pocetnaStanica;
-		cvorovi.add(c);
+
+		//cvorovi.add(c);
 		Cvor pocetna = c;
 		Veza v = null;
+
+		if(pocetna_id != -1)
+		{
+			while (c.id != pocetna_id)
+			{
+				v = c.vratiVezu(l);
+				c = v.destination;
+				//cvorovi.add(c);
+				udaljenost += v.weight;
+				//System.out.println(c.toString() + " udaljenost = " + udaljenost);
+				Log.i("TAG", c.toString() + " udaljenost = " + udaljenost);
+				if (c == pocetna)
+					break;
+			}
+		}
+
+		cvorovi.add(c);
 		
 		//System.out.println("Linija:> " + l.toString());
 		//System.out.println(c.toString() + " udaljenost = " + udaljenost);
 		Log.i("TAG", "Linija:> " + l.toString());
 		Log.i("TAG",c.toString() + " udaljenost = " + udaljenost);
-		while((v = c.vratiVezu(l)) != null)
+		while(((v = c.vratiVezu(l)) != null) && (c.id != krajnja_id))
 		{
 			c = v.destination;
 			cvorovi.add(c);
