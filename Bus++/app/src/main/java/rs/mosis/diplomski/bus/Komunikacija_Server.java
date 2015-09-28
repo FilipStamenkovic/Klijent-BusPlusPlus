@@ -502,4 +502,6 @@ public class Komunikacija_Server
 
         return odgovor;
     }
+
+
 }

@@ -47,32 +47,6 @@ public class DirectionsHelper
         latLngs.add(new LatLng(cvorovi[0].lat, cvorovi[0].lon));
 
         lista.remove(0);
-      /*  for(int i = 1; i < cvorovi.length - 1; i++)
-        {
-            cvorovi[i] = lista.get(0);
-            lista.remove(0);
-
-            List<Address> addresses;
-
-            try {
-                addresses = geocoder.getFromLocation(cvorovi[i].lat, cvorovi[i].lon, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-                String address = addresses.get(0).getFeatureName();
-                if(listaUlica.isEmpty() || (address == null))
-                {
-                    listaUlica.add(address);
-                    latLngs.add(new LatLng(cvorovi[i].lat, cvorovi[i].lon));
-                }else if(!address.equals(listaUlica.get(listaUlica.size() - 1)))
-                {
-                    listaUlica.add(address);
-                    latLngs.add(new LatLng(cvorovi[i - 1].lat, cvorovi[i - 1].lon));
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }*/
-
         for(int i = 1; i <cvorovi.length; i++)
         {
             cvorovi[i] = lista.get(0);
@@ -127,6 +101,13 @@ public class DirectionsHelper
 
     }
 
+    public DirectionsHelper(LatLng start, LatLng end)
+    {
+        ulice = new LatLng[2];
+        ulice[0] = start;
+        ulice[1] = end;
+    }
+
     private double ugaoPrava(double x1, double x2, double y1, double y2,double x3, double y3)
     {
         double k1 = (y2 - y1) / (x2 - x1);
@@ -139,7 +120,7 @@ public class DirectionsHelper
         return (Math.atan(tangens) * 180 / Math.PI);
     }
 
-    private String makeURL(int pocetak, int kraj)
+    private String makeURL(int pocetak, int kraj, String mode)
     {
         StringBuilder urlString = new StringBuilder();
         urlString.append("https://maps.googleapis.com/maps/api/directions/json");
@@ -153,18 +134,21 @@ public class DirectionsHelper
                 .append(Double.toString(ulice[kraj].latitude));
         urlString.append(",");
         urlString.append(Double.toString(ulice[kraj].longitude));
-        urlString.append("&waypoints=optimize:true");
-
-        for(int i = pocetak + 1; i < kraj - 1 ; i++)
+        if(mode.equals("driving"))
         {
-            String umetni;
-            umetni = "|via:" + ulice[i].latitude + "," + ulice[i].longitude;
+            urlString.append("&waypoints=optimize:true");
 
-            urlString.append(umetni);
+            for (int i = pocetak + 1; i < kraj - 1; i++)
+            {
+                String umetni;
+                umetni = "|via:" + ulice[i].latitude + "," + ulice[i].longitude;
 
+                urlString.append(umetni);
+
+            }
         }
 
-        urlString.append("&sensor=false&mode=driving");
+        urlString.append("&sensor=false&mode=" + mode);
        // urlString.append("&key=AIzaSyC0d76hl9vJDNrNmW5GWTHqQJfutc4OcoQ");
         return urlString.toString();
     }
@@ -205,7 +189,7 @@ public class DirectionsHelper
 
 
 
-    public List<LatLng> getTacke()
+    public List<LatLng> getTacke(String mode)
     {
         int pocetak = 0;
         int granica = 10;
@@ -221,7 +205,7 @@ public class DirectionsHelper
                //     odgovor = getJSONFromUrl(makeURL(pocetak, kraj));
              //   else
              //       odgovor = getJSONFromUrl(makeURL(pocetak, granica));
-                odgovor = getJSONFromUrl(makeURL(pocetak, 9));
+                odgovor = getJSONFromUrl(makeURL(pocetak, kraj, mode));
                 pocetak = granica;
                 pocetak = 1999;
                 if (granica + 10 < kraj)

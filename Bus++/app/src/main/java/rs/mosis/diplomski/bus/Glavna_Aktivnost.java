@@ -78,6 +78,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -105,8 +107,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     SectionsPagerAdapter mSectionsPagerAdapter;
 
     public static LatLng MyLocation = new LatLng(43.319425, 21.899487);
+    public static final LatLng Nis = new LatLng(43.319425, 21.899487);
     public static final LatLng jugozapad = new LatLng(43.2659128,21.7123964);
     public static final LatLng severoistok = new LatLng(43.4381218,22.1044385);
+    public static final LatLng proba = new LatLng(43.338626, 21.875792);
+    public static final LatLng proba_kraj= new LatLng(43.312385, 21.923335);
     public static Handler UIHandler = new Handler(Looper.getMainLooper());
     LocationManager locationManager;
     LocationListener listener;
@@ -281,6 +286,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 public void run()
                 {
                     final Response odgovor = Komunikacija_Server.ekonomicniRezim(source,destination);
+
+                    final ArrayList<ArrayList<Cvor>> listaCvorova = new ArrayList<ArrayList<Cvor>>();
+                    if(odgovor != null)
+                        for(int i = 0; i < odgovor.linije.length; i++)
+                            listaCvorova.add(MainActivity.graf.pratiLiniju(odgovor.linije[i],odgovor.stanice[0],odgovor.stanice[1]));
                     runOnUiThread(new Runnable()
                     {
                         @Override
@@ -288,60 +298,42 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         {
                             if(odgovor != null)
                             {
-                                ArrayList<Cvor> cvorovi = new ArrayList<Cvor>();
                                 int index = 0;
+                                ArrayList<Integer> linije_id = new ArrayList<Integer>();
+                                Cvor pocetna = MainActivity.graf.getStanica(odgovor.stanice[0]);
+                                MapaFragment.nacrtajPesacenje(source,new LatLng(pocetna.lat,pocetna.lon));
+                                for(int i = 0; i < odgovor.linije.length; i++)
+                                    linije_id.add(new Integer(odgovor.linije[i]));
+
                                 for(int i = 0; i < odgovor.linije.length - 1; i++)
                                 {
-
-                                    if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
+                                    if ((GradskeLinije.istaOsnovna(odgovor.linije[index],odgovor.linije[index + 1]))
+                                            && (listaCvorova.get(index).size() == listaCvorova.get(index + 1).size()))
                                     {
-                                        ArrayList<Cvor> stanice1 =
-                                                MainActivity.graf.pratiLiniju(odgovor.linije[i],
-                                                        odgovor.stanice[0], odgovor.stanice[1]);
-
-                                        ArrayList<Cvor> stanice2 =
-                                                MainActivity.graf.pratiLiniju(odgovor.linije[i + 1],
-                                                        odgovor.stanice[0], odgovor.stanice[1]);
-
-                                        if (stanice1.size() == stanice2.size())
-                                        {
-                                            if (cvorovi.size() < stanice1.size())
-                                            {
-
-                                                cvorovi = stanice1;
-                                                index = i;
-                                            }
-                                        } else if (stanice1.size() > stanice2.size())
-                                        {
-                                            if (cvorovi.size() < stanice1.size())
-                                            {
-                                                cvorovi = stanice1;
-                                                index = i;
-                                            }
-                                        } else
-                                        {
-                                            cvorovi = stanice2;
-                                            index = i;
-                                        }
-                                    }else
-                                    {
-                                        MapaFragment.pratiLiniju(odgovor.linije[index],otac.getSupportActionBar(),cvorovi);
-                                        cvorovi = new ArrayList<Cvor>();
+                                        listaCvorova.remove(index + 1);
+                                        linije_id.remove(index + 1);
                                     }
+                                    else
+                                        index++;
+
                                 }
-                                if(odgovor.linije.length == 1)
+
+                                for(int i = 0; i < listaCvorova.size(); i++)
                                 {
-                                    cvorovi = MainActivity.graf.pratiLiniju(odgovor.linije[0],odgovor.stanice[0], odgovor.stanice[1]);
+                                    MapaFragment.pratiLiniju(linije_id.get(i).intValue(),
+                                            otac.getSupportActionBar(),listaCvorova.get(i));
                                 }
-                                MapaFragment.pratiLiniju(odgovor.linije[index],otac.getSupportActionBar(),cvorovi);
-                                ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor, 5);
-                                ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
-                                // otac.getSupportActionBar().setSelectedNavigationItem(2);
-                                Odgovor_Servera.prikazEkonomicnog(odgovor, vremena, korekcije);
+                                Cvor krajnja = MainActivity.graf.getStanica(odgovor.stanice[1]);
+                               // MapaFragment.nacrtajPesacenje(new LatLng(krajnja.lat,krajnja.lon),destination);
                             }else
                             {
                                 Toast.makeText(otac.getApplicationContext(),"UPS, greska",Toast.LENGTH_LONG).show();
                             }
+
+                            ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor, 5);
+                            ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
+                            // otac.getSupportActionBar().setSelectedNavigationItem(2);
+                            Odgovor_Servera.prikazEkonomicnog(odgovor, vremena, korekcije);
                         }
                     });
 
@@ -353,7 +345,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 MapaFragment.start.remove();
             BitmapDescriptor ikonica = BitmapDescriptorFactory.fromResource(R.mipmap.ic_start_position);
             MapaFragment.start = MapaFragment.googleMap.addMarker(new MarkerOptions()
-                    .position(MyLocation)
+                    .position(Nis)
                     .title(getString(R.string.pocetak))
                     .icon(ikonica)
                     .draggable(true));
@@ -569,7 +561,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         int id = v.getId();
 
-        ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id,-1,-1);
+        ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id, -1, -1);
 
         MapaFragment.pratiLiniju(id, getSupportActionBar(),cvorovi);
 
@@ -617,6 +609,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public static Polyline ruta = null;
 
+        public static ArrayList<Circle> pesacenja = null;
+
         public static Marker cilj = null;
 
         public static Marker start = null;
@@ -659,14 +653,17 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 @Override
                 public void run()
                 {
-                    DirectionsHelper directionsHelper = new DirectionsHelper(cvorovi);
-                    final List<LatLng> lista = directionsHelper.getTacke();
+                    DirectionsHelper directionsHelper;
+                    final List<LatLng> lista;
+
+                    directionsHelper  = new DirectionsHelper(cvorovi);
+                    lista= directionsHelper.getTacke("driving");
 
                     UIHandler.post(new Runnable() {
                         @Override
                         public void run()
                         {
-                            if(lista != null)
+                            if (lista != null)
                             {
                                 if (ruta != null)
                                     ruta.remove();
@@ -678,17 +675,59 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                                                 .geodesic(true)
                                 );
                             }
-
                         }
                     });
-
-
-
-
                 }
             }).start();
 
 
+
+        }
+
+        public static void nacrtajPesacenje(final LatLng source, final LatLng dest)
+        {
+            new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    DirectionsHelper directionsHelper;
+                    final List<LatLng> lista;
+
+                    directionsHelper  = new DirectionsHelper(source,dest);
+                    lista= directionsHelper.getTacke("walking");
+                    UIHandler.post(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            if (lista != null)
+                            {
+                                if (pesacenja != null)
+                                {
+                                       /* int size = pesacenja.size();
+                                        for(int i = 0; i < size; i++)
+                                        {
+                                            pesacenja.get(0).remove();
+                                            pesacenja.remove(0);
+                                        }*/
+                                }
+
+                                pesacenja = new ArrayList<Circle>();
+                                for (int i = 0; i < lista.size(); i++)
+                                {
+                                    Circle circle = googleMap.addCircle(new CircleOptions()
+                                            .center(lista.get(i))
+                                            .radius(5)
+                                            .strokeColor(Color.RED)
+                                            .fillColor(Color.BLUE));
+                                    pesacenja.add(circle);
+                                }
+                            }
+                        }
+                    });
+                }
+            }).start();
 
         }
 
@@ -705,6 +744,20 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             }
         }
 
+        public static void clearPesacenje()
+        {
+            if (pesacenja != null)
+            {
+                int size = pesacenja.size();
+                for (int i = 0; i < size; i++)
+                {
+                    pesacenja.get(0).remove();
+                    pesacenja.remove(0);
+                }
+                pesacenja = null;
+            }
+        }
+
         public static void pratiLiniju(int id,ActionBar actionBar, ArrayList<Cvor> cvorovi)
         {
             Linija linija = MainActivity.graf.getGl().linije[id];
@@ -713,7 +766,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
            // clearStanice();
 
-            stanice = new ArrayList<>();
+            if(stanice == null)
+                stanice = new ArrayList<>();
             int brojac = 0;
             for(int i = 0; i < cvorovi.size(); i++)
             {
@@ -980,7 +1034,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             ruta.remove();
                             ruta = null;
                         }
-                       // clearStanice();
+                        // clearStanice();
                     }
                 });
                 googleMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener()
@@ -1004,9 +1058,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         {
                             if (start.getTitle().equals(marker.getTitle()))
                                 start = marker;
-                        }else if (cilj != null)
+                        } else if (cilj != null)
                         {
-                            if(cilj.getTitle().equals(marker.getTitle()))
+                            if (cilj.getTitle().equals(marker.getTitle()))
                                 cilj = marker;
                         }
                     }
@@ -1200,11 +1254,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         public static void prikazEkonomicnog(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
         {
             zahtev.putInt("zahtev",4);
-            LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+            LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
             Cvor polazna = MainActivity.graf.getStanica(odgovor.stanice[0]);
             Cvor dolazna = MainActivity.graf.getStanica(odgovor.stanice[1]);
-            View view = layoutInflater.inflate(R.layout.fragment_ekonomicni,container,false);
+            View view = layoutInflater.inflate(R.layout.fragment_ekonomicni, container, false);
             ((TextView)view.findViewById(R.id.polazna_stanica)).setText(Html.fromHtml("<u>" + polazna.naziv + "</u>"));
             ((TextView)view.findViewById(R.id.zavrsna_stanica)).setText(Html.fromHtml("<u>" + dolazna.naziv + "</u>"));
 
