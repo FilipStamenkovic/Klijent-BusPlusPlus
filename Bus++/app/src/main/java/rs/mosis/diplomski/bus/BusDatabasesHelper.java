@@ -7,6 +7,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by filip on 30.8.15..
@@ -34,7 +38,57 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
         busDatabasesHelper = this;
     }
 
-   public static BusDatabasesHelper getInstance()
+    public boolean loadFromAsset(char baza)
+    {
+        boolean b = false;
+        InputStream myInput;
+        String outFileName;
+
+            try
+            {
+                if(baza == 'S')
+                {
+                    myInput = mContext.getAssets().open("Strukture_0.4.db");
+                    // Path to the just created empty db
+                    outFileName = DB_PATH + "Strukture_0.4.db";
+                }else
+                {
+                    myInput = mContext.getAssets().open("Red_Voznje0.3.db");
+                    // Path to the just created empty db
+                    outFileName = DB_PATH + "Red_Voznje0.3.db\"";
+                }
+
+                File f = new File(outFileName);
+                if (!f.exists())
+                {
+                   // f.getParentFile().mkdirs();
+                    f.createNewFile();
+                }
+                //Open the empty db as the output stream
+                OutputStream myOutput = new FileOutputStream(outFileName);
+
+                //transfer bytes from the inputfile to the outputfile
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = myInput.read(buffer))>0){
+                    myOutput.write(buffer, 0, length);
+                }
+
+                //Close the streams
+                myOutput.flush();
+                myOutput.close();
+                myInput.close();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+
+
+        return b;
+    }
+
+    public static BusDatabasesHelper getInstance()
    {
        return busDatabasesHelper;
    }

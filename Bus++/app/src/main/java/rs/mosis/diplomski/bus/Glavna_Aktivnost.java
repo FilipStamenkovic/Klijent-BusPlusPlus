@@ -324,7 +324,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                                             otac.getSupportActionBar(),listaCvorova.get(i));
                                 }
                                 Cvor krajnja = MainActivity.graf.getStanica(odgovor.stanice[1]);
-                               // MapaFragment.nacrtajPesacenje(new LatLng(krajnja.lat,krajnja.lon),destination);
+                                MapaFragment.nacrtajPesacenje(new LatLng(krajnja.lat,krajnja.lon),destination);
                             }else
                             {
                                 Toast.makeText(otac.getApplicationContext(),"UPS, greska",Toast.LENGTH_LONG).show();
@@ -695,7 +695,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     final List<LatLng> lista;
 
                     directionsHelper  = new DirectionsHelper(source,dest);
-                    lista= directionsHelper.getTacke("walking");
+                    lista = directionsHelper.getTacke("walking");
                     UIHandler.post(new Runnable()
                     {
                         @Override
@@ -718,9 +718,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                                 {
                                     Circle circle = googleMap.addCircle(new CircleOptions()
                                             .center(lista.get(i))
-                                            .radius(5)
-                                            .strokeColor(Color.RED)
-                                            .fillColor(Color.BLUE));
+                                            .radius(4)
+                                            .strokeColor(Color.BLUE)
+                                            .fillColor(Color.GREEN));
                                     pesacenja.add(circle);
                                 }
                             }

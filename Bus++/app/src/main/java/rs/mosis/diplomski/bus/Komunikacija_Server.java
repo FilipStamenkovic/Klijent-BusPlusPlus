@@ -40,6 +40,11 @@ public class Komunikacija_Server
 
             BusDatabasesHelper busDatabasesHelper = BusDatabasesHelper.getInstance();
             String file = busDatabasesHelper.checkDatabase(baza);
+            if (file == null)
+            {
+                busDatabasesHelper.loadFromAsset(baza);
+                file = busDatabasesHelper.checkDatabase(baza);
+            }
             double verzija = busDatabasesHelper.getVersions(baza);
             Request request;
             if (baza == 'S')

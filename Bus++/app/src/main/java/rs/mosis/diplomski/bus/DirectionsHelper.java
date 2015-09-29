@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 import strukture.Cvor;
+import strukture.OfflineRezim;
 
 /**
  * Created by filip on 18.9.15..
@@ -228,8 +229,71 @@ public class DirectionsHelper
             e.printStackTrace();
         }
 
-        return list;
+        if (mode.equals("walking"))
+            return preurediTacke(list);
+        else
+            return list;
 
+    }
+
+    private List<LatLng> preurediTacke(List<LatLng> tacke)
+    {
+        if (tacke == null)
+        {
+
+            tacke = new ArrayList<LatLng>();
+            tacke.addAll(vratiTackeIzmedju(ulice[0],ulice[1],20.0));
+            return tacke;
+        }else
+        {
+            ArrayList<LatLng> preuredjene = new ArrayList<>();
+            LatLng trenutna = tacke.get(0);
+            preuredjene.add(trenutna);
+            for(int i = 1; i < tacke.size() - 1; i++)
+            {
+                LatLng radna = tacke.get(0);
+                double udaljenost =  OfflineRezim.calcDistance(trenutna.latitude,trenutna.longitude,radna.latitude,radna.longitude);
+                tacke.remove(0);
+                if (udaljenost > 40.0)
+                {
+                    preuredjene.addAll(vratiTackeIzmedju(trenutna, radna, 20.0));
+                    trenutna = radna;
+                }
+                else if (udaljenost > 20.0)
+                {
+                    preuredjene.add(radna);
+                    trenutna = radna;
+                }
+            }
+
+            return preuredjene;
+        }
+    }
+
+    private List<LatLng> vratiTackeIzmedju(LatLng source,LatLng dest, double razmak)
+    {
+        double udaljenost = OfflineRezim.calcDistance(source.latitude,source.longitude,dest.latitude,dest.longitude);
+        double latRazlika = dest.latitude - source.latitude;
+        double lonRazlika = dest.longitude - source.longitude;
+        ArrayList<LatLng> tacke = null;
+        int brojTacaka = (int) (Math.round(udaljenost / razmak) - 2);
+        if (brojTacaka > 0)
+        {
+            tacke = new ArrayList<>();
+            double difLat = latRazlika / (double) brojTacaka;
+            double difLon = lonRazlika / (double) brojTacaka;
+            double lat,lon;
+            lat = source.latitude;
+            lon = source.longitude;
+            for (int i = 0; i < brojTacaka; i++)
+            {
+                lat += difLat;
+                lon += difLon;
+                tacke.add(new LatLng(lat,lon));
+            }
+        }
+
+        return tacke;
     }
 
     private List<LatLng> decodePoly(String encoded)
