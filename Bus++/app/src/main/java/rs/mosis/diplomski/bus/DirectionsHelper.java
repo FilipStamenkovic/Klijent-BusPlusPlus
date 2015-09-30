@@ -47,13 +47,11 @@ public class DirectionsHelper
         cvorovi[0] = lista.get(0);
         latLngs.add(new LatLng(cvorovi[0].lat, cvorovi[0].lon));
 
-        lista.remove(0);
+       // lista.remove(0);
         for(int i = 1; i <cvorovi.length; i++)
         {
-            cvorovi[i] = lista.get(0);
-            lista.remove(0);
-
-
+            cvorovi[i] = lista.get(i);
+            //lista.remove(0);
         }
         int broj_tacaka = 10;
         if(cvorovi.length < broj_tacaka)
@@ -236,6 +234,52 @@ public class DirectionsHelper
 
     }
 
+    public List<LatLng> getTacke2(String mode)
+    {
+        int pocetak = 0;
+        int granica = 10;
+        int kraj = ulice.length - 1;
+
+
+        List<LatLng> list = null;
+        JSONArray routeArray = null;
+        try {
+            String odgovor = "";
+            while(pocetak < kraj) {
+                // if (granica >= kraj)
+                //     odgovor = getJSONFromUrl(makeURL(pocetak, kraj));
+                //   else
+                //       odgovor = getJSONFromUrl(makeURL(pocetak, granica));
+                odgovor = getJSONFromUrl(makeURL(pocetak, kraj, mode));
+                pocetak = granica;
+                pocetak = 1999;
+                if (granica + 10 < kraj)
+                    granica += 10;
+                else
+                    granica = kraj;
+
+
+                final JSONObject json = new JSONObject(odgovor);
+                routeArray = json.getJSONArray("routes");
+                JSONObject routes = routeArray.getJSONObject(0);
+                JSONObject overviewPolylines = routes.getJSONObject("overview_polyline");
+                String encodedString = overviewPolylines.getString("points");
+                if(list == null)
+                    list = decodePoly(encodedString);
+                else
+                    list.addAll(decodePoly(encodedString));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        if (mode.equals("walking"))
+            return list;
+        else
+            return list;
+
+    }
+
     private List<LatLng> preurediTacke(List<LatLng> tacke)
     {
         if (tacke == null)
@@ -248,8 +292,10 @@ public class DirectionsHelper
         {
             ArrayList<LatLng> preuredjene = new ArrayList<>();
             LatLng trenutna = tacke.get(0);
+            tacke.remove(0);
             preuredjene.add(trenutna);
-            for(int i = 1; i < tacke.size() - 1; i++)
+            int size = tacke.size();
+            for(int i = 0; i < size; i++)
             {
                 LatLng radna = tacke.get(0);
                 double udaljenost =  OfflineRezim.calcDistance(trenutna.latitude,trenutna.longitude,radna.latitude,radna.longitude);
@@ -276,7 +322,7 @@ public class DirectionsHelper
         double latRazlika = dest.latitude - source.latitude;
         double lonRazlika = dest.longitude - source.longitude;
         ArrayList<LatLng> tacke = null;
-        int brojTacaka = (int) (Math.round(udaljenost / razmak) - 2);
+        int brojTacaka = (int) (Math.round(udaljenost / razmak));
         if (brojTacaka > 0)
         {
             tacke = new ArrayList<>();

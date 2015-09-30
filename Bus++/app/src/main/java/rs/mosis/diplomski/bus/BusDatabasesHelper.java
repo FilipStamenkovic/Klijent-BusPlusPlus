@@ -55,13 +55,13 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
                 {
                     myInput = mContext.getAssets().open("Red_Voznje0.3.db");
                     // Path to the just created empty db
-                    outFileName = DB_PATH + "Red_Voznje0.3.db\"";
+                    outFileName = DB_PATH + "Red_Voznje0.3.db";
                 }
 
                 File f = new File(outFileName);
                 if (!f.exists())
                 {
-                   // f.getParentFile().mkdirs();
+                    f.getParentFile().mkdirs();
                     f.createNewFile();
                 }
                 //Open the empty db as the output stream
