@@ -4,81 +4,6 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/zaglavlje"
-        >
-        <TextView
-            android:layout_width="0px"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/pozadina"
-            android:gravity="center"
-            android:text="@string/polazna_stanica"
-            />
-        <TextView
-            android:layout_width="0px"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/pozadina"
-            android:gravity="center"
-            android:text="@string/zavrsna_stanica"
-            />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-
-        >
-        <TextView
-            android:layout_width="0px"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/pozadina"
-            android:gravity="center"
-            android:id="@+id/polazna_stanica"
-            />
-        <TextView
-            android:layout_width="0px"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:background="@drawable/pozadina"
-            android:id="@+id/zavrsna_stanica"
-            />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="4"
-            android:gravity="center"
-            android:background="@drawable/pozadina"
-            android:layout_height="wrap_content"
-            android:text="@string/vreme_dolaska"
-            />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="4"
-            android:gravity="center"
-            android:background="@drawable/pozadina"
-            android:layout_height="wrap_content"
-            android:text="@string/vreme_polaska"
-            />
-
-    </LinearLayout>
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -90,26 +15,7 @@
             android:id="@+id/kontenjer"
             android:layout_height="wrap_content">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:id="@+id/vremena"
 
-                >
-
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:orientation="vertical"
-                android:id="@+id/info_o_liniji"
-
-                android:layout_height="wrap_content">
-
-
-            </LinearLayout>
 
 
         </LinearLayout>

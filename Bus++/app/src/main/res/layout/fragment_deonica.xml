@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:background="@drawable/pozadina"
+              android:layout_height="wrap_content">
+    <ImageView
+        android:layout_width="0px"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:id="@+id/slicica"
+        android:gravity="center"
+        />
+
+    <TextView
+        android:layout_width="0px"
+        android:layout_weight="4"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:id="@+id/linija"
+        android:text="blasdf"
+        />
+    <TextView
+        android:layout_width="0px"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:id="@+id/vremena"
+        android:text="blasdf"
+        />
+    <TextView
+        android:layout_width="0px"
+        android:layout_weight="4"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:id="@+id/stanice"
+        android:text="blasdf"
+        />
+
+</LinearLayout>

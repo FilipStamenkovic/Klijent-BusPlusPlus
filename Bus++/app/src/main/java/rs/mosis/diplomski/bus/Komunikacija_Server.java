@@ -329,29 +329,37 @@ public class Komunikacija_Server
         List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
 
+        //int dodatak = (int) OfflineRezim.calcDistance()
+
         for(int i = 0; i < odgovor.linije.length; i++)
             vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i],size));
 
 
-
+        for(int i = 0; i < vremena.size(); i++)
+        {
+            if(vremena.get(i).size() == 0)
+                odgovor.linije[i] = -1;
+        }
 
         int pocetak = 0;
         int kraj;
-        while(pocetak <= odgovor.linije.length - 1)
+        while(pocetak < odgovor.stanice.length - 1)
         {
             kraj = pocetak;
-            for (int i = pocetak; i < odgovor.linije.length - 1; i++)
-                if (GradskeLinije.istaOsnovna(odgovor.linije[i],odgovor.linije[i + 1]))
-                    kraj = i + 1;
-                else
-                    break;
+            for (int i = pocetak; i < odgovor.stanice.length - 1; i++)
+                if ((odgovor.linije[i] > -1) && (odgovor.linije[i + 1] > -1))
+                    if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
+                        kraj++;
+                    else
+                        break;
 
             String s = "";
 
-                int brojac = 0;
-                while(brojac < size)
+            for(int j = pocetak; j <= kraj; j++)
+            {
+
+                while(!vremena.get(j).isEmpty())
                 {
-                    brojac++;
                     int niz[] = new int[kraj - pocetak + 1];
                     for (int i = pocetak; i <= kraj; i++)
                     {
@@ -363,7 +371,7 @@ public class Komunikacija_Server
                             niz[i - pocetak] = -1;
                     }
 
-                    int min = 900000;
+                    int min = 100000;
                     int indeks = 0;
                     for(int k = 0; k < niz.length; k++)
                         if(min > niz[k] && (niz[k] != -1))
@@ -382,20 +390,20 @@ public class Komunikacija_Server
                         s += sati + ":" + min % 100;
                     else
                         s += sati + ":0" + min % 100;
-                    for(int l = 0; l < indeks; l++)
+                    for(int l = 0; l < indeks + pocetak; l++)
                         s += "*";
                     s += "\n";
                     vremena.get(indeks + pocetak).remove(0);
 
 
-
                 }
 
 
+            }
             povratniString.add(s);
             pocetak = kraj + 1;
         }
-        return povratniString;
+         return povratniString;
     }
 
 
@@ -439,10 +447,15 @@ public class Komunikacija_Server
                         sati++;
                         minuti -= 60;
                     }
-                    if (minuti >= 10)
-                        s += sati + ":" + minuti;
+                    String sSati;
+                    if (sati >= 10)
+                        sSati = sati + "";
                     else
-                        s += sati + ":0" + minuti;
+                        sSati = "0" + sati;
+                    if (minuti >= 10)
+                        s += sSati + ":" + minuti;
+                    else
+                        s += sSati + ":0" + minuti;
                     for (int l = 0; l < korekcija_id; l++)
                         s += "*";
                     s += "\n";

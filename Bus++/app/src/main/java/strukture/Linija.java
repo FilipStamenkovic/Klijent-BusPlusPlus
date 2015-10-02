@@ -221,6 +221,7 @@ public class Linija
             hour+=24;
         }
         int  dodatak = 0;
+        hour = 14;
         while(brojac < size)
         {
 
@@ -233,17 +234,16 @@ public class Linija
                     int j = 0;
                     while ((j < 60) && (matNedelja[i][j] != -1))
                     {
-                        if (minute <= matNedelja[i][j])
+                        if ((i > hour) || (minute <= matNedelja[i][j]))
                         {
+
                             vremena.add((i + dodatak) * 100 + matNedelja[i][j]);
-                            brojac++;
-                            if (brojac == size)
+                            brojac +=  minute - matNedelja[i][j];
+                            if ((i * 60 + matNedelja[i][j] - hour * 60 - minute) > 60)
                                 return vremena;
                         }
                         j++;
                     }
-
-                    minute = -1;
                 }
             } else if (day == Calendar.SATURDAY)
             {
@@ -252,17 +252,16 @@ public class Linija
                     int j = 0;
                     while ((j < 60) && (matSubota[i][j] != -1))
                     {
-                        if (minute <= matSubota[i][j])
+                        if ((i > hour) || (minute <= matSubota[i][j]))
                         {
+
                             vremena.add((i + dodatak) * 100 + matSubota[i][j]);
-                            brojac++;
-                            if (brojac == size)
+                            brojac += ((i - hour) % 24) * 60 + minute - matSubota[i][j];
+                            if ((i * 60 + matSubota[i][j] - hour * 60 - minute) > 60)
                                 return vremena;
                         }
                         j++;
                     }
-
-                    minute = -1;
                 }
 
                 for (int i = 0; i < 3; i++)
@@ -270,11 +269,12 @@ public class Linija
                     int j = 0;
                     while ((j < 60) && (matNedelja[i][j] != -1))
                     {
-                        if (minute <= matNedelja[i][j])
+                        if ((i > hour) || (minute <= matNedelja[i][j]))
                         {
+
                             vremena.add((i + 24) * 100 + matNedelja[i][j]);
-                            brojac++;
-                            if (brojac == size)
+                            brojac += ((i - hour) % 24) * 60 + minute - matNedelja[i][j];
+                            if (((i + 24) * 60 + matNedelja[i][j] - hour * 60 - minute) > 60)
                                 return vremena;
                         }
                         j++;
@@ -287,17 +287,16 @@ public class Linija
                     int j = 0;
                     while ((j < 60) && (matRadni[i][j] != -1))
                     {
-                        if (minute <= matRadni[i][j])
+                        if ((i > hour) || (minute <= matRadni[i][j]))
                         {
+
                             vremena.add((i + dodatak) * 100 + matRadni[i][j]);
-                            brojac++;
-                            if (brojac == size)
+                            brojac += ((i - hour) % 24) * 60 + minute - matRadni[i][j];
+                            if ((i * 60 + matRadni[i][j] - hour * 60 - minute) > 60)
                                 return vremena;
                         }
                         j++;
                     }
-
-                    minute = -1;
                 }
 
                 for (int i = 0; i < 3; i++)
@@ -307,9 +306,10 @@ public class Linija
                     {
                         if (minute <= matSubota[i][j])
                         {
+
                             vremena.add((i + 24) * 100 + matSubota[i][j]);
-                            brojac++;
-                            if (brojac == size)
+                            brojac += ((i - hour) % 24) * 60 + minute - matSubota[i][j];
+                            if (((i + 24) * 60 + matSubota[i][j] - hour * 60 - minute) > 60)
                                 return vremena;
                         }
                         j++;
@@ -322,17 +322,16 @@ public class Linija
                     int j = 0;
                     while ((j < 60) && (matRadni[i][j] != -1))
                     {
-                        if (minute <= matRadni[i][j])
+                        if ((i > hour) || (minute <= matRadni[i][j]))
                         {
+
                             vremena.add((i + dodatak) * 100 + matRadni[i][j]);
-                            brojac++;
-                            if (brojac == size)
+                            brojac += ((i - hour) % 24) * 60 + minute - matRadni[i][j];
+                            if ((i * 60 + matRadni[i][j] - hour * 60 - minute) > 60)
                                 return vremena;
                         }
                         j++;
                     }
-
-                    minute = -1;
                 }
             }
 

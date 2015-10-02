@@ -30,9 +30,9 @@ import strukture.OfflineRezim;
  */
 public class DirectionsHelper
 {
-    static InputStream is = null;
-    static JSONObject jObj = null;
-    static String json = "";
+    InputStream is = null;
+    JSONObject jObj = null;
+    String json = "";
     Cvor [] cvorovi = null;
     LatLng [] ulice = null;
     double [] ugao;
@@ -152,13 +152,15 @@ public class DirectionsHelper
         return urlString.toString();
     }
 
-    private String getJSONFromUrl(String url) {
+    private String getJSONFromUrl(String url)
+    {
 
         // Making HTTP request
         // defaultHttpClient
 
         HttpURLConnection urlConnection = null;
-        try {
+        try
+        {
             URL u = new URL(url);
             urlConnection = (HttpURLConnection) u.openConnection();
             urlConnection.connect();
@@ -166,7 +168,8 @@ public class DirectionsHelper
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
             StringBuffer sb = new StringBuffer();
             String line = "";
-            while ((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null)
+            {
                 sb.append(line);
             }
 
@@ -175,18 +178,19 @@ public class DirectionsHelper
             br.close();
             is.close();
             urlConnection.disconnect();
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException e)
+        {
             e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException e)
+        {
             e.printStackTrace();
-        }catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
 
         return json;
     }
-
-
 
     public List<LatLng> getTacke(String mode)
     {

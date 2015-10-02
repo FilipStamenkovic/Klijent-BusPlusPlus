@@ -28,6 +28,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 
 import strukture.Graf;
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private SQLiteOpenHelper sqLiteOpenHelper;
     public static Graf graf;
     public static Context aplikacija;
+    public static int[] ikonice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,36 +54,107 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume()
+    {
         super.onResume();
 
-        new Thread(new Runnable() {
+        new Thread(new Runnable()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
                 graf = null;
                 boolean b = Komunikacija_Server.proveriVerzije('S');
-                if(b)
+                if (b)
                     b = Komunikacija_Server.proveriVerzije('R');
-                if(b)
+                if (b)
                     graf = Komunikacija_Server.loadGraf();
                 else
                     graf = null;
-                runOnUiThread(new Runnable() {
+                runOnUiThread(new Runnable()
+                {
                     @Override
-                    public void run() {
-                        if(graf == null)
-                            Toast.makeText(getApplicationContext(),"Greska, konektuj se na internet",Toast.LENGTH_LONG).show();
+                    public void run()
+                    {
+                        if (graf == null)
+                            Toast.makeText(getApplicationContext(), "Greska, konektuj se na internet", Toast.LENGTH_LONG).show();
                         else
                         {
-                            Intent i = new Intent(getApplicationContext(),Glavna_Aktivnost.class);
+
+                            Intent i = new Intent(getApplicationContext(), Glavna_Aktivnost.class);
                             finish();
                             startActivity(i);
                         }
                     }
                 });
 
+                if (graf != null)
+                {
+                    ikonice = new int[graf.getGl().linije.length];
+                    for (int i = 0; i < graf.getGl().linije.length; i++)
+                        if (graf.getGl().linije[i] != null)
+                        {
+                            String broj = graf.getGl().linije[i].broj;
+                            broj = broj.replace("*", "");
+                            int brojLinije = Integer.parseInt(broj);
+
+                            switch (brojLinije)
+                            {
+                                case 1:
+                                    ikonice[i] = R.mipmap.ic_linija_1;
+                                    break;
+                                case 2:
+                                    ikonice[i] = R.mipmap.ic_linija_2;
+                                    break;
+                                case 3:
+                                    ikonice[i] = R.mipmap.ic_linija_3;
+                                    break;
+                                case 4:
+                                    ikonice[i] = R.mipmap.ic_linija_4;
+                                    break;
+                                case 5:
+                                    ikonice[i] = R.mipmap.ic_linija_5;
+                                    break;
+                                case 6:
+                                    ikonice[i] = R.mipmap.ic_linija_6;
+                                    break;
+                                case 7:
+                                    ikonice[i] = R.mipmap.ic_linija_7;
+                                    break;
+                                case 8:
+                                    ikonice[i] = R.mipmap.ic_linija_8;
+                                    break;
+                                case 9:
+                                    ikonice[i] = R.mipmap.ic_linija_9;
+                                    break;
+                                case 10:
+                                    ikonice[i] = R.mipmap.ic_linija_10;
+                                    break;
+                                case 12:
+                                    ikonice[i] = R.mipmap.ic_linija_12;
+                                    break;
+                                case 13:
+                                    ikonice[i] = R.mipmap.ic_linija_13;
+                                    break;
+                                case 36:
+                                    ikonice[i] = R.mipmap.ic_linija_36;
+                                    break;
+                                case 34:
+                                    if (graf.getGl().linije[i].smer.equalsIgnoreCase("A"))
+                                        ikonice[i] = R.mipmap.ic_linija_34a;
+                                    else
+                                        ikonice[i] = R.mipmap.ic_linija_34b;
+                                    break;
+
+                            }
+
+                        }
+                }
+
             }
         }).start();
+
+
 
 
     }

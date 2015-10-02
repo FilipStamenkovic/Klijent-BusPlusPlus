@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Bus++</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_glavna__aktivnost">Glavna_Aktivnost</string>
 
@@ -26,5 +25,6 @@
     <string name="zavrsna_stanica">Zavrsna stanica</string>
     <string name="postavi_start">Postavi pocetnu poziciju</string>
     <string name="clean_map">Ocisti mapu</string>
+    <string name="pesacenje">Pesacenje</string>
 
 </resources>
