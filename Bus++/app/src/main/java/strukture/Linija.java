@@ -232,6 +232,8 @@ public class Linija
                 for (int i = hour; i < 25; i++)
                 {
                     int j = 0;
+                    if ((i * 60 - hour * 60 - minute) > 60)
+                        return vremena;
                     while ((j < 60) && (matNedelja[i][j] != -1))
                     {
                         if ((i > hour) || (minute <= matNedelja[i][j]))
@@ -250,6 +252,8 @@ public class Linija
                 for (int i = hour; i < 25; i++)
                 {
                     int j = 0;
+                    if ((i * 60 - hour * 60 - minute) > 60)
+                        return vremena;
                     while ((j < 60) && (matSubota[i][j] != -1))
                     {
                         if ((i > hour) || (minute <= matSubota[i][j]))
@@ -267,6 +271,8 @@ public class Linija
                 for (int i = 0; i < 3; i++)
                 {
                     int j = 0;
+                    if ((i * 60 - hour * 60 - minute) > 60)
+                        return vremena;
                     while ((j < 60) && (matNedelja[i][j] != -1))
                     {
                         if ((i > hour) || (minute <= matNedelja[i][j]))
@@ -285,6 +291,8 @@ public class Linija
                 for (int i = hour; i < 25; i++)
                 {
                     int j = 0;
+                    if ((i * 60 - hour * 60 - minute) > 60)
+                        return vremena;
                     while ((j < 60) && (matRadni[i][j] != -1))
                     {
                         if ((i > hour) || (minute <= matRadni[i][j]))
@@ -302,6 +310,8 @@ public class Linija
                 for (int i = 0; i < 3; i++)
                 {
                     int j = 0;
+                    if ((i * 60 - hour * 60 - minute) > 60)
+                        return vremena;
                     while ((j < 60) && (matSubota[i][j] != -1))
                     {
                         if (minute <= matSubota[i][j])
@@ -320,6 +330,8 @@ public class Linija
                 for (int i = hour; i < 25; i++)
                 {
                     int j = 0;
+                    if ((i * 60 - hour * 60 - minute) > 60)
+                        return vremena;
                     while ((j < 60) && (matRadni[i][j] != -1))
                     {
                         if ((i > hour) || (minute <= matRadni[i][j]))

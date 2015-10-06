@@ -6,7 +6,7 @@
 
     <string name="title_section1">Linije</string>
     <string name="title_section2">Mapa</string>
-    <string name="title_section3">Section 3</string>
+    <string name="title_section3">Informacije</string>
 
     <string name="view_red_voznje">Pogledaj Red Vožnje</string>
     <string name="show_linija">Prikaži Liniju</string>
@@ -26,5 +26,6 @@
     <string name="postavi_start">Postavi pocetnu poziciju</string>
     <string name="clean_map">Ocisti mapu</string>
     <string name="pesacenje">Pesacenje</string>
+    <string name="cilj">Cilj</string>
 
 </resources>

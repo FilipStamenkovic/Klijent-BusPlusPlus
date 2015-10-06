@@ -346,7 +346,7 @@ public class Komunikacija_Server
         while(pocetak < odgovor.stanice.length - 1)
         {
             kraj = pocetak;
-            for (int i = pocetak; i < odgovor.stanice.length - 1; i++)
+            for (int i = pocetak; i < odgovor.linije.length - 1; i++)
                 if ((odgovor.linije[i] > -1) && (odgovor.linije[i + 1] > -1))
                     if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
                         kraj++;

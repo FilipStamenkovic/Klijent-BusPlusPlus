@@ -468,7 +468,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
          * The fragment argument representing the section number for this
          * fragment.
          */
-        private static final String ARG_SECTION_NUMBER = "section_number";
 
         private static LinearLayout linearLayout = null;
 
@@ -553,6 +552,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id, -1, -1);
 
         MapaFragment.pratiLiniju(id, getSupportActionBar(),cvorovi);
+        otac.getSupportActionBar().setSelectedNavigationItem(1);
 
     }
 
@@ -587,8 +587,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
 
                         //Odgovor_Servera.tipZahteva = 3;
-                        otac.getSupportActionBar().setSelectedNavigationItem(2);
                         Odgovor_Servera.popuniTabelu(odgovor, vremena, korekcije);
+                        otac.getSupportActionBar().setSelectedNavigationItem(2);
 
                     }
                 });
@@ -782,7 +782,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             }*/
 
            // getContext();
-            actionBar.setSelectedNavigationItem(1);
+           // actionBar.setSelectedNavigationItem(1);
 
         }
 
@@ -900,7 +900,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                                 // ArrayAdapter<?> adapter = new ArrayAdapter<String>(getActivity(),R.layout.simple_suggest,strings);
 
 
-                                ((Glavna_Aktivnost) getActivity()).postaviComplete(strings, searchView);
+                                otac.postaviComplete(strings, searchView);
                             } catch (IOException e)
                             {
                                 e.printStackTrace();
@@ -1434,7 +1434,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         imageView = new ImageView(otac);
                         imageView.setImageResource(R.mipmap.ic_walking);
 
-                        dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, "Cilj", sati + ":" + minuti,
+                        dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj), sati + ":" + minuti,
                                 dolazak, otac.getString(R.string.pesacenje),
                                 (LinearLayout) info.findViewById(R.id.kontenjer));
 
