@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Bus++</string>
 
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Podesavanja</string>
     <string name="title_activity_glavna__aktivnost">Glavna_Aktivnost</string>
 
     <string name="title_section1">Linije</string>
@@ -20,12 +20,19 @@
     <string name="naziv">Naziv</string>
     <string name="stanica">Stanica</string>
 
-    <string name="ekonomicni">Ekonimicni</string>
+    <string name="ekonomicni">Ekonomicni</string>
     <string name="polazna_stanica">Polazna stanica</string>
     <string name="zavrsna_stanica">Zavrsna stanica</string>
     <string name="postavi_start">Postavi pocetnu poziciju</string>
     <string name="clean_map">Ocisti mapu</string>
     <string name="pesacenje">Pesacenje</string>
     <string name="cilj">Cilj</string>
+    <string name="title_activity_podesavanja">Podesavanja</string>
+    <string name="minwalk">Minimalno pesacenje</string>
+    <string name="optimalni">Najbrzi</string>
+    <string name="ekoopt">Najbrzi ekonomicni</string>
+    <string name="choose_mode">Izaberite navigacioni mod:</string>
+
+    <string name="hello_world">Hello world!</string>
 
 </resources>

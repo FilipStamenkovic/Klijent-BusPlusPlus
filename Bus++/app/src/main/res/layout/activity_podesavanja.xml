@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingBottom="@dimen/activity_vertical_margin"
+                tools:context="rs.mosis.diplomski.bus.Podesavanja">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/choose_mode"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:textSize="20dp"
+        />
+
+    <RadioGroup
+        android:layout_width="fill_parent"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/ekonomicni"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ekonomicni"
+                android:onClick="onRadioButtonClicked"
+                android:drawableRight="@mipmap/ic_linija_4"
+                />
+            <RadioButton
+                android:id="@+id/minwalk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/minwalk"
+                android:onClick="onRadioButtonClicked"
+                android:drawableRight="@mipmap/ic_linija_5"
+                />
+            <RadioButton
+                android:id="@+id/optimalni"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/optimalni"
+                android:onClick="onRadioButtonClicked"
+                android:drawableRight="@mipmap/ic_linija_6"
+                />
+            <RadioButton
+                android:id="@+id/ekoopt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ekoopt"
+                android:drawableRight="@mipmap/ic_linija_7"
+                android:onClick="onRadioButtonClicked"/>
+
+    </RadioGroup>
+
+
+</LinearLayout>

@@ -23,6 +23,7 @@ import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -122,6 +123,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     LocationManager locationManager;
     LocationListener listener;
     public static Geocoder geocoder;
+    public static SharedPreferences preferences;
 
     public static Glavna_Aktivnost otac;
 
@@ -141,6 +143,12 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         geocoder = new Geocoder(this, Locale.US);
 
         fragmentManager = getSupportFragmentManager();
+
+        preferences = getSharedPreferences(Constants.rezim,MODE_PRIVATE);
+
+        int rezim = preferences.getInt("mode", -1);
+        if (rezim != -1)
+            Constants.mode = rezim;
 
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
@@ -277,7 +285,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings)
         {
-            //MapaFragment.pocetak = !MapaFragment.pocetak;
+            Intent i = new Intent(this,Podesavanja.class);
+            startActivity(i);
             return true;
         } else if (id == R.id.action_ekonomicni)
         {
