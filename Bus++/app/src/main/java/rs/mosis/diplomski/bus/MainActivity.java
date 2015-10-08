@@ -81,8 +81,16 @@ public class MainActivity extends AppCompatActivity {
                     public void run()
                     {
                         if (graf == null)
+                        {
                             Toast.makeText(getApplicationContext(), "Greska, konektuj se na internet", Toast.LENGTH_LONG).show();
-                        else
+
+                            File[] fajlovi = (new File(BusDatabasesHelper.getDatabasePath())).listFiles();
+                            for (int i = 0; i < fajlovi.length; i++)
+                            {
+                                fajlovi[i].delete();
+                            }
+
+                        }else
                         {
 
                             Intent i = new Intent(getApplicationContext(), Glavna_Aktivnost.class);
