@@ -31,6 +31,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
+import strukture.BusDBAdapter;
 import strukture.Graf;
 
 public class MainActivity extends AppCompatActivity {
@@ -69,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
                 if (b)
                     b = Komunikacija_Server.proveriVerzije('R');
                 if (b)
+                    b = Komunikacija_Server.proveriVerzije('P');
+                if (b)
                     graf = Komunikacija_Server.loadGraf();
                 else
                     graf = null;
@@ -93,7 +96,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (graf != null)
                 {
-                    graf.inicijalizujMatricu();
+
+                    BusDBAdapter.setPolilinije();
                     ikonice = new int[graf.getGl().linije.length];
                     for (int i = 0; i < graf.getGl().linije.length; i++)
                         if (graf.getGl().linije[i] != null)
@@ -153,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                         }
+
+                    graf.inicijalizujMatricu();
                 }
 
             }
@@ -168,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+       // getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 

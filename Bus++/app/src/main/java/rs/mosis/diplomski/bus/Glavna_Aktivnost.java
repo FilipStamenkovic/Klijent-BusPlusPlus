@@ -1,33 +1,15 @@
 package rs.mosis.diplomski.bus;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.CookieStore;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
 import java.util.StringTokenizer;
-import java.util.concurrent.TimeUnit;
-
-import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -36,7 +18,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -49,7 +30,6 @@ import android.support.v7.widget.SearchView;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -59,42 +39,24 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
-import android.widget.CursorAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.drive.internal.AddEventListenerRequest;
-import com.google.android.gms.location.places.AutocompletePredictionBuffer;
-import com.google.android.gms.location.places.GeoDataApi;
-import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import org.w3c.dom.Text;
 
 import strukture.Cvor;
 import strukture.GradskeLinije;
@@ -327,6 +289,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         } else if (odgovor.type == 7)
                         {
                             Odgovor_Servera.pripremiOptimalni(odgovor, source, destination);
+                        } else
+                        {
+                            Odgovor_Servera.pripremiEkoOpt(odgovor, source, destination);
                         }
                     }else
                     {
@@ -600,6 +565,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public static Polyline ruta = null;
 
+        private static ArrayList<Polyline> rute = null;
+
         public static ArrayList<Circle> pesacenja = null;
 
         public static Marker cilj = null;
@@ -653,7 +620,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     final List<LatLng> lista;
 
                     directionsHelper = new DirectionsHelper(cvorovi);
-                    lista = directionsHelper.getTacke("driving");
+                    //lista = directionsHelper.getTacke("driving");
+                    lista = directionsHelper.getDriving();
 
                     UIHandler.post(new Runnable()
                     {
@@ -666,22 +634,23 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 }
             }).start();
 
-
         }
 
         public static void nacrtajPoliliniju(List<LatLng> lista)
         {
             if (lista != null)
             {
-                if (ruta != null)
-                    ruta.remove();
-
+                if (rute == null)
+                    rute = new ArrayList<>();
                 ruta = googleMap.addPolyline(new PolylineOptions()
                                 .addAll(lista)
                                 .width(12)
                                 .color(Color.parseColor("#05b1fb"))//Google maps blue color
                                 .geodesic(true)
                 );
+
+                rute.add(ruta);
+                ruta = null;
             }
         }
 
@@ -1049,9 +1018,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             {
                 cilj.remove();
             }
-            if (ruta != null)
+            if (rute != null)
             {
-                ruta.remove();
+                int size = rute.size();
+                for (int i = 0; i < size; i++)
+                    rute.get(i).remove();
             }
             if (pesacenja != null)
             {
@@ -1076,9 +1047,10 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             {
                 cilj = null;
             }
-            if (ruta != null)
+            if (rute != null)
             {
-                ruta = null;
+                rute.clear();
+                rute = null;
             }
             if (pesacenja != null)
             {
@@ -1185,8 +1157,12 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 double lon = cilj.getPosition().longitude;
                 postaviCilj(lat, lon, cilj.getSnippet());
             }
-            if (ruta != null)
-                nacrtajPoliliniju(ruta.getPoints());
+            if (rute != null)
+            {
+                int size = rute.size();
+                for (int i = 0; i < size; i++)
+                    nacrtajPoliliniju(rute.get(i).getPoints());
+            }
             if (stanice != null)
             {
                 int size = stanice.size();
@@ -1619,7 +1595,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         private static void prikaziMinWalk(Response odgovor, LatLng source, LatLng destination)
         {
 
-            //ZAVRSI!!!!!!!!!!!!!!!!!!!!11
+            //ZAVRSI!!!!!!!!!!!!!!!!!!!!
             LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
 
@@ -1692,9 +1668,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 int resurs = MainActivity.ikonice[odgovor.linije[i]];
                 dolazna = MainActivity.graf.getStanica(odgovor.stanice[i]);
 
-                dolazak = odgovor.vremenaDolaska.get(pomak).sat + ":" + odgovor.vremenaDolaska.get(pomak).minut;
+                //dolazak = odgovor.vremenaDolaska.get(pomak).sat + ":" + odgovor.vremenaDolaska.get(pomak).minut;
 
-                dodajDeonicu(resurs, polazna.naziv, dolazna.naziv, dolazak,
+                dodajDeonicu(resurs, polazna.naziv, dolazna.naziv, "",
                         "", MainActivity.graf.getGl().linije[odgovor.linije[i]].naziv,
                         (LinearLayout) info.findViewById(R.id.kontenjer));
 
@@ -1706,8 +1682,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             (LinearLayout) info.findViewById(R.id.kontenjer));
                 }
 
-                if (odgovor.vremenaDolaska.size() > ++pomak)
-                    polazna = MainActivity.graf.getStanica(odgovor.vremenaDolaska.get(pomak).stanica);
+             //   if (odgovor.vremenaDolaska.size() > ++pomak)
+             //       polazna = MainActivity.graf.getStanica(odgovor.vremenaDolaska.get(pomak).stanica);
 
                 if (b)
                     ((LinearLayout) view.findViewById(R.id.kontenjer)).addView(kontenjer);
@@ -1886,6 +1862,12 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
                 ((RelativeLayout) otac.findViewById(R.id.wraper)).addView(v);
             }
+        }
+
+        public static void pripremiEkoOpt(Response odgovor, LatLng source, LatLng destination)
+        {
+            int a = 3;
+            a++;
         }
     }
 }

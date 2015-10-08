@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import rs.mosis.diplomski.bus.BusDatabasesHelper;
 
@@ -19,10 +20,10 @@ public class Graf
 	private GradskeLinije gl;
 	public static int stanicaMaxId;
 	public double [][] matricaUdaljenosti;
+	private HashMap<Integer, Cvor> hashMap = new HashMap<>();
+
 	
-	public Graf() {}
-	
-	public Graf(String grafDBName, String redVoznjeDBName) throws ClassNotFoundException, SQLException, Exception
+	public Graf(String grafDBName, String redVoznjeDBName,String putanjeDBName) throws ClassNotFoundException, SQLException, Exception
 	{
 		int maxId = 0;
 		Cvor tempArray[] = null;
@@ -32,7 +33,7 @@ public class Graf
 		gl = new GradskeLinije();
 		
 		// load the sqlite-JDBC driver using the current class loader
-	    tempArray = BusDBAdapter.getAllCvorovi();
+	    tempArray = BusDBAdapter.getAllCvorovi(hashMap);
 	    
 	    for(int i = 0; i < gl.linije.length; ++i)
 	    {
@@ -56,6 +57,8 @@ public class Graf
 		for(int i = 0; i < gl.linije.length; ++i)
 			if(gl.linije[i] != null)
 				BusDBAdapter.podesiRedVoznje(gl.linije[i]);
+
+		BusDatabasesHelper.setDbName(putanjeDBName);
 	}
 	
 	public ArrayList<Cvor> pratiLiniju(int linijaId,int pocetna_id,int krajnja_id)
@@ -150,19 +153,8 @@ public class Graf
 		return 6371000 * c;
 	}
 
-
     public Cvor getStanica(int stanicaId)
     {
-        Cvor cvor = null;
-        for(int i = 0; i < cvorovi.size(); i++)
-		{
-			Cvor cvor2 = cvorovi.get(i);
-			if (cvor2.id == stanicaId)
-			{
-				cvor = cvor2;
-				break;
-			}
-		}
-        return cvor;
+        return hashMap.get(stanicaId);
     }
 }

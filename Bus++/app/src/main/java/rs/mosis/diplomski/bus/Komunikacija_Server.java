@@ -39,7 +39,8 @@ public class Komunikacija_Server
     public static boolean proveriVerzije(final char baza)
     {
         boolean b = false;
-        try {
+        try
+        {
 
             BusDatabasesHelper busDatabasesHelper = BusDatabasesHelper.getInstance();
             String file = busDatabasesHelper.checkDatabase(baza);
@@ -52,13 +53,15 @@ public class Komunikacija_Server
             Request request;
             if (baza == 'S')
                 request = new Request(0, null, null, null, null, null, null, new Double(verzija));
-            else
+            else if (baza == 'R')
                 request = new Request(1, null, null, null, null, null, null, new Double(verzija));
+            else
+                request = new Request(2, null, null, null, null, null, null, new Double(verzija));
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
 //            Socket socket = new Socket(inetAddress, Constants.PORT);
             Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(inetAddress,Constants.PORT),Constants.TIMEOUT);
+            socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
             int bytesRead = 0;
             int current = 0;
 
@@ -72,7 +75,8 @@ public class Komunikacija_Server
 
             BufferedReader input = new BufferedReader(new InputStreamReader(is));
             poruka = input.readLine();
-            if (poruka == null) {
+            if (poruka == null)
+            {
                 is.close();
                 printWriter.close();
                 out.close();
@@ -83,7 +87,8 @@ public class Komunikacija_Server
             Gson gson = new GsonBuilder().create();
             Response odgovor = gson.fromJson(poruka, Response.class);
             //poruka = input.readLine();
-            if (odgovor.size == -1) {
+            if (odgovor.size == -1)
+            {
                 is.close();
                 printWriter.close();
                 out.close();
@@ -94,9 +99,10 @@ public class Komunikacija_Server
             String imeBaze;
             if (baza == 'S')
                 imeBaze = "Strukture_" + odgovor.dbVer + ".db";
-            else
+            else if (baza == 'R')
                 imeBaze = "Red_Voznje" + odgovor.dbVer + ".db";
-
+            else
+                imeBaze = "Putanje_" + odgovor.dbVer + ".db";
 
             File f = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
             f.getParentFile().mkdirs();
@@ -106,12 +112,14 @@ public class Komunikacija_Server
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             byte[] mybytearray = new byte[filesize];
 
-            while (current < filesize) {
+            while (current < filesize)
+            {
                 int preostalo = filesize - current;
                 bytesRead = is.read(mybytearray, current, preostalo);
                 current += bytesRead;
 
-                if (bytesRead == -1) {
+                if (bytesRead == -1)
+                {
                     break;
                 }
 
@@ -123,13 +131,13 @@ public class Komunikacija_Server
                 b = true;
                 if (file != null)
                     //   for (int i = 0; i < files.length; i++)
-                    if (baza == file.charAt(0)) {
+                    if (baza == file.charAt(0))
+                    {
                         File ff = new File(busDatabasesHelper.getDatabasePath() + file);
                         if (ff.exists())
                             ff.delete();
                     }
-            }
-            else
+            } else
             {
                 b = false;
                 File ff = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
@@ -143,15 +151,19 @@ public class Komunikacija_Server
             out.close();
             socket.close();
 
-        } catch (SocketTimeoutException e) {
+        } catch (SocketTimeoutException e)
+        {
             b = true;
             e.printStackTrace();
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e)
+        {
             e.printStackTrace();
-        } catch (UnknownHostException e) {
+        } catch (UnknownHostException e)
+        {
             b = true;
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             b = true;
             e.printStackTrace();
         }
@@ -169,23 +181,27 @@ public class Komunikacija_Server
         String baza = files[0];*/
         Graf graf = null;
         String baza = busDatabasesHelper.checkDatabase('S');
-        if(baza == null)
+        if (baza == null)
             return graf;
         //BusDatabasesHelper.setDbName(baza);
         // baza = busDatabasesHelper.getDatabasePath() + baza;
 
         String red_voznje = busDatabasesHelper.checkDatabase('R');
+        String putanje = busDatabasesHelper.checkDatabase('P');
 
         File f = new File(busDatabasesHelper.getDatabasePath() + baza);
         File f2 = new File(busDatabasesHelper.getDatabasePath() + red_voznje);
+        File f3 = new File(busDatabasesHelper.getDatabasePath() + putanje);
 
-        try {
-            graf = new Graf(baza, red_voznje);
-        } catch (Exception e) {
+        try
+        {
+            graf = new Graf(baza, red_voznje, putanje);
+        } catch (Exception e)
+        {
             e.printStackTrace();
 
-            File [] fajlovi = (new File(busDatabasesHelper.getDatabasePath())).listFiles();
-            for(int i = 0; i < fajlovi.length; i++)
+            File[] fajlovi = (new File(busDatabasesHelper.getDatabasePath())).listFiles();
+            for (int i = 0; i < fajlovi.length; i++)
             {
                 fajlovi[i].delete();
             }
@@ -196,7 +212,7 @@ public class Komunikacija_Server
         return graf;
     }
 
-    public static Response ObicanRedVoznje(LatLng latLng,int linija_id)
+    public static Response ObicanRedVoznje(LatLng latLng, int linija_id)
     {
         Response odgovor = null;
         Request request = new Request(new Integer(3), new Double(latLng.latitude),
@@ -243,29 +259,30 @@ public class Komunikacija_Server
             e.printStackTrace();
         }
 
-        if(odgovor == null)
+        if (odgovor == null)
             return OfflineRezim.handleRequest3(request);
 
         return odgovor;
     }
+
     public static ArrayList<String> vremenaPolaska(Response odgovor)
     {
         List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
 
-        for(int i = 0; i < odgovor.linije.length; i++)
+        for (int i = 0; i < odgovor.linije.length; i++)
             vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i]));
 
 
-        for(int i = 0; i < vremena.size(); i++)
+        for (int i = 0; i < vremena.size(); i++)
         {
-            if(vremena.get(i).size() == 0)
+            if (vremena.get(i).size() == 0)
                 odgovor.linije[i] = -1;
         }
 
         int pocetak = 0;
         int kraj;
-        while(pocetak <= odgovor.stanice.length - 1)
+        while (pocetak <= odgovor.stanice.length - 1)
         {
             kraj = pocetak;
             for (int i = pocetak; i < odgovor.stanice.length - 1; i++)
@@ -276,10 +293,10 @@ public class Komunikacija_Server
 
             String s = "";
 
-            for(int j = pocetak; j <= kraj; j++)
+            for (int j = pocetak; j <= kraj; j++)
             {
 
-                while(!vremena.get(j).isEmpty())
+                while (!vremena.get(j).isEmpty())
                 {
                     int niz[] = new int[kraj - pocetak + 1];
                     for (int i = pocetak; i <= kraj; i++)
@@ -287,31 +304,30 @@ public class Komunikacija_Server
                         if (vremena.get(i).size() > 0)
                         {
                             niz[i - pocetak] = vremena.get(i).get(0);
-                        }
-                        else
+                        } else
                             niz[i - pocetak] = -1;
                     }
 
                     int min = 100000;
                     int indeks = 0;
-                    for(int k = 0; k < niz.length; k++)
-                        if(min > niz[k] && (niz[k] != -1))
+                    for (int k = 0; k < niz.length; k++)
+                        if (min > niz[k] && (niz[k] != -1))
                         {
                             min = niz[k];
                             indeks = k;
 
                         }
                     String sati;
-                    if(((min / 100) % 24 ) < 10)
+                    if (((min / 100) % 24) < 10)
                         sati = "0" + (min / 100) % 24;
                     else
                         sati = "" + (min / 100) % 24;
 
-                    if((min % 100) >= 10)
+                    if ((min % 100) >= 10)
                         s += sati + ":" + min % 100;
                     else
                         s += sati + ":0" + min % 100;
-                    for(int l = 0; l < indeks + pocetak; l++)
+                    for (int l = 0; l < indeks + pocetak; l++)
                         s += "*";
                     s += "\n";
                     vremena.get(indeks + pocetak).remove(0);
@@ -327,26 +343,26 @@ public class Komunikacija_Server
         return povratniString;
     }
 
-    public static ArrayList<String> vremenaPolaska(Response odgovor,int size)
+    public static ArrayList<String> vremenaPolaska(Response odgovor, int size)
     {
         List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
 
         //int dodatak = (int) OfflineRezim.calcDistance()
 
-        for(int i = 0; i < odgovor.linije.length; i++)
-            vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i],size));
+        for (int i = 0; i < odgovor.linije.length; i++)
+            vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i], size));
 
 
-        for(int i = 0; i < vremena.size(); i++)
+        for (int i = 0; i < vremena.size(); i++)
         {
-            if(vremena.get(i).size() == 0)
+            if (vremena.get(i).size() == 0)
                 odgovor.linije[i] = -1;
         }
 
         int pocetak = 0;
         int kraj;
-        while(pocetak < odgovor.stanice.length - 1)
+        while (pocetak < odgovor.stanice.length - 1)
         {
             kraj = pocetak;
             for (int i = pocetak; i < odgovor.linije.length - 1; i++)
@@ -358,10 +374,10 @@ public class Komunikacija_Server
 
             String s = "";
 
-            for(int j = pocetak; j <= kraj; j++)
+            for (int j = pocetak; j <= kraj; j++)
             {
 
-                while(!vremena.get(j).isEmpty())
+                while (!vremena.get(j).isEmpty())
                 {
                     int niz[] = new int[kraj - pocetak + 1];
                     for (int i = pocetak; i <= kraj; i++)
@@ -369,31 +385,30 @@ public class Komunikacija_Server
                         if (vremena.get(i).size() > 0)
                         {
                             niz[i - pocetak] = vremena.get(i).get(0);
-                        }
-                        else
+                        } else
                             niz[i - pocetak] = -1;
                     }
 
                     int min = 100000;
                     int indeks = 0;
-                    for(int k = 0; k < niz.length; k++)
-                        if(min > niz[k] && (niz[k] != -1))
+                    for (int k = 0; k < niz.length; k++)
+                        if (min > niz[k] && (niz[k] != -1))
                         {
                             min = niz[k];
                             indeks = k;
 
                         }
                     String sati;
-                    if(((min / 100) % 24 ) < 10)
+                    if (((min / 100) % 24) < 10)
                         sati = "0" + (min / 100) % 24;
                     else
                         sati = "" + (min / 100) % 24;
 
-                    if((min % 100) >= 10)
+                    if ((min % 100) >= 10)
                         s += sati + ":" + min % 100;
                     else
                         s += sati + ":0" + min % 100;
-                    for(int l = 0; l < indeks + pocetak; l++)
+                    for (int l = 0; l < indeks + pocetak; l++)
                         s += "*";
                     s += "\n";
                     vremena.get(indeks + pocetak).remove(0);
@@ -406,11 +421,11 @@ public class Komunikacija_Server
             povratniString.add(s);
             pocetak = kraj + 1;
         }
-         return povratniString;
+        return povratniString;
     }
 
 
-    public static ArrayList<String> vremenaDolaska(Response odgovor,ArrayList<String> vremenaDolaska)
+    public static ArrayList<String> vremenaDolaska(Response odgovor, ArrayList<String> vremenaDolaska)
     {
         ArrayList<String> povratniString = new ArrayList<>();
 

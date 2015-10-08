@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import strukture.Cvor;
 import strukture.OfflineRezim;
+import strukture.Veza;
 
 /**
  * Created by filip on 18.9.15..
@@ -33,7 +34,7 @@ public class DirectionsHelper
     InputStream is = null;
     JSONObject jObj = null;
     String json = "";
-    Cvor [] cvorovi = null;
+    ArrayList<Cvor>  cvorovi = null;
     LatLng [] ulice = null;
     double [] ugao;
 
@@ -41,63 +42,7 @@ public class DirectionsHelper
 
     public DirectionsHelper(ArrayList<Cvor> lista)
     {
-        cvorovi = new Cvor[lista.size()];
-        ArrayList<String> listaUlica = new ArrayList<>();
-        ArrayList<LatLng> latLngs = new ArrayList<>();
-        cvorovi[0] = lista.get(0);
-        latLngs.add(new LatLng(cvorovi[0].lat, cvorovi[0].lon));
-
-       // lista.remove(0);
-        for(int i = 1; i <cvorovi.length; i++)
-        {
-            cvorovi[i] = lista.get(i);
-            //lista.remove(0);
-        }
-        int broj_tacaka = 10;
-        if(cvorovi.length < broj_tacaka)
-            broj_tacaka = cvorovi.length;
-        ugao = new double[cvorovi.length];
-        uzmi = new boolean[cvorovi.length];
-        uzmi[0] = false;
-        ArrayList<Integer> listaIndeksa = new ArrayList<>();
-        for(int i = 1; i < cvorovi.length - 1; i++)
-        {
-            ugao[i] = ugaoPrava(cvorovi[i - 1].lat, cvorovi[i].lat, cvorovi[i - 1].lon,
-                    cvorovi[i].lon, cvorovi[i + 1].lat, cvorovi[i + 1].lon);
-            int j;
-            uzmi[i] = false;
-            for(j = 0; j < listaIndeksa.size(); j++)
-                if(ugao[i] > ugao[listaIndeksa.get(j).intValue()])
-                {
-                    listaIndeksa.add(j, i);
-                    break;
-                }
-            if (j == listaIndeksa.size())
-                listaIndeksa.add(listaIndeksa.size(), i);
-        }
-
-       // indeks = new int[listaIndeksa.size()];
-        for(int i = 0; i < broj_tacaka - 2; i++)
-        {
-            uzmi[listaIndeksa.get(0).intValue()] = true;
-
-            listaIndeksa.remove(0);
-        }
-
-
-        //latLngs.add(new LatLng(cvorovi[cvorovi.length - 1].lat, cvorovi[cvorovi.length - 1].lon));
-
-        ulice = new LatLng[broj_tacaka];
-        int j = 1;
-        for(int i = 1; i < cvorovi.length; i++)
-        {
-            if(uzmi[i])
-                ulice[j++] = new LatLng(cvorovi[i].lat,cvorovi[i].lon);
-            //latLngs.remove(0);
-        }
-        ulice[0] = new LatLng(cvorovi[0].lat,cvorovi[0].lon);
-        ulice[broj_tacaka - 1] = new LatLng(cvorovi[cvorovi.length - 1].lat,cvorovi[cvorovi.length - 1].lon);
-
+        cvorovi = lista;
     }
 
     public DirectionsHelper(LatLng start, LatLng end)
@@ -107,17 +52,6 @@ public class DirectionsHelper
         ulice[1] = end;
     }
 
-    private double ugaoPrava(double x1, double x2, double y1, double y2,double x3, double y3)
-    {
-        double k1 = (y2 - y1) / (x2 - x1);
-        double k2 = (y3 - y2) / (x3 - x2);
-
-        double tangens =  (k2 - k1)/(1 + k1 * k2);
-        if(tangens < 0.0)
-            tangens *= -1;
-
-        return (Math.atan(tangens) * 180 / Math.PI);
-    }
 
     private String makeURL(int pocetak, int kraj, String mode)
     {
@@ -238,50 +172,26 @@ public class DirectionsHelper
 
     }
 
-    public List<LatLng> getTacke2(String mode)
+    public List<LatLng> getDriving()
     {
-        int pocetak = 0;
-        int granica = 10;
-        int kraj = ulice.length - 1;
+        List<LatLng> lista = new ArrayList<>();
 
-
-        List<LatLng> list = null;
-        JSONArray routeArray = null;
-        try {
-            String odgovor = "";
-            while(pocetak < kraj) {
-                // if (granica >= kraj)
-                //     odgovor = getJSONFromUrl(makeURL(pocetak, kraj));
-                //   else
-                //       odgovor = getJSONFromUrl(makeURL(pocetak, granica));
-                odgovor = getJSONFromUrl(makeURL(pocetak, kraj, mode));
-                pocetak = granica;
-                pocetak = 1999;
-                if (granica + 10 < kraj)
-                    granica += 10;
-                else
-                    granica = kraj;
-
-
-                final JSONObject json = new JSONObject(odgovor);
-                routeArray = json.getJSONArray("routes");
-                JSONObject routes = routeArray.getJSONObject(0);
-                JSONObject overviewPolylines = routes.getJSONObject("overview_polyline");
-                String encodedString = overviewPolylines.getString("points");
-                if(list == null)
-                    list = decodePoly(encodedString);
-                else
-                    list.addAll(decodePoly(encodedString));
+        int size = cvorovi.size() - 1;
+        for (int i = 0; i < size; i++)
+        {
+            ArrayList<Veza> veze = cvorovi.get(i).veze;
+            int vsize = veze.size();
+            for (int j = 0; j < vsize; j++)
+            {
+                if (veze.get(j).destination == cvorovi.get(i + 1))
+                {
+                    lista.addAll(veze.get(j).putanje);
+                    break;
+                }
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
 
-        if (mode.equals("walking"))
-            return list;
-        else
-            return list;
-
+        return lista;
     }
 
     private List<LatLng> preurediTacke(List<LatLng> tacke)

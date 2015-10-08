@@ -6,8 +6,10 @@ import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import rs.mosis.diplomski.bus.BusDatabasesHelper;
+import rs.mosis.diplomski.bus.MainActivity;
 
 /**
  * Created by filip on 9/16/15.
@@ -18,6 +20,7 @@ public class BusDBAdapter
     public static final String LINIJA_TABLE = "LINIJA";
     public static final String STANICA_TABLE = "STANICA";
     public static final String VEZE_TABLE = "VEZA";
+    public static final String PUTANJE_TABLE = "PUTANJE_BUSEVA";
     public static final String ID = "id";
     public static final String LINIJA_BROJ = "broj";
     public static final String NAZIV = "naziv";
@@ -29,6 +32,9 @@ public class BusDBAdapter
     public static final String VEZA_DOLAZNA_STANICA = "dolazna_stanica_id";
     public static final String VEZA_UDALJENOST = "udaljenost";
     public static final String VEZA_LINIJA_ID = "linija_id";
+    public static final String PUTANJA_POCETNA = "src_stanica_id";
+    public static final String PUTANJA_KRAJNJA= "dest_stanica_id";
+    public static final String PUTANJA = "putanja";
 
     public static Linija[] getAllLinije()
     {
@@ -84,7 +90,7 @@ public class BusDBAdapter
         return linije;
     }
 
-    public static Cvor[] getAllCvorovi()
+    public static Cvor[] getAllCvorovi(HashMap<Integer, Cvor> hashMap)
     {
         int maxId = 0;
         Cvor tempArray[] = null;
@@ -125,6 +131,8 @@ public class BusDBAdapter
                     double lon = cursor.getDouble(cursor.getColumnIndex(STANICA_LON));
 
                     tempArray[id] = new Cvor(id, naziv, lat,lon);
+
+                    hashMap.put(id,tempArray[id]);
                 }
             }
         }catch (SQLiteException e)
@@ -214,7 +222,7 @@ public class BusDBAdapter
             nedelja = database.rawQuery("select RED_VOZNJE.cas, NEDELJA_MINUTA.nedelja_minuta from " +
                     "RED_VOZNJE, NEDELJA_MINUTA where RED_VOZNJE.id = NEDELJA_MINUTA.red_voznje_id and " +
                     "RED_VOZNJE.linija= ? and RED_VOZNJE.smer= ? " +
-                    "ORDER BY RED_VOZNJE.cas, NEDELJA_MINUTA.nedelja_minuta",whereArgs);
+                    "ORDER BY RED_VOZNJE.cas, NEDELJA_MINUTA.nedelja_minuta", whereArgs);
 
             database.setTransactionSuccessful();
             if((radni_dan.getCount() > 0) || (subota.getCount() > 0) || (nedelja.getCount() > 0))
@@ -284,6 +292,53 @@ public class BusDBAdapter
         if(database.isOpen())
             database.close();
         return b;
+    }
+
+    public static boolean setPolilinije()
+    {
+        Graf graf = MainActivity.graf;
+
+        boolean b = false;
+        SQLiteDatabase database = BusDatabasesHelper.getDatabase();
+
+        Cursor cursor = null;
+
+        database.beginTransaction();
+        try
+        {
+
+            cursor = database.query(PUTANJE_TABLE, null, null, null, null, null, null);
+
+            database.setTransactionSuccessful();
+            if(cursor.getCount() > 0)
+            {
+                while(cursor.moveToNext())
+                {
+                    int srcId = cursor.getInt(cursor.getColumnIndex(PUTANJA_POCETNA));
+                    int destId = cursor.getInt(cursor.getColumnIndex(PUTANJA_KRAJNJA));
+                    String putanja = cursor.getString(cursor.getColumnIndex(PUTANJA));
+                    Cvor polazni = graf.getStanica(srcId);
+                    Cvor krajnji = graf.getStanica(destId);
+                    ArrayList<Veza> veze = polazni.veze;
+                    for(int i = 0; i < veze.size(); i++)
+                        if ((veze.get(i).destination == krajnji) && (veze.get(i).putanje == null))
+                            veze.get(i).setPutanje(putanja);
+
+                }
+                b = true;
+            }
+        }catch (SQLiteException e)
+        {
+            Log.v("MyPlacesDBAdapter", e.getMessage());
+        }finally {
+            database.endTransaction();
+        }
+
+        if(database.isOpen())
+            database.close();
+
+        return b;
+
     }
 
 }
