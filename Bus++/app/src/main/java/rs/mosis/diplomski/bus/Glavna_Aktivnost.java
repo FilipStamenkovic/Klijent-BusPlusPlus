@@ -269,6 +269,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             final LatLng source = MapaFragment.getMyPosition();
             Odgovor_Servera.tipZahteva = Constants.mode;
+            if (MapaFragment.cilj == null)
+            {
+                Toast.makeText(this,getString(R.string.izaberi_cilj),Toast.LENGTH_LONG).show();
+                return true;
+            }
             final LatLng destination = MapaFragment.cilj.getPosition();
             new Thread(new Runnable()
             {
