@@ -17,6 +17,8 @@ public class Graf
 {
 	private ArrayList<Cvor> cvorovi = new ArrayList<>();
 	private GradskeLinije gl;
+	public static int stanicaMaxId;
+	public double [][] matricaUdaljenosti;
 	
 	public Graf() {}
 	
@@ -93,7 +95,7 @@ public class Graf
 		//System.out.println("Linija:> " + l.toString());
 		//System.out.println(c.toString() + " udaljenost = " + udaljenost);
 		Log.i("TAG", "Linija:> " + l.toString());
-		Log.i("TAG",c.toString() + " udaljenost = " + udaljenost);
+		Log.i("TAG", c.toString() + " udaljenost = " + udaljenost);
 		while(((v = c.vratiVezu(l)) != null) && (c.id != krajnja_id))
 		{
 			c = v.destination;
@@ -115,6 +117,39 @@ public class Graf
 	{
 		return this.cvorovi;
 	}
+
+	public void resetujCvorove()
+	{
+		for(int i = 0; i < cvorovi.size(); ++i)
+			cvorovi.get(i).resetStatus();
+	}
+
+	public void inicijalizujMatricu()
+	{
+		matricaUdaljenosti = new double[stanicaMaxId + 3][stanicaMaxId + 3];
+		ArrayList<Cvor> stanice = cvorovi;
+
+		for(int i = 0; i < stanice.size(); ++i)
+			for(int j = 0; j < stanice.size(); ++j)
+			{
+				Cvor start = stanice.get(i);
+				Cvor finish = stanice.get(j);
+				matricaUdaljenosti[start.id][finish.id] = calcDistance(start, finish);
+			}
+	}
+
+	private double calcDistance(Cvor c1, Cvor c2)
+	{
+		double a, c;
+
+		a = Math.sin((c2.lat - c1.lat)*Math.PI/360) * Math.sin((c2.lat - c1.lat)*Math.PI/360) +
+				Math.sin((c2.lon - c1.lon)*Math.PI/360) * Math.sin((c2.lon - c1.lon)*Math.PI/360) * Math.cos(c2.lat * Math.PI/180) * Math.cos(c1.lat * Math.PI/180);
+
+		c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+		return 6371000 * c;
+	}
+
 
     public Cvor getStanica(int stanicaId)
     {

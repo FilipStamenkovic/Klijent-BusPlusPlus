@@ -221,7 +221,7 @@ public class Linija
             hour+=24;
         }
         int  dodatak = 0;
-        hour = 14;
+        //hour = 14;
         while(brojac < size)
         {
 

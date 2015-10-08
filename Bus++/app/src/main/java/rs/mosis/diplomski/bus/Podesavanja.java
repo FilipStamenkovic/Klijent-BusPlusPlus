@@ -25,13 +25,13 @@ public class Podesavanja extends AppCompatActivity
             case 4:
                 ((RadioButton)findViewById(R.id.ekonomicni)).setChecked(true);
                 break;
-            case 5:
+            case 7:
                 ((RadioButton)findViewById(R.id.minwalk)).setChecked(true);
                 break;
             case 6:
                 ((RadioButton)findViewById(R.id.optimalni)).setChecked(true);
                 break;
-            case 7:
+            case 5:
                 ((RadioButton)findViewById(R.id.ekoopt)).setChecked(true);
                 break;
         }
@@ -60,14 +60,16 @@ public class Podesavanja extends AppCompatActivity
                     Constants.mode = 4;
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putInt("mode", 4);
+                    editor.commit();
                 }
                 break;
             case R.id.minwalk:
                 if (checked)
                 {
-                    Constants.mode = 5;
+                    Constants.mode = 7;
                     SharedPreferences.Editor editor = preferences.edit();
-                    editor.putInt("mode", 5);
+                    editor.putInt("mode", 7);
+                    editor.commit();
                 }
                 break;
             case R.id.optimalni:
@@ -76,14 +78,16 @@ public class Podesavanja extends AppCompatActivity
                     Constants.mode = 6;
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putInt("mode", 6);
+                    editor.commit();
                 }
                 break;
             case R.id.ekoopt:
                 if (checked)
                 {
-                    Constants.mode = 7;
+                    Constants.mode = 5;
                     SharedPreferences.Editor editor = preferences.edit();
-                    editor.putInt("mode", 7);
+                    editor.putInt("mode", 5);
+                    editor.commit();
                 }
                 break;
         }

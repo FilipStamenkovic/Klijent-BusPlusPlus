@@ -5,7 +5,7 @@
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />
 
-    <item android:id="@+id/action_ekonomicni" android:title="@string/ekonomicni"
+    <item android:id="@+id/action_nadji_put" android:title="@string/nadji_put"
           android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_set_start" android:title="@string/postavi_start"
           android:orderInCategory="100" app:showAsAction="never" />

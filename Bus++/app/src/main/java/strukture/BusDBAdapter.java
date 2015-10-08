@@ -103,6 +103,8 @@ public class BusDBAdapter
                 cursor.moveToFirst();
                 maxId = cursor.getInt(0);
 
+                Graf.stanicaMaxId = maxId;
+
                 tempArray= new Cvor[maxId + 1];
 
             }

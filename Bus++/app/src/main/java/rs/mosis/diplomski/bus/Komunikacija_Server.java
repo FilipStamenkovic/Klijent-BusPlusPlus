@@ -1,5 +1,8 @@
 package rs.mosis.diplomski.bus;
 
+import android.content.res.ColorStateList;
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -468,6 +471,69 @@ public class Komunikacija_Server
         return povratniString;
     }
 
+    public static Response napredniRezim(LatLng source, LatLng destination)
+    {
+        Response odgovor = null;
+        Request request = new Request(new Integer(Constants.mode), new Double(source.latitude),
+                new Double(source.longitude), new Double(destination.latitude),
+                new Double(destination.longitude), null, null, null);
+        try
+        {
+
+            String poruka = request.toString();
+            InetAddress inetAddress = InetAddress.getByName(Constants.IP);
+//            Socket socket = new Socket(inetAddress, Constants.PORT);
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
+            int bytesRead = 0;
+            int current = 0;
+
+            InputStream is = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
+            PrintWriter printWriter = new PrintWriter(out);
+
+
+            printWriter.print(poruka + "\n");
+            printWriter.flush();
+
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(is));
+            poruka = input.readLine();
+            if (poruka == null)
+            {
+                is.close();
+                printWriter.close();
+                out.close();
+                socket.close();
+                return null;
+            }
+
+            Gson gson = new GsonBuilder().create();
+            odgovor = gson.fromJson(poruka, Response.class);
+        } catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        if (odgovor == null)
+            switch (Constants.mode)
+            {
+                case 4:
+                    odgovor = OfflineRezim.handleRequest4(request);
+                    break;
+                case 6:
+                    odgovor = OfflineRezim.handleRequest6(request,
+                            Constants.brzinaAutobusa, Constants.brzinaPesaka);
+                    Log.e("tag", "izaso skroz");
+                    break;
+            }
+        return odgovor;
+
+    }
+
     public static Response ekonomicniRezim(LatLng source, LatLng destionation)
     {
         Response odgovor = null;
@@ -520,6 +586,4 @@ public class Komunikacija_Server
 
         return odgovor;
     }
-
-
 }

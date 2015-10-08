@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (graf != null)
                 {
+                    graf.inicijalizujMatricu();
                     ikonice = new int[graf.getGl().linije.length];
                     for (int i = 0; i < graf.getGl().linije.length; i++)
                         if (graf.getGl().linije[i] != null)
@@ -156,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }).start();
+
 
 
 
