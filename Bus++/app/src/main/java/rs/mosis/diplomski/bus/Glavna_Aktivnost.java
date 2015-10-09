@@ -277,7 +277,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         } else if (id == R.id.action_nadji_put)
         {
             final LatLng source = MapaFragment.getMyPosition();
-            Odgovor_Servera.tipZahteva = Constants.mode;
+           // Odgovor_Servera.tipZahteva = Constants.mode;
             if (MapaFragment.cilj == null)
             {
                 Toast.makeText(this, getString(R.string.izaberi_cilj), Toast.LENGTH_LONG).show();
@@ -1174,9 +1174,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 {
                     Circle circle = googleMap.addCircle(new CircleOptions()
                             .center(lista.get(i))
-                            .radius(3.9)
+                            .radius(4)
                             .fillColor(0xFF33E5B5)
-                            .strokeColor(0x00000000));
+                            .strokeColor(0xFF33E5B5));
                     pesacenja.add(circle);
                 }
 
@@ -1240,7 +1240,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         private static View v = null;
 
-        private static int tipZahteva = 1;
+        private static int tipZahteva = 0;
 
         private static ArrayList<RadioButton> dugmici = null;
 

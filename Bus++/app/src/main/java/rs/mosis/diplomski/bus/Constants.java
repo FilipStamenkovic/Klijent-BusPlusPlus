@@ -12,5 +12,5 @@ public class Constants
     public static final double brzinaPesaka = 0.7659;
     public static int mode = 4;
     public static final String rezim = "rezim";
-    public static final double udaljenostPesacenje = 20.0;
+    public static final double udaljenostPesacenje = 50.0;
 }

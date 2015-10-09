@@ -197,7 +197,7 @@ public class DirectionsHelper
         {
 
             tacke = new ArrayList<LatLng>();
-            tacke.addAll(vratiTackeIzmedju(ulice[0], ulice[1], 20.0));
+            tacke.addAll(vratiTackeIzmedju(ulice[0], ulice[1], Constants.udaljenostPesacenje));
             return tacke;
         } else
         {
@@ -215,7 +215,7 @@ public class DirectionsHelper
                 {
                     preuredjene.addAll(vratiTackeIzmedju(trenutna, radna, Constants.udaljenostPesacenje));
                     trenutna = radna;
-                } else if (udaljenost > 20.0)
+                } else if (udaljenost > Constants.udaljenostPesacenje)
                 {
                     preuredjene.add(radna);
                     trenutna = radna;
