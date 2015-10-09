@@ -89,9 +89,6 @@ public class DirectionsHelper
     private String getJSONFromUrl(String url)
     {
 
-        // Making HTTP request
-        // defaultHttpClient
-
         HttpURLConnection urlConnection = null;
         try
         {
@@ -200,30 +197,57 @@ public class DirectionsHelper
         {
 
             tacke = new ArrayList<LatLng>();
-            tacke.addAll(vratiTackeIzmedju(ulice[0],ulice[1],20.0));
+            tacke.addAll(vratiTackeIzmedju(ulice[0], ulice[1], 20.0));
             return tacke;
-        }else
+        } else
         {
             ArrayList<LatLng> preuredjene = new ArrayList<>();
             LatLng trenutna = tacke.get(0);
             tacke.remove(0);
             preuredjene.add(trenutna);
             int size = tacke.size();
-            for(int i = 0; i < size; i++)
+            for (int i = 0; i < size; i++)
             {
                 LatLng radna = tacke.get(0);
-                double udaljenost =  OfflineRezim.calcDistance(trenutna.latitude,trenutna.longitude,radna.latitude,radna.longitude);
+                double udaljenost = OfflineRezim.calcDistance(trenutna.latitude, trenutna.longitude, radna.latitude, radna.longitude);
                 tacke.remove(0);
-                if (udaljenost > 40.0)
+                if (udaljenost > Constants.udaljenostPesacenje * 2)
                 {
-                    preuredjene.addAll(vratiTackeIzmedju(trenutna, radna, 20.0));
+                    preuredjene.addAll(vratiTackeIzmedju(trenutna, radna, Constants.udaljenostPesacenje));
                     trenutna = radna;
-                }
-                else if (udaljenost > 20.0)
+                } else if (udaljenost > 20.0)
                 {
                     preuredjene.add(radna);
                     trenutna = radna;
                 }
+            }
+            size = preuredjene.size();
+            ArrayList<LatLng> indeksi = new ArrayList<>();
+            for (int i = 0; i < size; i++)
+                for (int j = i + 1; j < size; j++)
+                {
+                    double udaljenost = OfflineRezim.calcDistance(
+                            preuredjene.get(i).latitude, preuredjene.get(i).longitude,
+                            preuredjene.get(j).latitude, preuredjene.get(j).longitude);
+                    if (udaljenost < Constants.udaljenostPesacenje)
+                        for (int l = i + 1; l < j; l++)
+                            indeksi.add(preuredjene.get(l));
+                }
+            int j = 0;
+            while (indeksi.size() > 0)
+            {
+                size = preuredjene.size();
+                int i;
+                for (i = j; i < size; i++)
+                    if (preuredjene.get(i) == indeksi.get(0))
+                    {
+                        preuredjene.remove(i);
+                        indeksi.remove(0);
+                        j = i;
+                        break;
+                    }
+                if (i == size)
+                    indeksi.remove(0);
             }
 
             return preuredjene;
@@ -258,7 +282,7 @@ public class DirectionsHelper
 
     private List<LatLng> decodePoly(String encoded)
     {
-        List<LatLng> poly = new ArrayList<LatLng>();
+        List<LatLng> poly = new ArrayList<>();
         int index = 0, len = encoded.length();
         int lat = 0, lng = 0;
 

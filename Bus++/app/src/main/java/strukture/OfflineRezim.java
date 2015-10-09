@@ -338,7 +338,6 @@ public class OfflineRezim
                     }
                 } else
                 {
-                    Log.e("tag","USO");
                     if(tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight/brzinaAutobusa +
                             (kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor, brzinaAutobusa)))
                     {
@@ -374,11 +373,9 @@ public class OfflineRezim
 
                         lista.pushPriority(tempCvor);
                     }
-                    Log.e("tag","izaso");
                 }
             }
 
-            Log.e("tag","size je:" + lista.size());
             //obradi pesacenje do svih stanica
             for(int j = 0; j < stanice.length; ++j)
             {
@@ -478,11 +475,8 @@ public class OfflineRezim
         //Date sourceDate = null;
 
         long realLifeSeconds = realLifeDate.getTime() / 1000;
-        Log.e("tag","USO korekcija " + l.broj);
 
         long busTravelSeconds = izracunajKorekciju(l, c);
-
-        Log.e("tag","izaso korekcija");
 
         long futureShiftSeconds = (long) c.cenaPutanje;
 
@@ -586,5 +580,179 @@ public class OfflineRezim
 
         //System.out.println("bla=" + bla);
         return targetSeconds - sourceSeconds;
+    }
+
+    public static Response handleRequest5(Request req, double brzinaAutobusa, double brzinaPesacenja)
+    {
+
+        Linija linije[] = MainActivity.graf.getGl().linije;
+        MainActivity.graf.resetujCvorove();
+
+        //LocalDateTime currentTime = LocalDateTime.now();
+       // LocalDateTime tempTime = null;
+        Calendar currentTime = Calendar.getInstance();
+        Calendar tempTime = Calendar.getInstance();
+
+        int linijeResenja[][] = new int[linije.length][5]; //start_stanica.id, end_stanica.id, cena_puta, vreme pesacenja do starta, kasnjenje linije na tu stanicu
+
+        for(int i = 0; i < linije.length; ++i)
+        {
+            if(linije[i] != null)
+            {
+                Cvor stanica = linije[i].pocetnaStanica;
+                Cvor start = null, stop = null;
+                Veza v = null;
+                int predjeniPut = 0, startPredjeniPut = 0, endPredjeniPut = 0;
+                double startnaUdaljenost = Double.MAX_VALUE;//gornjaGranica;
+                double zavrsnaUdaljenost = Double.MAX_VALUE;//gornjaGranica;
+                double dS, dZ;
+
+                while((v = stanica.vratiVezu(linije[i])) != null)
+                {
+                    predjeniPut += v.weight;
+                    stanica = v.destination;
+
+                    dS = calcDistance(stanica, req.srcLat, req.srcLon);
+                    dZ = calcDistance(stanica, req.destLat, req.destLon);
+                    //moze da se optimizuje tako sto se jednom izracunaju i zapamte u cvorovima njihove udaljenosti do cilja i starta
+
+                    if(dS<startnaUdaljenost && nijeLazniStart(stanica, linije[i], startnaUdaljenost, zavrsnaUdaljenost, req))
+                    {
+                        startnaUdaljenost = dS;
+                        zavrsnaUdaljenost = Double.MAX_VALUE;;
+                        start = stanica;
+                        stop = null;
+                        startPredjeniPut = predjeniPut;
+                    }
+
+                    if(dZ < zavrsnaUdaljenost)
+                    {
+                        zavrsnaUdaljenost = dZ;
+                        stop = stanica;
+                        endPredjeniPut = predjeniPut;
+                    }
+
+                    if(stanica == linije[i].pocetnaStanica)
+                        break;
+                }
+
+                linijeResenja[i][0] = start.id;
+                linijeResenja[i][1] = stop.id;
+                if(start != stop)
+                {
+                    linijeResenja[i][2] = (int) ((startnaUdaljenost + zavrsnaUdaljenost)/brzinaPesacenja + (endPredjeniPut - startPredjeniPut)/brzinaAutobusa); //na ovo treba da se doda jos i vreme cekanja busa na stanici
+                    linijeResenja[i][3] = (int) (startnaUdaljenost/brzinaPesacenja);
+
+                    start.cenaPutanje = startnaUdaljenost/brzinaPesacenja;
+
+                    linijeResenja[i][4] = (int) izracunajKasnjenjeLinije2(linije[i], start, brzinaAutobusa);
+
+                    linijeResenja[i][2] += linijeResenja[i][4];
+                } else
+                    linijeResenja[i][2] = Integer.MAX_VALUE;
+            }
+        }
+
+        int minCena = Integer.MAX_VALUE;
+        ArrayList<Integer> responseLinije = new ArrayList<>();
+        //responseLinije[i] odgovara kao start stanica responseStanice[2*i] i kao end stanica responseStanice[2*i+1]
+        ArrayList<Integer> responseStanice = new ArrayList<>();
+        ArrayList<DatumVremeStanica> vremenaDolaska = new ArrayList<>();
+        ArrayList<Integer> responseKorekcije = new ArrayList<>();
+
+        int cenaPesacenja;
+
+        for(int i = 0; i < linije.length; ++i)
+            if(linije[i] != null && linijeResenja[i][2] < minCena)
+                minCena = linijeResenja[i][2];
+
+        if((cenaPesacenja = (int) (calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon)/brzinaPesacenja)) < minCena)
+            minCena = cenaPesacenja;
+
+        for(int i = 0; i < linije.length; ++i)
+            if(linije[i] != null && linijeResenja[i][2] <= 1.5 * minCena)
+            {
+                responseLinije.add(linije[i].id);
+                responseKorekcije.add(linijeResenja[i][2]);
+                responseStanice.add(linijeResenja[i][0]);
+                responseStanice.add(linijeResenja[i][1]);
+
+                /* tempTime = currentTime.plusDays(((long) radniCvor.cenaPutanje + kasnjenje) / 86400);
+                        tempTime = tempTime.plusHours((((long) radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
+                        tempTime = tempTime.plusMinutes((((long) radniCvor.cenaPutanje + kasnjenje) / 60) % 60);
+                        tempTime = tempTime.plusSeconds(((long)radniCvor.cenaPutanje + kasnjenje)%60);
+                        DatumVremeStanica vremeDolaska = new DatumVremeStanica(radniCvor.id, v.linija.id,
+                                tempTime.getSecond(), tempTime.getMinute(), tempTime.getHour(),
+                                tempTime.getDayOfWeek().getValue(),
+                                tempTime.getMonthValue(), tempTime.getYear());
+                tempTime = Calendar.getInstance();
+                //tempTime.set(Calendar.HOUR_OF_DAY,14);
+                //tempTime.set(Calendar.MINUTE,14);
+                tempTime.add(Calendar.DAY_OF_WEEK, (int)(radniCvor.cenaPutanje + kasnjenje)/86400);
+                tempTime.add(Calendar.HOUR_OF_DAY, (int) ((radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
+                tempTime.add(Calendar.MINUTE, (int) ((radniCvor.cenaPutanje + kasnjenje) / 60) % 60);
+                tempTime.add(Calendar.SECOND, (int) ((radniCvor.cenaPutanje + kasnjenje) % 60));
+
+                tempTime = currentTime.plusDays((linijeResenja[i][3] + linijeResenja[i][4])/86400);
+                tempTime = tempTime.plusHours(((linijeResenja[i][3] + linijeResenja[i][4])/3600)%24);
+                tempTime = tempTime.plusMinutes(((linijeResenja[i][3] + linijeResenja[i][4])/60)%60);
+                tempTime = tempTime.plusSeconds((linijeResenja[i][3] + linijeResenja[i][4])%60);*/
+                tempTime = Calendar.getInstance();
+                tempTime.add(Calendar.DAY_OF_WEEK, (int)(linijeResenja[i][3] + linijeResenja[i][4])/86400);
+                tempTime.add(Calendar.HOUR_OF_DAY, (int) ((linijeResenja[i][3] + linijeResenja[i][4]) / 3600) % 24);
+                tempTime.add(Calendar.MINUTE, (int) ((linijeResenja[i][3] + linijeResenja[i][4]) / 60) % 60);
+                tempTime.add(Calendar.SECOND, (int) ((linijeResenja[i][3] + linijeResenja[i][4]) % 60));
+               // DatumVremeStanica vremeDolaska = new DatumVremeStanica(linijeResenja[i][0], linije[i].id, tempTime.getSecond(), tempTime.getMinute(), tempTime.getHour(), tempTime.getDayOfWeek().getValue(), tempTime.getMonthValue(), tempTime.getYear());
+
+                DatumVremeStanica vremeDolaska = new DatumVremeStanica(linijeResenja[i][0], linije[i].id,
+                        tempTime.get(Calendar.SECOND), tempTime.get(Calendar.MINUTE),
+                        tempTime.get(Calendar.HOUR_OF_DAY),
+                        tempTime.get(Calendar.DAY_OF_WEEK),
+                        tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR));
+
+                vremenaDolaska.add(vremeDolaska);
+            }
+
+        if(cenaPesacenja <= 1.5 * minCena)
+        {
+            responseLinije.add(null);
+            responseKorekcije.add(cenaPesacenja);
+        }
+
+        return (new Response(req.type, responseStanice.toArray(new Integer[responseStanice.size()]),
+                responseLinije.toArray(new Integer[responseLinije.size()]),
+                responseKorekcije.toArray(new Integer[responseKorekcije.size()]),
+                vremenaDolaska, null, null));
+
+
+    }
+
+    private static boolean nijeLazniStart(Cvor stanica, Linija linija,
+                                          double startnaUdaljenost, double zavrsnaUdaljenost, Request req)
+    {
+        boolean p = false;
+        double dS, dZ;
+
+        dS = calcDistance(stanica, req.srcLat, req.srcLon);
+
+        Veza v = null;
+
+        while((v = stanica.vratiVezu(linija)) != null)
+        {
+            stanica = v.destination;
+
+            dZ = calcDistance(stanica, req.destLat, req.destLon);
+
+            if(dS + dZ < startnaUdaljenost + zavrsnaUdaljenost)
+            {
+                p = true;
+                break;
+            }
+
+            if(stanica == linija.pocetnaStanica)
+                break;
+        }
+
+        return p;
     }
 }

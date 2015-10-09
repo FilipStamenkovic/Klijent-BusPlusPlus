@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -39,8 +40,10 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -87,6 +90,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     LocationManager locationManager;
     LocationListener listener;
     public static Geocoder geocoder;
+    private int trenutniTab = 0;
     public static SharedPreferences preferences;
 
     public static Glavna_Aktivnost otac;
@@ -152,6 +156,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     actionBar.newTab()
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
+        }
+
+        if ((otac != this) && (otac != null))
+        {
+            this.trenutniTab = otac.trenutniTab;
         }
 
         otac = this;
@@ -271,7 +280,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             Odgovor_Servera.tipZahteva = Constants.mode;
             if (MapaFragment.cilj == null)
             {
-                Toast.makeText(this,getString(R.string.izaberi_cilj),Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.izaberi_cilj), Toast.LENGTH_LONG).show();
                 return true;
             }
             final LatLng destination = MapaFragment.cilj.getPosition();
@@ -283,8 +292,17 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     final Response odgovor = Komunikacija_Server.napredniRezim(source, destination);
 
 
-                    if (odgovor !=null)
+                    if (odgovor != null)
                     {
+                        UIHandler.post(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                MapaFragment.obrisiPutovanje();
+                            }
+                        });
+
                         if (odgovor.type.intValue() == 4)
                         {
                             Odgovor_Servera.pripremiEkonomicni(odgovor, source, destination);
@@ -296,9 +314,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             Odgovor_Servera.pripremiOptimalni(odgovor, source, destination);
                         } else
                         {
-                            Odgovor_Servera.pripremiEkoOpt(odgovor, source, destination);
+                            Odgovor_Servera.pripremiEkoOpt(odgovor, source, destination, -1);
                         }
-                    }else
+                    } else
                     {
                         UIHandler.post(new Runnable()
                         {
@@ -314,7 +332,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             }
                         });
                     }
-
 
 
                 }
@@ -334,10 +351,19 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     }
 
     @Override
+    protected void onResume()
+    {
+        super.onResume();
+        if (trenutniTab != getSupportActionBar().getSelectedTab().getPosition())
+            getSupportActionBar().setSelectedNavigationItem(trenutniTab);
+    }
+
+    @Override
     public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction)
     {
         // When the given tab is selected, switch to the corresponding page in
         // the ViewPager.
+        trenutniTab = tab.getPosition();
         mViewPager.setCurrentItem(tab.getPosition());
         if (tab.getPosition() == 2)
             Odgovor_Servera.tipZahteva = 0;
@@ -359,6 +385,58 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     @Override
     public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction)
     {
+    }
+
+    public void prikaziNaMapi(View v)
+    {
+        int id = v.getId();
+
+        ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id, -1, -1);
+
+        MapaFragment.pratiLiniju(id, cvorovi);
+        otac.getSupportActionBar().setSelectedNavigationItem(1);
+
+    }
+
+    public void toogle_content(View v)
+    {
+        View view = v.findViewById(R.id.kontenjer);
+        if (view != null)
+            view.setVisibility(view.isShown() ? View.GONE : View.VISIBLE);
+    }
+
+
+    public void redVoznje(View v)
+    {
+        final int id = v.getId() - 1000;
+
+
+        final LatLng sourceLatLng = MapaFragment.getMyPosition();
+
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                final Response odgovor = Komunikacija_Server.ObicanRedVoznje(sourceLatLng, id);
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor);
+                        ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
+
+                        //Odgovor_Servera.tipZahteva = 3;
+                        Odgovor_Servera.popuniTabelu(odgovor, vremena, korekcije);
+                        otac.getSupportActionBar().setSelectedNavigationItem(2);
+
+                    }
+                });
+
+            }
+        }).start();
+
     }
 
     /**
@@ -508,57 +586,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
     }
 
-    public void prikaziNaMapi(View v)
-    {
-        int id = v.getId();
-
-        ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id, -1, -1);
-
-        MapaFragment.pratiLiniju(id, cvorovi);
-        otac.getSupportActionBar().setSelectedNavigationItem(1);
-
-    }
-
-    public void toogle_content(View v)
-    {
-        View view = v.findViewById(R.id.kontenjer);
-        if (view != null)
-            view.setVisibility(view.isShown() ? View.GONE : View.VISIBLE);
-    }
-
-
-    public void redVoznje(View v)
-    {
-        final int id = v.getId() - 1000;
-
-
-        final LatLng sourceLatLng = MapaFragment.getMyPosition();
-
-        new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                final Response odgovor = Komunikacija_Server.ObicanRedVoznje(sourceLatLng, id);
-                runOnUiThread(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor);
-                        ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
-
-                        //Odgovor_Servera.tipZahteva = 3;
-                        Odgovor_Servera.popuniTabelu(odgovor, vremena, korekcije);
-                        otac.getSupportActionBar().setSelectedNavigationItem(2);
-
-                    }
-                });
-
-            }
-        }).start();
-
-    }
 
     public static class MapaFragment extends Fragment
     {
@@ -594,6 +621,33 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
+        public static void obrisiPutovanje()
+        {
+            if (rute != null)
+            {
+                int size = rute.size();
+                for (int i = 0; i < size; i++)
+                    rute.get(i).remove();
+                rute.clear();
+                rute = null;
+            }
+            if (pesacenja != null)
+            {
+                int size = pesacenja.size();
+                for (int i = 0; i < size; i++)
+                    pesacenja.get(i).remove();
+                pesacenja.clear();
+                pesacenja = null;
+            }
+            if (stanice != null)
+            {
+                int size = stanice.size();
+                for (int i = 0; i < size; i++)
+                    stanice.get(i).remove();
+                stanice.clear();
+                stanice = null;
+            }
+        }
 
         public static LatLng getMyPosition()
         {
@@ -685,20 +739,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         }
 
-
-        public static void clearPesacenje()
-        {
-            if (pesacenja != null)
-            {
-                int size = pesacenja.size();
-                for (int i = 0; i < size; i++)
-                {
-                    pesacenja.get(0).remove();
-                    pesacenja.remove(0);
-                }
-                pesacenja = null;
-            }
-        }
 
         public static void pratiLiniju(final int id, ArrayList<Cvor> cvors)
         {
@@ -1134,9 +1174,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 {
                     Circle circle = googleMap.addCircle(new CircleOptions()
                             .center(lista.get(i))
-                            .radius(4)
-                            .strokeColor(Color.BLUE)
-                            .fillColor(Color.GREEN));
+                            .radius(3.9)
+                            .fillColor(0xFF33E5B5)
+                            .strokeColor(0x00000000));
                     pesacenja.add(circle);
                 }
 
@@ -1201,6 +1241,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         private static View v = null;
 
         private static int tipZahteva = 1;
+
+        private static ArrayList<RadioButton> dugmici = null;
 
 
         public static Odgovor_Servera newInstance()
@@ -1592,15 +1634,13 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     if (odgovor.type == 6)
                         prikaziOptimalni(odgovor, source, destination);
                     else
-                        prikaziMinWalk(odgovor,source,destination);
+                        prikaziMinWalk(odgovor, source, destination);
                 }
             });
         }
 
         private static void prikaziMinWalk(Response odgovor, LatLng source, LatLng destination)
         {
-
-            //ZAVRSI!!!!!!!!!!!!!!!!!!!!
             LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
 
@@ -1621,7 +1661,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     imageView = new ImageView(otac);
                     imageView.setImageResource(R.mipmap.ic_walking);
                     ikone.addView(imageView);
-                }else
+                } else
                 {
                     int resurs = MainActivity.ikonice[odgovor.linije[i]];
                     imageView = new ImageView(otac);
@@ -1673,22 +1713,21 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 int resurs = MainActivity.ikonice[odgovor.linije[i]];
                 dolazna = MainActivity.graf.getStanica(odgovor.stanice[i]);
 
-                //dolazak = odgovor.vremenaDolaska.get(pomak).sat + ":" + odgovor.vremenaDolaska.get(pomak).minut;
 
                 dodajDeonicu(resurs, polazna.naziv, dolazna.naziv, "",
                         "", MainActivity.graf.getGl().linije[odgovor.linije[i]].naziv,
                         (LinearLayout) info.findViewById(R.id.kontenjer));
 
-                if ((odgovor.stanice[i + 1] > 0) && (odgovor.linije[i+1] == null))
+                if ((odgovor.stanice[i + 1] > 0) && (odgovor.linije[i + 1] == null))
                 {
-                    polazna = MainActivity.graf.getStanica(odgovor.stanice[i+1]);
+                    polazna = MainActivity.graf.getStanica(odgovor.stanice[i + 1]);
                     dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, polazna.naziv, "",
                             "", otac.getString(R.string.pesacenje),
                             (LinearLayout) info.findViewById(R.id.kontenjer));
+                } else
+                {
+                    polazna = dolazna;
                 }
-
-             //   if (odgovor.vremenaDolaska.size() > ++pomak)
-             //       polazna = MainActivity.graf.getStanica(odgovor.vremenaDolaska.get(pomak).stanica);
 
                 if (b)
                     ((LinearLayout) view.findViewById(R.id.kontenjer)).addView(kontenjer);
@@ -1696,12 +1735,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     b = true;
             }
 
-            if((odgovor.vremenaDolaska != null) && (odgovor.vremenaDolaska.size() > 0))
-            {
-                dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj)
-                        , "","", otac.getString(R.string.pesacenje),
-                        (LinearLayout) info.findViewById(R.id.kontenjer));
-            }
+            dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj)
+                    , "", "", otac.getString(R.string.pesacenje),
+                    (LinearLayout) info.findViewById(R.id.kontenjer));
             v = view;
             if (otac.findViewById(R.id.wraper) != null)
             {
@@ -1751,7 +1787,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     imageView = new ImageView(otac);
                     imageView.setImageResource(R.mipmap.ic_walking);
                     ikone.addView(imageView);
-                }else
+                } else
                 {
                     int resurs = MainActivity.ikonice[odgovor.vremenaDolaska.get(pomak++).linija];
                     imageView = new ImageView(otac);
@@ -1827,15 +1863,26 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 int resurs = MainActivity.ikonice[odgovor.linije[i]];
                 dolazna = MainActivity.graf.getStanica(odgovor.stanice[i]);
 
-                dolazak = odgovor.vremenaDolaska.get(pomak).sat + ":" + odgovor.vremenaDolaska.get(pomak).minut;
+                if (odgovor.vremenaDolaska.get(pomak).sat > 9)
+                    sati = odgovor.vremenaDolaska.get(pomak).sat + "";
+                else
+                    sati = "0" + odgovor.vremenaDolaska.get(pomak).sat;
+
+                if (odgovor.vremenaDolaska.get(pomak).minut > 9)
+                    minuti = odgovor.vremenaDolaska.get(pomak).minut + "";
+                else
+                    minuti = "0" + odgovor.vremenaDolaska.get(pomak).minut;
+
+
+                dolazak = sati + ":" + minuti;
 
                 dodajDeonicu(resurs, polazna.naziv, dolazna.naziv, dolazak,
                         "", MainActivity.graf.getGl().linije[odgovor.linije[i]].naziv,
                         (LinearLayout) info.findViewById(R.id.kontenjer));
 
-                if ((odgovor.stanice[i + 1] > 0) && (odgovor.linije[i+1] == null))
+                if ((odgovor.stanice[i + 1] > 0) && (odgovor.linije[i + 1] == null))
                 {
-                    polazna = MainActivity.graf.getStanica(odgovor.stanice[i+1]);
+                    polazna = MainActivity.graf.getStanica(odgovor.stanice[i + 1]);
                     dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, polazna.naziv, "",
                             "", otac.getString(R.string.pesacenje),
                             (LinearLayout) info.findViewById(R.id.kontenjer));
@@ -1850,10 +1897,10 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     b = true;
             }
 
-            if((odgovor.vremenaDolaska != null) && (odgovor.vremenaDolaska.size() > 0))
+            if ((odgovor.vremenaDolaska != null) && (odgovor.vremenaDolaska.size() > 0))
             {
                 dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj)
-                        , "","", otac.getString(R.string.pesacenje),
+                        , "", "", otac.getString(R.string.pesacenje),
                         (LinearLayout) info.findViewById(R.id.kontenjer));
             }
             v = view;
@@ -1869,10 +1916,212 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             }
         }
 
-        public static void pripremiEkoOpt(Response odgovor, LatLng source, LatLng destination)
+        public static void pripremiEkoOpt(final Response odgovor, final LatLng source, final LatLng destination, int linija)
         {
-            int a = 3;
-            a++;
+
+            int i;
+            if (linija == -1)
+            {
+                i = 0;
+                if (dugmici != null)
+                    dugmici.clear();
+                dugmici = new ArrayList<>();
+            } else
+            {
+                i = linija;
+                MapaFragment.obrisiPutovanje();
+            }
+
+            if (odgovor.linije[i] == null)
+            {
+                MapaFragment.nacrtajPesacenje(source, destination);
+            } else
+            {
+                Cvor pocetna = MainActivity.graf.getStanica(odgovor.stanice[2 * i]);
+                Cvor krajnja = MainActivity.graf.getStanica(odgovor.stanice[2 * i + 1]);
+                ArrayList<Cvor> cvorovi =
+                        MainActivity.graf.pratiLiniju(odgovor.linije[i], pocetna.id, krajnja.id);
+                MapaFragment.nacrtajPesacenje(source, (new LatLng(pocetna.lat, pocetna.lon)));
+                MapaFragment.pratiLiniju(odgovor.linije[i], cvorovi);
+
+                MapaFragment.nacrtajPesacenje((new LatLng(krajnja.lat, krajnja.lon)),
+                        destination);
+            }
+
+
+            if (linija == -1)
+            {
+                UIHandler.post(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        prikaziEkoOpt(odgovor, source, destination);
+                    }
+
+                });
+            }
+        }
+
+        private static void prikaziEkoOpt(final Response odgovor, final LatLng source, final LatLng destination)
+        {
+            Calendar now = Calendar.getInstance();
+            int hour = now.get(Calendar.HOUR_OF_DAY);
+            int minute = now.get(Calendar.MINUTE);
+            LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
+
+            View view = layoutInflater.inflate(R.layout.fragment_ekonomicni, container, false);
+
+            String sati, minuti;
+            if (hour >= 10)
+                sati = hour + "";
+            else
+                sati = "0" + hour;
+            if (minute >= 10)
+                minuti = "" + minute;
+            else
+                minuti = "0" + minute;
+
+            for (int i = 0; i < odgovor.linije.length; i++)
+            {
+                LinearLayout kontenjer;
+                if (i == 0)
+                    kontenjer = (LinearLayout) view.findViewById(R.id.kontenjer);
+                else
+                {
+                    View kopija = layoutInflater.inflate(R.layout.fragment_odgovor_servera, null);
+                    kontenjer = (LinearLayout) kopija.findViewById(R.id.kontenjer);
+                    ((ScrollView) kontenjer.getParent()).removeAllViewsInLayout();
+                }
+
+                int dolazakSati, dolazakMinuti;
+
+
+                dolazakSati = hour;
+                dolazakMinuti = minute + odgovor.korekcije[i] / 60;
+                while (dolazakMinuti > 59)
+                {
+                    dolazakSati = (dolazakSati + 1) % 24;
+                    dolazakMinuti -= 60;
+                }
+
+                String krajDolazak;
+
+                if (dolazakSati > 9)
+                    krajDolazak = dolazakSati + ":";
+                else
+                    krajDolazak = "0" + dolazakSati + ":";
+
+                if (dolazakMinuti > 9)
+                    krajDolazak += dolazakMinuti + "";
+                else
+                    krajDolazak += "0" + dolazakMinuti;
+
+
+                LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.slicke, null);
+                LinearLayout ikone = (LinearLayout) info.findViewById(R.id.slicice);
+                ((TextView) info.findViewById(R.id.vremena)).setText(sati + ":" + minuti + "-" + krajDolazak);
+                if (odgovor.linije[i] == null)
+                {
+                    ImageView imageView = new ImageView(otac);
+                    imageView.setImageResource(R.mipmap.ic_walking);
+                    ikone.addView(imageView);
+
+                    dodajDeonicu(R.mipmap.ic_walking, "Start", otac.getString(R.string.cilj), sati + ":" + minuti,
+                            krajDolazak, otac.getString(R.string.pesacenje),
+                            (LinearLayout) info.findViewById(R.id.kontenjer));
+
+
+                } else
+                {
+                    Cvor polazna = MainActivity.graf.getStanica(odgovor.stanice[2 * i]);
+                    Cvor dolazna = MainActivity.graf.getStanica(odgovor.stanice[2 * i + 1]);
+                    ImageView imageView = new ImageView(otac);
+                    imageView.setImageResource(R.mipmap.ic_walking);
+                    ikone.addView(imageView);
+
+                    String dolazak;
+                    if (odgovor.vremenaDolaska.get(i).sat > 9)
+                        dolazak = odgovor.vremenaDolaska.get(i).sat + ":";
+                    else
+                        dolazak = "0" + odgovor.vremenaDolaska.get(i).sat + ":";
+
+                    if (odgovor.vremenaDolaska.get(i).minut > 9)
+                        dolazak += odgovor.vremenaDolaska.get(i).minut + "";
+                    else
+                        dolazak += "0" + odgovor.vremenaDolaska.get(i).minut;
+
+                    dodajDeonicu(R.mipmap.ic_walking, "Start", polazna.naziv, sati + ":" + minuti,
+                            "", otac.getString(R.string.pesacenje),
+                            (LinearLayout) info.findViewById(R.id.kontenjer));
+
+                    int resurs = MainActivity.ikonice[odgovor.linije[i]];
+                    imageView = new ImageView(otac);
+                    imageView.setImageResource(resurs);
+
+                    ikone.addView(imageView);
+
+                    dodajDeonicu(resurs, polazna.naziv, dolazna.naziv, dolazak,
+                            "", MainActivity.graf.getGl().linije[odgovor.linije[i]].naziv,
+                            (LinearLayout) info.findViewById(R.id.kontenjer));
+
+
+                    imageView = new ImageView(otac);
+                    imageView.setImageResource(R.mipmap.ic_walking);
+
+                    dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj), "",
+                            krajDolazak, otac.getString(R.string.pesacenje),
+                            (LinearLayout) info.findViewById(R.id.kontenjer));
+
+                    ikone.addView(imageView);
+                    RadioButton button = (RadioButton) layoutInflater
+                            .inflate(R.layout.show_on_map, null).findViewById(R.id.dugme);
+                    ((LinearLayout) button.getParent()).removeAllViewsInLayout();
+                    if (i == 0)
+                        button.setChecked(true);
+                    dugmici.add(button);
+
+                    button.setOnClickListener(new View.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(View v)
+                        {
+                            for (int i = 0; i < dugmici.size(); i++)
+                            {
+                                if (dugmici.get(i).isChecked())
+                                    dugmici.get(i).setChecked(false);
+                                RadioButton dugme = (RadioButton) v;
+                                if (dugme == dugmici.get(i))
+                                {
+                                    dugme.setChecked(true);
+                                    pripremiEkoOpt(odgovor, source, destination, i);
+                                    otac.getSupportActionBar().setSelectedNavigationItem(1);
+                                }
+                            }
+                        }
+                    });
+
+                    ((LinearLayout) info.findViewById(R.id.kontenjer)).addView(button);
+                }
+
+                kontenjer.addView(info);
+
+                if (i > 0)
+                    ((LinearLayout) view.findViewById(R.id.kontenjer)).addView(kontenjer);
+            }
+
+            v = view;
+            if (otac.findViewById(R.id.wraper) != null)
+            {
+                if (v.getParent() != null)
+                {
+                    ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
+                    ((RelativeLayout) otac.findViewById(R.id.wraper)).removeAllViewsInLayout();
+                }
+
+                ((RelativeLayout) otac.findViewById(R.id.wraper)).addView(v);
+            }
         }
     }
 }

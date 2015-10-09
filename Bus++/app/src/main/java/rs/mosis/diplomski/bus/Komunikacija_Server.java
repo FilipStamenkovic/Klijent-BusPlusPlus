@@ -542,63 +542,14 @@ public class Komunikacija_Server
                 case 6:
                     odgovor = OfflineRezim.handleRequest6(request,
                             Constants.brzinaAutobusa, Constants.brzinaPesaka);
-                    Log.e("tag", "izaso skroz");
+                    break;
+                case 5:
+                    odgovor = OfflineRezim.handleRequest5(request,
+                            Constants.brzinaAutobusa, Constants.brzinaPesaka);
                     break;
             }
         return odgovor;
 
     }
 
-    public static Response ekonomicniRezim(LatLng source, LatLng destionation)
-    {
-        Response odgovor = null;
-        Request request = new Request(new Integer(4), new Double(source.latitude),
-                new Double(source.longitude), new Double(destionation.latitude),
-                new Double(destionation.longitude), null, null, null);
-        try
-        {
-
-            String poruka = request.toString();
-            InetAddress inetAddress = InetAddress.getByName(Constants.IP);
-//            Socket socket = new Socket(inetAddress, Constants.PORT);
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
-            int bytesRead = 0;
-            int current = 0;
-
-            InputStream is = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
-            PrintWriter printWriter = new PrintWriter(out);
-
-
-            printWriter.print(poruka + "\n");
-            printWriter.flush();
-
-
-            BufferedReader input = new BufferedReader(new InputStreamReader(is));
-            poruka = input.readLine();
-            if (poruka == null)
-            {
-                is.close();
-                printWriter.close();
-                out.close();
-                socket.close();
-                return null;
-            }
-
-            Gson gson = new GsonBuilder().create();
-            odgovor = gson.fromJson(poruka, Response.class);
-        } catch (UnknownHostException e)
-        {
-            e.printStackTrace();
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-
-        if (odgovor == null)
-            odgovor = OfflineRezim.handleRequest4(request);
-
-        return odgovor;
-    }
 }

@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 if (graf != null)
                 {
 
-                    BusDBAdapter.setPolilinije();
+
                     ikonice = new int[graf.getGl().linije.length];
                     for (int i = 0; i < graf.getGl().linije.length; i++)
                         if (graf.getGl().linije[i] != null)
@@ -166,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
                         }
 
+                    BusDBAdapter.setPolilinije();
                     graf.inicijalizujMatricu();
                 }
 
