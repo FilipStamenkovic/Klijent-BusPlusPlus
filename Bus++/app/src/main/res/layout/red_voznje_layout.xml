@@ -7,7 +7,7 @@
         android:layout_width="0px"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:textAlignment="center"
+        android:gravity="center"
         android:text="LINIJA"
         android:textSize="20sp"
         android:tag="linija"
@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
             android:text="smera"
-            android:textAlignment="center"
+            android:gravity="center"
             android:tag="smerA"
             />
         <TextView
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:text="smera"
             android:textSize="16sp"
-            android:textAlignment="center"
+            android:gravity="center"
             android:tag="smerB"
             />
 

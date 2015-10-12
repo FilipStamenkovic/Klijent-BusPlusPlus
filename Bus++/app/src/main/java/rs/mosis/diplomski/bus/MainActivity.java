@@ -4,10 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -38,15 +40,21 @@ public class MainActivity extends AppCompatActivity {
 
     private SQLiteOpenHelper sqLiteOpenHelper;
     public static Graf graf;
-    public static Context aplikacija;
+    public static MainActivity aplikacija;
     public static int[] ikonice;
+    public static int progres = 0;
+    public ProgressBar mProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        aplikacija = this.getApplicationContext();
+        mProgress = (ProgressBar) findViewById(R.id.progressBar);
+
+
+
+        aplikacija = this;
 
         if(BusDatabasesHelper.getInstance() == null)
         {
@@ -55,10 +63,18 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void namestiProgres()
+    {
+        progres++;
+        int ukupno = (int)((double)progres / Constants.BROJ_PROGRES  * 100);
+        mProgress.setProgress(ukupno);
+    }
+
     @Override
     protected void onResume()
     {
         super.onResume();
+       // namestiProgres();
 
         new Thread(new Runnable()
         {
@@ -92,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
                         }else
                         {
+                            ((MainActivity)MainActivity.aplikacija).namestiProgres();
 
                             Intent i = new Intent(getApplicationContext(), Glavna_Aktivnost.class);
                             finish();

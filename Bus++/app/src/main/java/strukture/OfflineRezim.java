@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import rs.mosis.diplomski.bus.Constants;
+import rs.mosis.diplomski.bus.Komunikacija_Server;
 import rs.mosis.diplomski.bus.MainActivity;
 import rs.mosis.diplomski.bus.Request;
 import rs.mosis.diplomski.bus.Response;
@@ -95,6 +96,14 @@ public class OfflineRezim
         return response;
 
 
+    }
+
+    public static double calcDistance(Cvor cvor1, Cvor cvor2)
+    {
+        if(cvor1.id > 0 && cvor2.id > 0)
+            return MainActivity.graf.matricaUdaljenosti[cvor1.id][cvor2.id];
+        else
+            return calcDistance(cvor1.lat, cvor1.lon, cvor2.lat, cvor2.lon);
     }
 
     public static double calcDistance(Cvor stanica, double lat2, double long2)
@@ -243,7 +252,8 @@ public class OfflineRezim
         boolean nadjenPut = false;
         Calendar currentTime = Calendar.getInstance();
         Calendar calendar = Calendar.getInstance();
-        Calendar tempTime = Calendar.getInstance();;
+        Calendar tempTime = Calendar.getInstance();
+        ;
 
         /*calendar.set(Calendar.HOUR_OF_DAY,14);
         calendar.set(Calendar.MINUTE,14);
@@ -259,8 +269,8 @@ public class OfflineRezim
         pseudoEnd.heuristika = 0.0;
         pseudoEnd.linijom = null;
         pseudoEnd.prethodnaStanica = pseudoStart;
-        pseudoEnd.cenaPutanje = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon)/brzinaPesacenja;
-        pseudoStart.heuristika = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon)/brzinaAutobusa;
+        pseudoEnd.cenaPutanje = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / brzinaPesacenja;
+        pseudoStart.heuristika = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / brzinaAutobusa;
         pseudoStart.linijom = null;
         pseudoStart.prethodnaStanica = null;
         pseudoStart.cenaPutanje = 0.0;
@@ -270,18 +280,18 @@ public class OfflineRezim
 
         double[][] matricaUdaljenosti = graf.matricaUdaljenosti;
 
-                //izvuci sve stanice u niz
+        //izvuci sve stanice u niz
         Cvor stanice[] = graf.getStanice().toArray(new Cvor[graf.getStanice().size()]);
 
         PrioritetnaListaCvorova lista = new PrioritetnaListaCvorova();
 
         //izracunaj heuristike
-        for(int i = 0; i < stanice.length; ++i)
+        for (int i = 0; i < stanice.length; ++i)
         {
-            if(stanice[i] != null)
+            if (stanice[i] != null)
             {
-                stanice[i].heuristika = calcDistance(stanice[i], req.destLat, req.destLon)/brzinaAutobusa;
-                stanice[i].cenaPutanje = calcDistance(stanice[i], req.srcLat, req.srcLon)/brzinaPesacenja;
+                stanice[i].heuristika = calcDistance(stanice[i], req.destLat, req.destLon) / brzinaAutobusa;
+                stanice[i].cenaPutanje = calcDistance(stanice[i], req.srcLat, req.srcLon) / brzinaPesacenja;
 
                 stanice[i].linijom = null;
                 stanice[i].prethodnaStanica = pseudoStart;
@@ -303,13 +313,13 @@ public class OfflineRezim
         Linija l = null;
         long kasnjenje = 0;
 
-        while(!lista.isEmpty())
+        while (!lista.isEmpty())
         {
             radniCvor = lista.remove(0);
 
             radniCvor.status = StruktureConsts.CVOR_OBRADJEN;
 
-            if(radniCvor == pseudoEnd)
+            if (radniCvor == pseudoEnd)
             {
                 nadjenPut = true;
                 break;
@@ -317,34 +327,41 @@ public class OfflineRezim
 
             //pokupi decu cvorove i update statistike
             potomciVeze = radniCvor.veze;
-            for(int i = 0; i < potomciVeze.size(); ++i)
+            for (int i = 0; i < potomciVeze.size(); ++i)
             {
                 v = potomciVeze.get(i);
                 tempCvor = v.destination;
 
-                if(tempCvor.status == StruktureConsts.CVOR_OBRADJEN)
+                if (tempCvor.status == StruktureConsts.CVOR_OBRADJEN)
                     continue;
 
-                if(v.linija == radniCvor.linijom)
+                if (v.linija == radniCvor.linijom)
                 {
-                    if(tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight/brzinaAutobusa)
+                    if (tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight / brzinaAutobusa)
                     {
                         lista.remove(tempCvor);
                         tempCvor.linijom = v.linija;
                         tempCvor.prethodnaStanica = radniCvor;
-                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight/brzinaAutobusa;
+                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight / brzinaAutobusa;
                         tempCvor.vremeDolaskaAutobusaNaPrethodnuStanicu = null;
                         lista.pushPriority(tempCvor);
                     }
                 } else
                 {
-                    if(tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight/brzinaAutobusa +
-                            (kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor, brzinaAutobusa)))
+                    if (req.type == 7)
+                        kasnjenje = 10;        //za min_walk je kasnjenje konstanta
+                    else
+                        kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor, brzinaAutobusa);
+
+                    if (tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight / brzinaAutobusa + kasnjenje)
                     {
                         lista.remove(tempCvor);
                         tempCvor.linijom = v.linija;
                         tempCvor.prethodnaStanica = radniCvor;
-                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight/brzinaAutobusa + kasnjenje;
+                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight / brzinaAutobusa + kasnjenje;
+
+                        if (req.type == 6) //ako je MIN_WALK ne racunaj vremena dolaska autobusa na stanicu
+                        {
 
                        /* tempTime = currentTime.plusDays(((long) radniCvor.cenaPutanje + kasnjenje) / 86400);
                         tempTime = tempTime.plusHours((((long) radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
@@ -354,112 +371,230 @@ public class OfflineRezim
                                 tempTime.getSecond(), tempTime.getMinute(), tempTime.getHour(),
                                 tempTime.getDayOfWeek().getValue(),
                                 tempTime.getMonthValue(), tempTime.getYear());*/
-                        tempTime = Calendar.getInstance();
-                        //tempTime.set(Calendar.HOUR_OF_DAY,14);
-                        //tempTime.set(Calendar.MINUTE,14);
-                        tempTime.add(Calendar.DAY_OF_WEEK, (int)(radniCvor.cenaPutanje + kasnjenje)/86400);
-                        tempTime.add(Calendar.HOUR_OF_DAY, (int) ((radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
-                        tempTime.add(Calendar.MINUTE, (int) ((radniCvor.cenaPutanje + kasnjenje) / 60) % 60);
-                        tempTime.add(Calendar.SECOND, (int) ((radniCvor.cenaPutanje + kasnjenje) % 60));
+                            tempTime = Calendar.getInstance();
+                            //tempTime.set(Calendar.HOUR_OF_DAY,14);
+                            //tempTime.set(Calendar.MINUTE,14);
+                            tempTime.add(Calendar.DAY_OF_WEEK, (int) (radniCvor.cenaPutanje + kasnjenje) / 86400);
+                            tempTime.add(Calendar.HOUR_OF_DAY, (int) ((radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
+                            tempTime.add(Calendar.MINUTE, (int) ((radniCvor.cenaPutanje + kasnjenje) / 60) % 60);
+                            tempTime.add(Calendar.SECOND, (int) ((radniCvor.cenaPutanje + kasnjenje) % 60));
 
-                        DatumVremeStanica vremeDolaska = new DatumVremeStanica(radniCvor.id, v.linija.id,
-                                tempTime.get(Calendar.SECOND), tempTime.get(Calendar.MINUTE),
-                                tempTime.get(Calendar.HOUR_OF_DAY),
-                                tempTime.get(Calendar.DAY_OF_WEEK),
-                                tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR));
+                            DatumVremeStanica vremeDolaska = new DatumVremeStanica(radniCvor.id, v.linija.id,
+                                    tempTime.get(Calendar.SECOND), tempTime.get(Calendar.MINUTE),
+                                    tempTime.get(Calendar.HOUR_OF_DAY),
+                                    tempTime.get(Calendar.DAY_OF_WEEK),
+                                    tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR));
 
-                        tempCvor.vremeDolaskaAutobusaNaPrethodnuStanicu = vremeDolaska;
-
+                            tempCvor.vremeDolaskaAutobusaNaPrethodnuStanicu = vremeDolaska;
+                        } else
+                            tempCvor.vremeDolaskaAutobusaNaPrethodnuStanicu = null;
 
                         lista.pushPriority(tempCvor);
                     }
                 }
             }
 
-            //obradi pesacenje do svih stanica
-            for(int j = 0; j < stanice.length; ++j)
-            {
-                if(stanice[j] != radniCvor && stanice[j].status != StruktureConsts.CVOR_OBRADJEN)
+                //obradi pesacenje do svih stanica
+                for (int j = 0; j < stanice.length; ++j)
                 {
-                    double udaljenost = matricaUdaljenosti[radniCvor.id][stanice[j].id];
-                    if(stanice[j].cenaPutanje > radniCvor.cenaPutanje + udaljenost/brzinaPesacenja)
+                    if (stanice[j] != radniCvor && stanice[j].status != StruktureConsts.CVOR_OBRADJEN)
                     {
-                        lista.remove(stanice[j]);
-                        stanice[j].linijom = null;
-                        stanice[j].prethodnaStanica = radniCvor;
-                        stanice[j].cenaPutanje = radniCvor.cenaPutanje + udaljenost/brzinaPesacenja;
-                        stanice[j].vremeDolaskaAutobusaNaPrethodnuStanicu = null;
-                        lista.pushPriority(stanice[j]);
+                        double udaljenost = matricaUdaljenosti[radniCvor.id][stanice[j].id];
+                        if (req.type == 7 && radniCvor.linijom != null)
+
+                            udaljenost += 150;
+                        if (stanice[j].cenaPutanje > radniCvor.cenaPutanje + udaljenost / brzinaPesacenja)
+                        {
+                            lista.remove(stanice[j]);
+                            stanice[j].linijom = null;
+                            stanice[j].prethodnaStanica = radniCvor;
+                            stanice[j].cenaPutanje = radniCvor.cenaPutanje + udaljenost / brzinaPesacenja;
+                            stanice[j].vremeDolaskaAutobusaNaPrethodnuStanicu = null;
+                            lista.pushPriority(stanice[j]);
+                        }
                     }
                 }
-            }
-            //pesacenje do cilja jer on nije u nizu stanice[]
-            double udaljenost = calcDistance(radniCvor, pseudoEnd.lat, pseudoEnd.lon);
-            if(pseudoEnd.cenaPutanje > radniCvor.cenaPutanje + udaljenost/brzinaPesacenja)
-            {
-                lista.remove(pseudoEnd);
-                pseudoEnd.linijom = null;
-                pseudoEnd.prethodnaStanica = radniCvor;
-                pseudoEnd.cenaPutanje = radniCvor.cenaPutanje + udaljenost/brzinaPesacenja;
-                lista.pushPriority(pseudoEnd);
-            }
-        }
-
-        if(nadjenPut)
-        {
-            Cvor c = pseudoEnd;
-
-            Response response = new Response();
-            response.type = req.type;
-            response.size = (int) pseudoEnd.cenaPutanje;    //procenjena cena putovanja
-            ArrayList<Integer> responseStanice = new ArrayList<>();
-            ArrayList<Integer> responseLinije = new ArrayList<>();
-            ArrayList<DatumVremeStanica> responseVremenaDolaska = new ArrayList<>();
-
-            while (c != null)
-            {
-                responseStanice.add(c.id);
-
-                if (c.linijom != null)
-                    responseLinije.add(c.linijom.id);
-                else
-                    responseLinije.add(null);
-
-                if (c.vremeDolaskaAutobusaNaPrethodnuStanicu != null)
-                    responseVremenaDolaska.add(c.vremeDolaskaAutobusaNaPrethodnuStanicu);
-
-                //moze da se doda u response i Estimated Time of Arrival (dodao sam ga u Response.size)
-                c = c.prethodnaStanica;
+                //pesacenje do cilja jer on nije u nizu stanice[]
+                double udaljenost = calcDistance(radniCvor, pseudoEnd.lat, pseudoEnd.lon);
+                if (pseudoEnd.cenaPutanje > radniCvor.cenaPutanje + udaljenost / brzinaPesacenja)
+                {
+                    lista.remove(pseudoEnd);
+                    pseudoEnd.linijom = null;
+                    pseudoEnd.prethodnaStanica = radniCvor;
+                    pseudoEnd.cenaPutanje = radniCvor.cenaPutanje + udaljenost / brzinaPesacenja;
+                    lista.pushPriority(pseudoEnd);
+                }
             }
 
-            response.stanice = new Integer[responseStanice.size()];
-            response.linije = new Integer[responseLinije.size()];
-            response.vremenaDolaska = new ArrayList<>();
 
-            int arraySize = responseStanice.size();
-            for (int i = arraySize - 1; i >= 0; --i)
+            if (nadjenPut)
             {
-                response.stanice[arraySize - 1 - i] = responseStanice.get(i);
-                response.linije[arraySize - 1 - i] = responseLinije.get(i);
-            }
+                if (req.type == 7)
+                    minWalkPostProcessing(pseudoStart, pseudoEnd);
 
-            arraySize = responseVremenaDolaska.size();
-            if (arraySize > 0)
-            {
+                Cvor c = pseudoEnd;
+
+                Response response = new Response();
+                response.type = req.type;
+
+                if (req.type == 6)
+                    response.size = (int) pseudoEnd.cenaPutanje;    //procenjena cena putovanja
+
+                ArrayList<Integer> responseStanice = new ArrayList<>();
+                ArrayList<Integer> responseLinije = new ArrayList<>();
+                ArrayList<DatumVremeStanica> responseVremenaDolaska = new ArrayList<>();
+
+                while (c != null)
+                {
+                    responseStanice.add(c.id);
+
+                    if (c.linijom != null)
+                        responseLinije.add(c.linijom.id);
+                    else
+                        responseLinije.add(null);
+
+                    if (c.vremeDolaskaAutobusaNaPrethodnuStanicu != null)
+                        responseVremenaDolaska.add(c.vremeDolaskaAutobusaNaPrethodnuStanicu);
+
+                    //moze da se doda u response i Estimated Time of Arrival (dodao sam ga u Response.size)
+                    c = c.prethodnaStanica;
+                }
+
+                response.stanice = new Integer[responseStanice.size()];
+                response.linije = new Integer[responseLinije.size()];
+                response.vremenaDolaska = new ArrayList<>();
+
+                int arraySize = responseStanice.size();
                 for (int i = arraySize - 1; i >= 0; --i)
-                    response.vremenaDolaska.add(responseVremenaDolaska.get(i));
+                {
+                    response.stanice[arraySize - 1 - i] = responseStanice.get(i);
+                    response.linije[arraySize - 1 - i] = responseLinije.get(i);
+                }
+
+                arraySize = responseVremenaDolaska.size();
+                if (arraySize > 0)
+                {
+                    for (int i = arraySize - 1; i >= 0; --i)
+                        response.vremenaDolaska.add(responseVremenaDolaska.get(i));
+                } else
+                    response.vremenaDolaska = null;
+
+                return response;
+
+                //log.write("Thread [" + owner.getId() + "] client=" +clientSocket.getInetAddress().toString()+ " RESPONSE= " + responseStr);
+                // out.write(responseStr + "\n");
+
             } else
-                response.vremenaDolaska = null;
+            {
+                return null;
+            }
 
+    }
 
-            return response;
+    private static void minWalkPostProcessing(Cvor pseudoStart, Cvor pseudoEnd)
+    {
+        double koeficijentUbrzanjaBuseva = 1.0;
+        ArrayList<Cvor> putanja = new ArrayList<>();
 
-
-        }
-        else
+        Cvor c = pseudoEnd;
+        while(c != null)
         {
-            return null;
+            putanja.add(0, c);
+
+            c = c.prethodnaStanica;
         }
+
+        double akumuliranaCena = 0.0;
+
+        for(int i = 1; i < putanja.size()-1; ++i)
+        {
+            c = putanja.get(i);
+
+            if(i > 1)
+            {
+                if(c.linijom != null)
+                    akumuliranaCena += c.prethodnaStanica.vratiVezu(c.linijom).weight/(koeficijentUbrzanjaBuseva * Constants.brzinaAutobusa);
+                else
+                    akumuliranaCena += calcDistance(c.prethodnaStanica, c)/Constants.brzinaPesaka;
+
+                c.cenaPutanje = c.heuristika*Constants.brzinaAutobusa/Constants.brzinaPesaka
+                        + akumuliranaCena;
+            }
+            else
+                c.cenaPutanje = c.heuristika*Constants.brzinaAutobusa/Constants.brzinaPesaka;
+        }
+
+        double minCena = Double.MAX_VALUE;
+        int minI = -1;
+
+        for(int i = 1; i < putanja.size()-1; ++i)
+        {
+            c = putanja.get(i);
+
+            if(minCena > c.cenaPutanje)
+            {
+                minCena = c.cenaPutanje;
+                minI = i;
+            }
+        }
+
+        if(minI != -1)
+            pseudoEnd.prethodnaStanica = putanja.get(minI);
+
+        //---------------------------------obradjen je kraj puta
+
+        ArrayList<Cvor> obradjenaPutanja = new ArrayList<>();
+        ArrayList<Linija> obradjeneLinije = new ArrayList<>();
+
+        c = pseudoEnd;
+        while(c != null)
+        {
+            c.heuristika = calcDistance(pseudoStart.lat, pseudoStart.lon, c.lat, c.lon)/Constants.brzinaPesaka;
+
+            obradjenaPutanja.add(0, c);
+            obradjeneLinije.add(0, c.linijom);
+
+            c = c.prethodnaStanica;
+        }
+
+        Linija l;
+        akumuliranaCena = 0.0;
+        //ovo ovde je jedan veliki znak pitanja :D
+        for(int i = 1; i < obradjenaPutanja.size()-1; ++i)
+        {
+            c = obradjenaPutanja.get(i);
+            l = obradjeneLinije.get(i+1);
+
+            if(l != null)
+                akumuliranaCena += c.vratiVezu(l).weight/Constants.brzinaAutobusa;
+            else
+                akumuliranaCena += calcDistance(c, obradjenaPutanja.get(i+1))/Constants.brzinaPesaka;
+
+            c.cenaPutanje = c.heuristika - akumuliranaCena; //pogotovo minus :)
+        }
+
+        minCena = Double.MAX_VALUE;
+        minI = -1;
+
+        for(int i = 1; i < obradjenaPutanja.size()-1; ++i)
+        {
+            c = obradjenaPutanja.get(i);
+
+            if(minCena > c.cenaPutanje)
+            {
+                minCena = c.cenaPutanje;
+                minI = i;
+            }
+        }
+
+        if(minI != -1)
+        {
+            c = obradjenaPutanja.get(minI).prethodnaStanica = pseudoStart;
+            c.linijom = null;
+        }
+
+        //---------------------------obradjen pocetak puta
+
     }
 
     private static long izracunajKasnjenjeLinije2(Linija l, Cvor c, double brzinaAutobusa)
@@ -504,14 +639,7 @@ public class OfflineRezim
 
         int mat[][] = null;
         boolean found = false;
-        //provera za nedelju
 
-		/*if(targetDate.getDay() == 0)
-			mat = l.matNedelja;
-		else if(targetDate.getDay() == 6)
-			mat = l.matSubota;
-		else
-			mat = l.matRadni;*/
 
         if(targetDateTime.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
             mat = l.matSubota;
@@ -536,10 +664,7 @@ public class OfflineRezim
                     targetSeconds += mat[h][i]*60;
                    // targetDateTime = targetDateTime.plusMinutes(mat[h][i]);
                     targetDateTime.add(Calendar.MINUTE, mat[h][i]);
-					/*System.out.println();
-					System.out.println("Bus travel seconds = " + busTravelSeconds);
-					System.out.println("Hvatam bus u " + targetDateTime.getDayOfWeek() + " koji krece u " + h + ":" + mat[h][i]);
-					System.out.println();*/
+
                 }
             }
             else
@@ -568,17 +693,8 @@ public class OfflineRezim
             }
             ++i;
         }
-        Log.e("tag","izaso" + targetDateTime.toString());
 
-        //targetDateTime = targetDateTime.plusDays(busTravelSeconds/86400);
-        //targetDateTime = targetDateTime.plusHours((busTravelSeconds/3600)%24);
-        //targetDateTime = targetDateTime.plusMinutes((busTravelSeconds/60)%60);
-        //targetDateTime = targetDateTime.plusSeconds(busTravelSeconds%60);
 
-        //DatumVremeStanica vremeDolaska = new DatumVremeStanica(c.id, targetDateTime.getSecond(), targetDateTime.getMinute(), targetDateTime.getHour(), targetDateTime.getDayOfWeek().getValue(), targetDateTime.getMonthValue(), targetDateTime.getYear());
-        //c.vremeDolaskaAutobusa = vremeDolaska;
-
-        //System.out.println("bla=" + bla);
         return targetSeconds - sourceSeconds;
     }
 
@@ -677,26 +793,6 @@ public class OfflineRezim
                 responseStanice.add(linijeResenja[i][0]);
                 responseStanice.add(linijeResenja[i][1]);
 
-                /* tempTime = currentTime.plusDays(((long) radniCvor.cenaPutanje + kasnjenje) / 86400);
-                        tempTime = tempTime.plusHours((((long) radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
-                        tempTime = tempTime.plusMinutes((((long) radniCvor.cenaPutanje + kasnjenje) / 60) % 60);
-                        tempTime = tempTime.plusSeconds(((long)radniCvor.cenaPutanje + kasnjenje)%60);
-                        DatumVremeStanica vremeDolaska = new DatumVremeStanica(radniCvor.id, v.linija.id,
-                                tempTime.getSecond(), tempTime.getMinute(), tempTime.getHour(),
-                                tempTime.getDayOfWeek().getValue(),
-                                tempTime.getMonthValue(), tempTime.getYear());
-                tempTime = Calendar.getInstance();
-                //tempTime.set(Calendar.HOUR_OF_DAY,14);
-                //tempTime.set(Calendar.MINUTE,14);
-                tempTime.add(Calendar.DAY_OF_WEEK, (int)(radniCvor.cenaPutanje + kasnjenje)/86400);
-                tempTime.add(Calendar.HOUR_OF_DAY, (int) ((radniCvor.cenaPutanje + kasnjenje) / 3600) % 24);
-                tempTime.add(Calendar.MINUTE, (int) ((radniCvor.cenaPutanje + kasnjenje) / 60) % 60);
-                tempTime.add(Calendar.SECOND, (int) ((radniCvor.cenaPutanje + kasnjenje) % 60));
-
-                tempTime = currentTime.plusDays((linijeResenja[i][3] + linijeResenja[i][4])/86400);
-                tempTime = tempTime.plusHours(((linijeResenja[i][3] + linijeResenja[i][4])/3600)%24);
-                tempTime = tempTime.plusMinutes(((linijeResenja[i][3] + linijeResenja[i][4])/60)%60);
-                tempTime = tempTime.plusSeconds((linijeResenja[i][3] + linijeResenja[i][4])%60);*/
                 tempTime = Calendar.getInstance();
                 tempTime.add(Calendar.DAY_OF_WEEK, (int)(linijeResenja[i][3] + linijeResenja[i][4])/86400);
                 tempTime.add(Calendar.HOUR_OF_DAY, (int) ((linijeResenja[i][3] + linijeResenja[i][4]) / 3600) % 24);

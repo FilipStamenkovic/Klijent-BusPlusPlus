@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import rs.mosis.diplomski.bus.BusDatabasesHelper;
+import rs.mosis.diplomski.bus.MainActivity;
 
 
 public class Graf
@@ -33,6 +34,7 @@ public class Graf
 		gl = new GradskeLinije();
 		
 		// load the sqlite-JDBC driver using the current class loader
+		((MainActivity)MainActivity.aplikacija).namestiProgres();
 	    tempArray = BusDBAdapter.getAllCvorovi(hashMap);
 	    
 	    for(int i = 0; i < gl.linije.length; ++i)
@@ -40,6 +42,7 @@ public class Graf
 	    	if(gl.linije[i] != null)
 	    		gl.linije[i].pocetnaStanica = tempArray[gl.linije[i].pocetnaStanica.id];
 	    }
+		((MainActivity)MainActivity.aplikacija).namestiProgres();
 	    boolean b = BusDBAdapter.podesiVeze(tempArray,gl.linije);
 
 	    
@@ -53,6 +56,7 @@ public class Graf
 	    }
 
 		BusDatabasesHelper.setDbName(redVoznjeDBName);
+		((MainActivity)MainActivity.aplikacija).namestiProgres();
 
 		for(int i = 0; i < gl.linije.length; ++i)
 			if(gl.linije[i] != null)

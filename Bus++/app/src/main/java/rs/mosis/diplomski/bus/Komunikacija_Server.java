@@ -49,6 +49,7 @@ public class Komunikacija_Server
                 busDatabasesHelper.loadFromAsset(baza);
                 file = busDatabasesHelper.checkDatabase(baza);
             }
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             double verzija = busDatabasesHelper.getVersions(baza);
             Request request;
             if (baza == 'S')
@@ -60,6 +61,7 @@ public class Komunikacija_Server
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
 //            Socket socket = new Socket(inetAddress, Constants.PORT);
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             Socket socket = new Socket();
             socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
             int bytesRead = 0;
@@ -93,6 +95,7 @@ public class Komunikacija_Server
                 printWriter.close();
                 out.close();
                 socket.close();
+                ((MainActivity) MainActivity.aplikacija).namestiProgres();
                 return true;
             }
             int filesize = odgovor.size;
@@ -124,7 +127,7 @@ public class Komunikacija_Server
                 }
 
             }
-
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             if (bytesRead != -1)
             {
                 bos.write(mybytearray, 0, current);
@@ -153,18 +156,22 @@ public class Komunikacija_Server
 
         } catch (SocketTimeoutException e)
         {
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             b = true;
             e.printStackTrace();
         } catch (FileNotFoundException e)
         {
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             e.printStackTrace();
         } catch (UnknownHostException e)
         {
             b = true;
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             e.printStackTrace();
         } catch (IOException e)
         {
             b = true;
+            ((MainActivity) MainActivity.aplikacija).namestiProgres();
             e.printStackTrace();
         }
 
@@ -546,6 +553,10 @@ public class Komunikacija_Server
                 case 5:
                     odgovor = OfflineRezim.handleRequest5(request,
                             Constants.brzinaAutobusa, Constants.brzinaPesaka);
+                    break;
+                case 7:
+                    odgovor = OfflineRezim.handleRequest6(request, Constants.brzinaAutobusa,
+                            Constants.brzinaPesakaZaMinWalk);
                     break;
             }
         return odgovor;

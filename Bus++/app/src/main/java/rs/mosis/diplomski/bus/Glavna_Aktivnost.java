@@ -8,10 +8,12 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -19,6 +21,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -40,7 +43,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -63,7 +65,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 import strukture.Cvor;
 import strukture.GradskeLinije;
-import strukture.Graf;
 import strukture.Linija;
 import strukture.OfflineRezim;
 
@@ -391,11 +392,16 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         int id = v.getId();
 
+        prikaziNaMapi(id);
+
+    }
+
+    public void prikaziNaMapi(int id)
+    {
         ArrayList<Cvor> cvorovi = MainActivity.graf.pratiLiniju(id, -1, -1);
 
         MapaFragment.pratiLiniju(id, cvorovi);
         otac.getSupportActionBar().setSelectedNavigationItem(1);
-
     }
 
     public void toogle_content(View v)
@@ -408,9 +414,12 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
     public void redVoznje(View v)
     {
-        final int id = v.getId() - 1000;
+        int id = v.getId() - 1000;
+        redVoznje(id);
+    }
 
-
+    public void redVoznje(final int id)
+    {
         final LatLng sourceLatLng = MapaFragment.getMyPosition();
 
         new Thread(new Runnable()
@@ -436,7 +445,44 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
             }
         }).start();
+    }
 
+    public void onTextViewClicked(View view)
+    {
+        final int id = view.getId();
+        String title = otac.getString(R.string.linija) + " " + MainActivity.graf.getGl().linije[id].broj;
+        title += " ," + otac.getString(R.string.smer) + " " + MainActivity.graf.getGl().linije[id].smer;
+        String naziv = MainActivity.graf.getGl().linije[id].naziv;
+
+        AlertDialog dialog = new AlertDialog.Builder(otac)
+                .setTitle(title)
+                .setMessage(naziv)
+                .setPositiveButton(R.string.view_red_voznje, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        redVoznje(id);
+                    }
+                })
+                .setNegativeButton(R.string.show_linija, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        prikaziNaMapi(id);
+                    }
+                })
+                .setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .show();
+
+        dialog.setCanceledOnTouchOutside(false);
     }
 
     /**
@@ -463,7 +509,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             switch (position)
             {
                 case 0:
-                    fragment = PlaceholderFragment.newInstance();
+                    fragment = Linije.newInstance();
                     break;
                 case 1:
                     fragment = MapaFragment.newInstance();
@@ -503,27 +549,29 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment
+    public static class Linije extends Fragment
     {
         /**
          * The fragment argument representing the section number for this
          * fragment.
          */
 
-        private static LinearLayout linearLayout = null;
+        private static LinearLayout landscapeLayout = null;
+
+        private static LinearLayout portraitLayout = null;
 
 
         /**
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance()
+        public static Linije newInstance()
         {
-            PlaceholderFragment fragment = new PlaceholderFragment();
+            Linije fragment = new Linije();
             return fragment;
         }
 
-        public PlaceholderFragment()
+        public Linije()
         {
 
         }
@@ -534,54 +582,87 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             final View rootView;
             rootView = inflater.inflate(R.layout.fragment_red_voznje, container, false);
+            boolean b = otac.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
 
+            popuniLayout(b,rootView,inflater,container);
+            return rootView;
+        }
 
-            Linija[] linije = MainActivity.graf.getGl().linije;
-            ArrayList<Linija> listaLinija = new ArrayList<>();
+        private void popuniLayout(boolean portrait, View rootView,
+                                  LayoutInflater inflater, ViewGroup container)
+        {
 
-            for (int i = 1; i < linije.length; i++)
-                if (linije[i].broj.charAt(linije[i].broj.length() - 1) == '*')
-                    continue;
-                else
-                    listaLinija.add(linije[i]);
+            LinearLayout linearLayout;
+            if (portrait)
+                linearLayout = portraitLayout;
+            else
+                linearLayout = landscapeLayout;
 
             if (linearLayout == null)
             {
+                Linija[] linije = MainActivity.graf.getGl().linije;
+                ArrayList<Linija> listaLinija = new ArrayList<>();
+
+                for (int i = 1; i < linije.length; i++)
+                    if (linije[i].broj.charAt(linije[i].broj.length() - 1) == '*')
+                        continue;
+                    else
+                        listaLinija.add(linije[i]);
+
 
                 linearLayout = (LinearLayout) rootView.findViewById(R.id.linije_scroll);
 
                 for (int i = 0; i < listaLinija.size(); i += 2)
                 {
-                    View red = inflater.inflate(R.layout.red_voznje_layout, container, false);
+                    View red;
+                    if (portrait)
+                        red = inflater.inflate(R.layout.red_voznje_portrait_layout, container, false);
+                    else
+                        red = inflater.inflate(R.layout.red_voznje_layout, container, false);
                     TextView textView = (TextView) red.findViewWithTag("linija");
                     textView.setText("Linija " + listaLinija.get(i).broj);
                     textView = (TextView) red.findViewWithTag("smerA");
                     textView.setText(listaLinija.get(i).naziv);
                     textView = (TextView) red.findViewWithTag("smerB");
                     textView.setText(listaLinija.get(i + 1).naziv);
-                    red.findViewWithTag("prikaziA").setId(listaLinija.get(i).id);
-                    red.findViewWithTag("prikaziB").setId(listaLinija.get(i + 1).id);
-                    red.findViewWithTag("pogledajA").setId(listaLinija.get(i).id + 1000);
-                    red.findViewWithTag("pogledajB").setId(listaLinija.get(i + 1).id + 1000);
-                    // container.addView(red);
+                    if (!portrait)
+                    {
+                        red.findViewWithTag("prikaziA").setId(listaLinija.get(i).id);
+                        red.findViewWithTag("prikaziB").setId(listaLinija.get(i + 1).id);
+                        red.findViewWithTag("pogledajA").setId(listaLinija.get(i).id + 1000);
+                        red.findViewWithTag("pogledajB").setId(listaLinija.get(i + 1).id + 1000);
+                    } else
+                    {
+                        red.findViewWithTag("smerA").setId(listaLinija.get(i).id);
+                        red.findViewWithTag("smerB").setId(listaLinija.get(i + 1).id);
+
+                        red.findViewWithTag("smerA").setOnClickListener(new View.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                otac.onTextViewClicked(v);
+                            }
+                        });
+                        red.findViewWithTag("smerB").setOnClickListener(new View.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                otac.onTextViewClicked(v);
+                            }
+                        });
+                    }
                     linearLayout.addView(red, i / 2);
 
                 }
             } else
             {
                 ScrollView skrol = (ScrollView) rootView.findViewById(R.id.skrol);
-                //lin = linearLayout;
-
-                //skrol.removeAllViewsInLayout();
-                //skrol.removeAllViews();
                 skrol.removeViewAt(0);
-                //rootView.findViewById(R.id.linije_scroll).remove
                 ((ScrollView) linearLayout.getParent()).removeAllViews();
                 skrol.addView(linearLayout);
             }
-
-
-            return rootView;
         }
 
     }
@@ -1117,7 +1198,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         .title(otac.getString(R.string.pocetak))
                         .icon(ikonica)
                         .draggable(true));
-                ;
             }
         }
 
@@ -1267,6 +1347,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 {
                     if (v.getParent() != null)
                         ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
+                    ((RelativeLayout) rootView).removeAllViewsInLayout();
                     ((RelativeLayout) rootView).addView(v);
                 }
             return rootView;
@@ -1318,15 +1399,15 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 Cvor cvor = MainActivity.graf.getStanica(odgovor.stanice[i]);
 
                 LinearLayout stanica = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
-                ((TextView) stanica.findViewById(R.id.linija_id)).setVisibility(View.GONE);
-                ((TextView) stanica.findViewById(R.id.smer_id)).setVisibility(View.GONE);
+                stanica.findViewById(R.id.linija_id).setVisibility(View.GONE);
+                stanica.findViewById(R.id.smer_id).setVisibility(View.GONE);
                 ((TextView) stanica.findViewById(R.id.naziv_id)).setText(R.string.stanica);
                 ((LinearLayout) kontenjer.findViewById(R.id.blok_za_stanicu)).addView(stanica);
 
                 String naziv = cvor.naziv;
                 stanica = (LinearLayout) layoutInflater.inflate(R.layout.informacije_linije, null);
-                ((TextView) stanica.findViewById(R.id.linija_id)).setVisibility(View.GONE);
-                ((TextView) stanica.findViewById(R.id.smer_id)).setVisibility(View.GONE);
+                stanica.findViewById(R.id.linija_id).setVisibility(View.GONE);
+                stanica.findViewById(R.id.smer_id).setVisibility(View.GONE);
                 ((TextView) stanica.findViewById(R.id.naziv_id)).setText(Html.fromHtml("<u>" + naziv + "</u>"));
                 ((LinearLayout) kontenjer.findViewById(R.id.blok_za_stanicu)).addView(stanica);
 
@@ -1372,7 +1453,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             tipZahteva = 0;
         }
 
-        public static void prikazEkonomicnog2(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
+        public static void prikazekonomicnog(Response odgovor, ArrayList<String> vremenaPolaska, ArrayList<String> vremenaDolaska)
         {
             Calendar now = Calendar.getInstance();
             int hour = now.get(Calendar.HOUR_OF_DAY);
@@ -1575,7 +1656,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             // otac.getSupportActionBar().setSelectedNavigationItem(2);
                             ArrayList<String> vremena = Komunikacija_Server.vremenaPolaska(odgovor, 60);
                             ArrayList<String> korekcije = Komunikacija_Server.vremenaDolaska(odgovor, vremena);
-                            Odgovor_Servera.prikazEkonomicnog2(odgovor, vremena, korekcije);
+                            Odgovor_Servera.prikazekonomicnog(odgovor, vremena, korekcije);
                         }
 
 
