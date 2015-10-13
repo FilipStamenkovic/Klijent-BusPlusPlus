@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import strukture.BusDBAdapter;
 import strukture.Cvor;
 import strukture.OfflineRezim;
 import strukture.Veza;
@@ -172,6 +173,8 @@ public class DirectionsHelper
     public List<LatLng> getDriving()
     {
         List<LatLng> lista = new ArrayList<>();
+        if (!BusDBAdapter.setPolilinije())
+            return null;
 
         int size = cvorovi.size() - 1;
         for (int i = 0; i < size; i++)

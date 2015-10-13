@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
+    android:background="@drawable/pozadina"
     android:layout_height="wrap_content">
 
     <TextView
@@ -31,7 +32,6 @@
             android:layout_weight="0.5"
             android:layout_height="wrap_content"
             android:text="smera"
-            android:textSize="16sp"
             android:gravity="center"
             android:tag="smerB"
             />
@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:textAlignment="center"
+            android:gravity="center"
             android:text="@string/view_red_voznje"
             android:tag="pogledajA"
             android:onClick="redVoznje"
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:text="@string/view_red_voznje"
             android:tag="pogledajB"
-            android:textAlignment="center"
+            android:gravity="center"
             android:onClick="redVoznje"
             />
 
@@ -76,7 +76,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
             android:text="@string/show_linija"
-            android:textAlignment="center"
+            android:gravity="center"
             android:tag="prikaziA"
             android:onClick="prikaziNaMapi"
             />
@@ -85,7 +85,7 @@
             android:layout_weight="0.5"
             android:layout_height="wrap_content"
             android:text="@string/show_linija"
-            android:textAlignment="center"
+            android:gravity="center"
             android:tag="prikaziB"
             android:onClick="prikaziNaMapi"
             />

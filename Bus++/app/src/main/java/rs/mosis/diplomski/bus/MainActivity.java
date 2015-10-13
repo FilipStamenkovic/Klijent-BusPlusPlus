@@ -38,11 +38,10 @@ import strukture.Graf;
 
 public class MainActivity extends AppCompatActivity {
 
-    private SQLiteOpenHelper sqLiteOpenHelper;
     public static Graf graf;
     public static MainActivity aplikacija;
     public static int[] ikonice;
-    public static int progres = 0;
+    public static int progres;
     public ProgressBar mProgress;
 
     @Override
@@ -52,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
         mProgress = (ProgressBar) findViewById(R.id.progressBar);
 
-
+        progres = 0;
 
         aplikacija = this;
 

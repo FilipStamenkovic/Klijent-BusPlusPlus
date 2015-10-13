@@ -48,9 +48,9 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
             {
                 if(baza == 'S')
                 {
-                    myInput = mContext.getAssets().open("Strukture_0.6.db");
+                    myInput = mContext.getAssets().open("Strukture_0.7.db");
                     // Path to the just created empty db
-                    outFileName = DB_PATH + "Strukture_0.6.db";
+                    outFileName = DB_PATH + "Strukture_0.7.db";
                 }else if (baza == 'R')
                 {
                     myInput = mContext.getAssets().open("Red_Voznje0.3.db");
@@ -58,9 +58,9 @@ public class BusDatabasesHelper extends SQLiteOpenHelper
                     outFileName = DB_PATH + "Red_Voznje0.3.db";
                 }else
                 {
-                    myInput = mContext.getAssets().open("Putanje_0.2.db");
+                    myInput = mContext.getAssets().open("Putanje_0.3.db");
                     // Path to the just created empty db
-                    outFileName = DB_PATH + "Putanje_0.2.db";
+                    outFileName = DB_PATH + "Putanje_0.3.db";
                 }
 
                 File f = new File(outFileName);

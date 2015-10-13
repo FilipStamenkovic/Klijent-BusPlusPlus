@@ -653,7 +653,7 @@ public class OfflineRezim
         targetDateTime.add(Calendar.SECOND, -targetDateTime.get(Calendar.SECOND));
         int i = 0, h = targetDateTime.get(Calendar.HOUR_OF_DAY);
 
-        Log.e("tag","USO" + targetDateTime.toString());
+       // Log.e("tag","USO" + targetDateTime.toString());
         while(!found)
         {
             if(mat[h][i] != -1)

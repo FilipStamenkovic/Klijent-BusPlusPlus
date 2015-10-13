@@ -35,6 +35,7 @@ public class BusDBAdapter
     public static final String PUTANJA_POCETNA = "src_stanica_id";
     public static final String PUTANJA_KRAJNJA= "dest_stanica_id";
     public static final String PUTANJA = "putanja";
+    private static boolean polilinije = false;
 
     public static Linija[] getAllLinije()
     {
@@ -294,8 +295,10 @@ public class BusDBAdapter
         return b;
     }
 
-    public static boolean setPolilinije()
+    public static synchronized boolean setPolilinije()
     {
+        if (polilinije)
+            return true;
         Graf graf = MainActivity.graf;
 
         boolean b = false;
@@ -326,6 +329,7 @@ public class BusDBAdapter
 
                 }
                 b = true;
+                polilinije = true;
             }
         }catch (SQLiteException e)
         {

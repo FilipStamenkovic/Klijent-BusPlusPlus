@@ -49,7 +49,7 @@ public class Komunikacija_Server
                 busDatabasesHelper.loadFromAsset(baza);
                 file = busDatabasesHelper.checkDatabase(baza);
             }
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             double verzija = busDatabasesHelper.getVersions(baza);
             Request request;
             if (baza == 'S')
@@ -61,7 +61,7 @@ public class Komunikacija_Server
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
 //            Socket socket = new Socket(inetAddress, Constants.PORT);
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             Socket socket = new Socket();
             socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
             int bytesRead = 0;
@@ -88,14 +88,14 @@ public class Komunikacija_Server
 
             Gson gson = new GsonBuilder().create();
             Response odgovor = gson.fromJson(poruka, Response.class);
-            //poruka = input.readLine();
+
             if (odgovor.size == -1)
             {
                 is.close();
                 printWriter.close();
                 out.close();
                 socket.close();
-                ((MainActivity) MainActivity.aplikacija).namestiProgres();
+                MainActivity.aplikacija.namestiProgres();
                 return true;
             }
             int filesize = odgovor.size;
@@ -107,11 +107,11 @@ public class Komunikacija_Server
             else
                 imeBaze = "Putanje_" + odgovor.dbVer + ".db";
 
-            File f = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
+            File f = new File(BusDatabasesHelper.getDatabasePath() + imeBaze);
             f.getParentFile().mkdirs();
             f.createNewFile();
             FileOutputStream fos = new FileOutputStream(
-                    busDatabasesHelper.getDatabasePath() + imeBaze);
+                    BusDatabasesHelper.getDatabasePath() + imeBaze);
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             byte[] mybytearray = new byte[filesize];
 
@@ -127,7 +127,7 @@ public class Komunikacija_Server
                 }
 
             }
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             if (bytesRead != -1)
             {
                 bos.write(mybytearray, 0, current);
@@ -136,14 +136,14 @@ public class Komunikacija_Server
                     //   for (int i = 0; i < files.length; i++)
                     if (baza == file.charAt(0))
                     {
-                        File ff = new File(busDatabasesHelper.getDatabasePath() + file);
+                        File ff = new File(BusDatabasesHelper.getDatabasePath() + file);
                         if (ff.exists())
                             ff.delete();
                     }
             } else
             {
                 b = false;
-                File ff = new File(busDatabasesHelper.getDatabasePath() + imeBaze);
+                File ff = new File(BusDatabasesHelper.getDatabasePath() + imeBaze);
                 if (ff.exists())
                     ff.delete();
             }
@@ -156,22 +156,22 @@ public class Komunikacija_Server
 
         } catch (SocketTimeoutException e)
         {
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             b = true;
             e.printStackTrace();
         } catch (FileNotFoundException e)
         {
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             e.printStackTrace();
         } catch (UnknownHostException e)
         {
             b = true;
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             e.printStackTrace();
         } catch (IOException e)
         {
             b = true;
-            ((MainActivity) MainActivity.aplikacija).namestiProgres();
+            MainActivity.aplikacija.namestiProgres();
             e.printStackTrace();
         }
 
@@ -196,9 +196,9 @@ public class Komunikacija_Server
         String red_voznje = busDatabasesHelper.checkDatabase('R');
         String putanje = busDatabasesHelper.checkDatabase('P');
 
-        File f = new File(busDatabasesHelper.getDatabasePath() + baza);
-        File f2 = new File(busDatabasesHelper.getDatabasePath() + red_voznje);
-        File f3 = new File(busDatabasesHelper.getDatabasePath() + putanje);
+        File f = new File(BusDatabasesHelper.getDatabasePath() + baza);
+        File f2 = new File(BusDatabasesHelper.getDatabasePath() + red_voznje);
+        File f3 = new File(BusDatabasesHelper.getDatabasePath() + putanje);
 
         try
         {
@@ -207,12 +207,11 @@ public class Komunikacija_Server
         {
             e.printStackTrace();
 
-            File[] fajlovi = (new File(busDatabasesHelper.getDatabasePath())).listFiles();
+            File[] fajlovi = (new File(BusDatabasesHelper.getDatabasePath())).listFiles();
             for (int i = 0; i < fajlovi.length; i++)
             {
                 fajlovi[i].delete();
             }
-
             return null;
         }
 
@@ -281,11 +280,11 @@ public class Komunikacija_Server
             vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i]));
 
 
-        for (int i = 0; i < vremena.size(); i++)
+     /*   for (int i = 0; i < vremena.size(); i++)
         {
             if (vremena.get(i).size() == 0)
                 odgovor.linije[i] = -1;
-        }
+        }*/
 
         int pocetak = 0;
         int kraj;

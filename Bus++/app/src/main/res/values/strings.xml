@@ -1,41 +1,52 @@
 <resources>
     <string name="app_name">Bus++</string>
 
-    <string name="action_settings">Podešavanja</string>
-    <string name="title_activity_glavna__aktivnost">Glavna_Aktivnost</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_podesavanja">Settings</string>
+    <string name="title_activity_glavna__aktivnost">Main_Activity</string>
 
-    <string name="title_section1">Linije</string>
-    <string name="title_section2">Mapa</string>
-    <string name="title_section3">Informacije</string>
+    <string name="title_section1">Lines</string>
+    <string name="title_section2">Map</string>
+    <string name="title_section3">Informations</string>
 
-    <string name="view_red_voznje">Pogledaj Red Vožnje</string>
-    <string name="show_linija">Prikaži Liniju</string>
-    <string name="pocetak">Početak</string>
-    <string name="finish_marker">Odredište</string>
-    <string name="vreme_dolaska">Vreme dolaska</string>
-    <string name="vreme_polaska">Vreme polaska</string>
-    <string name="napomena">Napomena</string>
-    <string name="linija">Linija</string>
-    <string name="smer">Smer</string>
-    <string name="naziv">Naziv</string>
-    <string name="stanica">Stanica</string>
+    <string name="view_red_voznje">Timetable</string>
+    <string name="show_linija">Show Line</string>
+    <string name="pocetak">Start</string>
+    <string name="finish_marker">Destination</string>
+    <string name="vreme_dolaska">Time of arrival</string>
+    <string name="vreme_polaska">Departure Time</string>
+    <string name="napomena">Notes</string>
+    <string name="linija">Line</string>
+    <string name="smer">Route</string>
+    <string name="naziv">Title</string>
+    <string name="stanica">Bus stop</string>
 
-    <string name="ekonomicni">Ekonomični</string>
-    <string name="polazna_stanica">Polazna stanica</string>
-    <string name="zavrsna_stanica">Završna stanica</string>
-    <string name="postavi_start">Postavi početnu poziciju</string>
-    <string name="clean_map">Očisti mapu</string>
-    <string name="pesacenje">Pešačenje</string>
-    <string name="cilj">Cilj</string>
-    <string name="title_activity_podesavanja">Podešavanja</string>
-    <string name="minwalk">Minimalno pešacenje</string>
-    <string name="optimalni">Najbrži</string>
-    <string name="ekoopt">Najbrži ekonomični</string>
-    <string name="choose_mode">Izaberite navigacioni mod:</string>
-    <string name="nadji_put">Nađi put</string>
-    <string name="izaberi_cilj">Izaberi cilj na mapi</string>
-    <string name="show_on_map">Prikazi na mapu</string>
-    <string name="cancel">Otkaži</string>
+    <string name="ekonomicni">Economical</string>
+    <string name="polazna_stanica">Start bus stop</string>
+    <string name="zavrsna_stanica">Finish bus stop</string>
+    <string name="postavi_start">Set start location</string>
+    <string name="clean_map">Clean map</string>
+    <string name="pesacenje">Walking</string>
+    <string name="cilj">Finish</string>
+    <string name="minwalk">Minimum Walking</string>
+    <string name="optimalni">Fastest</string>
+    <string name="ekoopt">Fastest Economical</string>
+    <string name="choose_mode">Choose navigation mode:</string>
+    <string name="nadji_put">Find path</string>
+    <string name="izaberi_cilj">Choose finish spot on map</string>
+    <string name="show_on_map">Show on map</string>
+    <string name="cancel">Cancel</string>
+    <string name="bus_informations">Informations in bus:</string>
+
+    <string name="smerA">Route A</string>
+    <string name="smerB">Route B</string>
+    <string name="address">Search for address</string>
+    <string name="guzva">Crowded</string>
+    <string name="klimatizovanost">Stuffiness</string>
+    <string name="kontrola">Control</string>
+    <string name="send_info">Send info</string>
+    <string name="ukupno">Overall</string>
+    <string name="presedanje">Stopover</string>
 
     <string name="hello_world">Hello world!</string>
 

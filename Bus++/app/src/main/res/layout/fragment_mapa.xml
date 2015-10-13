@@ -1,8 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
     >
 
     <AutoCompleteTextView
@@ -11,20 +11,210 @@
         android:singleLine="true"
         android:imeOptions="actionDone"
         android:padding="5dp"
+        android:hint="@string/address"
         android:id="@+id/search_adresa"
         android:drawableLeft="@android:drawable/ic_search_category_default"
         >
     </AutoCompleteTextView>
 
+
+
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/mapa"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
+
         android:layout_alignParentRight="true"
         android:layout_below="@+id/search_adresa"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        ></fragment>
+        android:layout_alignParentBottom="true"></fragment>
+
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/fab"
+        android:clickable="true"
+        android:onClick="prikaziCrowdSourcing"
+        android:src="@android:drawable/ic_dialog_info"
+
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
+
+    <RelativeLayout
+        android:id="@+id/crowd_sourcing"
+        android:visibility="visible"
+        android:layout_width="fill_parent"
+        android:focusable="true"
+        android:gravity="center"
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@+id/fab"
+        android:layout_alignTop="@+id/fab"
+        android:layout_marginLeft="15dp"
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/pozadina"
+        android:theme="@style/Animation.AppCompat.DropDownUp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:text="@string/bus_informations"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/pozadina"
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center|left"
+                    android:text="@string/linija"
+                    />
+
+                <Spinner
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:id="@+id/broj_linije"
+                    android:layout_height="match_parent"
+                    android:spinnerMode="dropdown">
+                </Spinner>
+                <TextView
+                    android:layout_width="0px"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:gravity="center"
+                    android:text="@string/smer"
+                    />
+                <RadioGroup
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:checkedButton="@+id/smerA"
+                    android:orientation="vertical"
+                    android:layout_height="match_parent">
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_weight="2"
+                        android:id="@+id/smerA"
+                        android:text="A"
+                        android:layout_height="0px"/>
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_weight="2"
+                        android:text="B"
+                        android:layout_height="0px"/>
+                </RadioGroup>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                android:id="@+id/rating_bars"
+                android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/pozadina"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/guzva"
+                    android:layout_height="match_parent"/>
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:id="@+id/rating_guzva"
+                    android:layout_gravity="center"
+                    style="?android:attr/ratingBarStyle"
+                    android:numStars="5"
+                    android:stepSize="1"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/pozadina"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:gravity="center"
+                    android:id="@+id/primer"
+                    android:text="@string/klimatizovanost"
+                    android:layout_height="match_parent"/>
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_gravity="center"
+                    android:id="@+id/rating_klimatizovanost"
+                    android:layout_height="match_parent"
+                    style="?android:attr/ratingBarStyle"
+                    android:numStars="5"
+                    android:stepSize="1"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/pozadina"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/ukupno"
+                    android:layout_height="match_parent"/>
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:id="@+id/rating_ukupno"
+                    style="?android:attr/ratingBarStyle"
+                    android:numStars="5"
+                    android:isIndicator="true"
+                    android:stepSize="0.1"/>
+
+            </LinearLayout>
+            </LinearLayout>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/kontrola"
+                />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/send_info"
+                android:layout_height="wrap_content"/>
+
+
+        </LinearLayout>
+        </ScrollView>
+    </RelativeLayout>
+
 
 </RelativeLayout>
