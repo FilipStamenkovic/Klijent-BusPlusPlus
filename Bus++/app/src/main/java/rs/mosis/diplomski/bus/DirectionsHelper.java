@@ -5,6 +5,7 @@ import android.location.Address;
 import android.location.Geocoder;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +39,7 @@ public class DirectionsHelper
     ArrayList<Cvor>  cvorovi = null;
     LatLng [] ulice = null;
     double [] ugao;
+    int udaljenost;
 
     boolean [] uzmi;
 
@@ -153,6 +155,7 @@ public class DirectionsHelper
                 routeArray = json.getJSONArray("routes");
                 JSONObject routes = routeArray.getJSONObject(0);
                 JSONObject overviewPolylines = routes.getJSONObject("overview_polyline");
+
                 String encodedString = overviewPolylines.getString("points");
                 if(list == null)
                     list = decodePoly(encodedString);

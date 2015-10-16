@@ -46,7 +46,7 @@
 
     <RelativeLayout
         android:id="@+id/crowd_sourcing"
-        android:visibility="visible"
+        android:visibility="gone"
         android:layout_width="fill_parent"
         android:focusable="true"
         android:gravity="center"
@@ -121,81 +121,98 @@
                         android:layout_height="0px"/>
                 </RadioGroup>
             </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:orientation="vertical"
-                android:id="@+id/rating_bars"
-                android:layout_height="wrap_content">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="@drawable/pozadina"
-                >
+            <LinearLayout android:id="@+id/rating_bars"
+                          android:layout_width="match_parent"
+                          android:orientation="vertical"
+                          android:layout_height="wrap_content">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/guzva"
-                    android:layout_height="match_parent"/>
-                <RatingBar
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:id="@+id/rating_guzva"
-                    android:layout_gravity="center"
-                    style="?android:attr/ratingBarStyle"
-                    android:numStars="5"
-                    android:stepSize="1"/>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/pozadina"
+                    >
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/guzva"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"/>
+                    <RatingBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/rating_guzva"
+                        android:layout_gravity="center"
+                        android:isIndicator="false"
+                        style="?android:attr/ratingBarStyle"
+                        android:numStars="5"
+                        android:stepSize="1"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerHorizontal="true"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="@drawable/pozadina"
-                >
+                </RelativeLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:gravity="center"
-                    android:id="@+id/primer"
-                    android:text="@string/klimatizovanost"
-                    android:layout_height="match_parent"/>
-                <RatingBar
-                    android:layout_width="wrap_content"
-                    android:layout_gravity="center"
-                    android:id="@+id/rating_klimatizovanost"
-                    android:layout_height="match_parent"
-                    style="?android:attr/ratingBarStyle"
-                    android:numStars="5"
-                    android:stepSize="1"/>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/pozadina"
+                    android:gravity="fill_horizontal">
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:gravity="center"
+                        android:id="@+id/primer"
+                        android:text="@string/klimatizovanost"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"/>
+                    <RatingBar
+                        android:layout_width="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:isIndicator="false"
+                        android:id="@+id/rating_klimatizovanost"
+                        android:layout_height="wrap_content"
+                        style="?android:attr/ratingBarStyle"
+                        android:numStars="5"
+                        android:stepSize="1"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerHorizontal="true"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="@drawable/pozadina"
-                >
+                </RelativeLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/ukupno"
-                    android:layout_height="match_parent"/>
-                <RatingBar
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:id="@+id/rating_ukupno"
-                    style="?android:attr/ratingBarStyle"
-                    android:numStars="5"
-                    android:isIndicator="true"
-                    android:stepSize="0.1"/>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/pozadina"
+                    >
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/ukupno"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"/>
+                    <RatingBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:id="@+id/rating_ukupno"
+                        style="?android:attr/ratingBarStyle"
+                        android:numStars="5"
+                        android:isIndicator="true"
+                        android:stepSize="0.1"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerHorizontal="true"/>
+
+                </RelativeLayout>
             </LinearLayout>
 
             <CheckBox

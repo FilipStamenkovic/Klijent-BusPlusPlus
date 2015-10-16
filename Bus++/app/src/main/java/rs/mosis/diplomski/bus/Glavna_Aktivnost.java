@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -34,15 +33,14 @@ import android.support.v7.widget.SearchView;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.Display;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -68,7 +66,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import strukture.BusDBAdapter;
 import strukture.Cvor;
 import strukture.GradskeLinije;
 import strukture.Linija;
@@ -105,6 +102,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     public double ukupniDojam = 0;
 
     public boolean landscape = true;
+    public boolean promena = true;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -173,9 +171,18 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             this.trenutniTab = otac.trenutniTab;
             this.landscape = otac.landscape;
+            this.promena = otac.promena;
         }
 
         otac = this;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+       // landscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE;
+       // promena = true;
     }
 
     @Override
@@ -188,6 +195,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         disconnect();
         startActivity(intent);
     }
+
+
 
     @Override
     protected void onStop()
@@ -377,6 +386,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         mViewPager.setCurrentItem(tab.getPosition());
         if (tab.getPosition() == 2)
             Odgovor_Servera.tipZahteva = 0;
+
 
         if (MapaFragment.searchView != null)
             if (MapaFragment.searchView.isFocused())
@@ -750,6 +760,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public static AutoCompleteTextView searchView;
 
+        private static boolean inicijalizacija = true;
+
 
         public static MapaFragment newInstance()
         {
@@ -790,52 +802,47 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             }
         }
 
-        @Override
-        public void onResume()
+        public synchronized void podesiInfo()
         {
-            super.onResume();
-
-        }
-
-        @Override
-        public void onViewCreated(View view, Bundle savedInstanceState)
-        {
-            super.onViewCreated(view, savedInstanceState);
-            podesiInfo();
-        }
-
-        public void podesiInfo()
-        {
-            Display display = otac.getWindowManager().getDefaultDisplay();
-            View view = otac.findViewById(R.id.rating_ukupno);
-
-
-            RatingBar rating =
-                    new RatingBar(otac, null, android.R.attr.ratingBarStyle);
-            rating.setNumStars(5);
-
-            rating.measure(display.getWidth(), display.getHeight());
-            //rating.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-
-            int sirina = rating.getMeasuredWidth(); // view width
-
-            view = otac.findViewById(R.id.primer);
-            view.measure(display.getWidth(), display.getHeight());
-
-            sirina += view.getMeasuredWidth();
-            int maxSirina;
-
-            view = otac.findViewById(R.id.rating_bars);
-            view.measure(display.getWidth(), display.getHeight());
-            maxSirina = view.getMeasuredWidth();
-            //int maxSirina = otac.findViewById(R.id.rating_bars).getWidth();
-
-
-            // int sirina = otac.findViewById(R.id.rating_ukupno).getWidth()
-            //         + otac.findViewById(R.id.primer).getWidth() + 10;
-
-            if (sirina > maxSirina)
+            if(inicijalizacija)
             {
+                int maxSirina = otac.findViewById(R.id.rating_bars).getWidth();
+                if (maxSirina == 0)
+                    return;
+
+
+                int sirina = otac.findViewById(R.id.rating_ukupno).getWidth()
+                        + otac.findViewById(R.id.primer).getWidth();
+                //if (otac.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+               // sirina = 1000;
+
+                inicijalizacija = false;
+                if (sirina > maxSirina)
+                    otac.promena = true;
+                else
+                {
+                    otac.promena = false;
+
+                    return;
+                }
+
+            }
+          // otac.promena = false;
+
+
+
+            if ((otac.landscape) &&
+                    (otac.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT))
+            {
+                RatingBar g = (RatingBar) otac.findViewById(R.id.rating_guzva);
+                RatingBar k = (RatingBar) otac.findViewById(R.id.rating_klimatizovanost);
+                RatingBar u = (RatingBar) otac.findViewById(R.id.rating_ukupno);
+
+                float gRat,kRat,uRat;
+                gRat = g.getRating();
+                kRat = k.getRating();
+                uRat = u.getRating();
+
                 LinearLayout ratingBars = (LinearLayout) otac.findViewById(R.id.rating_bars);
                 ratingBars.removeAllViewsInLayout();
 
@@ -843,28 +850,88 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 
-                LinearLayout dete = (LinearLayout) layoutInflater.inflate(R.layout.rating_bars, null);
+                LinearLayout dete = (LinearLayout) layoutInflater.inflate(R.layout.rating_bars_small, null);
+
+                g.setOnRatingBarChangeListener(null);
+                k.setOnRatingBarChangeListener(null);
+                u.setOnRatingBarChangeListener(null);
+
+                g = (RatingBar) dete.findViewById(R.id.rating_guzva);
+                k = (RatingBar) dete.findViewById(R.id.rating_klimatizovanost);
+                u = (RatingBar) dete.findViewById(R.id.rating_ukupno);
 
                 ratingBars.addView(dete);
                 otac.landscape = false;
-            } else if (!otac.landscape)
+                postaviListenerZaRatingBar(g,  k, u);
+
+                g.setRating(gRat);
+                k.setRating(kRat);
+            } else if ((!otac.landscape) &&
+                    (otac.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE))
             {
+                RatingBar g = (RatingBar) otac.findViewById(R.id.rating_guzva);
+                RatingBar k = (RatingBar) otac.findViewById(R.id.rating_klimatizovanost);
+                RatingBar u = (RatingBar) otac.findViewById(R.id.rating_ukupno);
+
+                float gRat,kRat,uRat;
+                gRat = g.getRating();
+                kRat = k.getRating();
+                uRat = u.getRating();
+
                 LinearLayout ratingBars = (LinearLayout) otac.findViewById(R.id.rating_bars);
                 ratingBars.removeAllViewsInLayout();
 
                 LayoutInflater layoutInflater = (LayoutInflater) otac
                         .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
+                LinearLayout dete = (LinearLayout) layoutInflater.inflate(R.layout.rating_bars_normal, null);
 
-                LinearLayout kopija = (LinearLayout) ((LinearLayout) layoutInflater
-                        .inflate(R.layout.fragment_mapa, null)).findViewById(R.id.rating_bars);
+                //((RelativeLayout) kopija.getParent()).removeAllViewsInLayout();
 
-                ((RelativeLayout) kopija.getParent()).removeAllViewsInLayout();
+                g.setOnRatingBarChangeListener(null);
+                u.setOnRatingBarChangeListener(null);
+                k.setOnRatingBarChangeListener(null);
 
-                ratingBars.addView(kopija);
+                g = (RatingBar) dete.findViewById(R.id.rating_guzva);
+                k = (RatingBar) dete.findViewById(R.id.rating_klimatizovanost);
+                u = (RatingBar) dete.findViewById(R.id.rating_ukupno);
+
+
+                ratingBars.addView(dete);
                 otac.landscape = true;
+                postaviListenerZaRatingBar(g,  k, u);
 
+                g.setRating(gRat);
+                k.setRating(kRat);
             }
+
+
+        }
+        public void postaviListenerZaRatingBar(RatingBar g, RatingBar k, RatingBar u)
+        {
+            final RatingBar guzva = g;
+            final RatingBar klima = k;
+            final RatingBar ukupno = u;
+
+            guzva.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener()
+            {
+                @Override
+                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser)
+                {
+                    otac.ukupniDojam = (klima.getRating() + rating )/ 2.0;
+                    ukupno.setRating((float) otac.ukupniDojam);
+                }
+            });
+
+            klima.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener()
+            {
+                @Override
+                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser)
+                {
+                    otac.ukupniDojam = (guzva.getRating() + rating )/ 2.0;
+                    ukupno.setRating((float) otac.ukupniDojam);
+                }
+            });
         }
 
         public static LatLng getMyPosition()
@@ -1081,30 +1148,25 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 spinner.setAdapter(karant_adapter);
             }
 
+            rootView.findViewById(R.id.rating_bars).getViewTreeObserver()
+                    .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+                    {
+                        @Override
+                        public void onGlobalLayout()
+                        {
+                            if (otac.promena)
+                                podesiInfo();
+                        }
+                    });
 
-            final RatingBar guzva = (RatingBar) rootView.findViewById(R.id.rating_guzva);
-            final RatingBar klima = (RatingBar) rootView.findViewById(R.id.rating_klimatizovanost);
-            final RatingBar ukupno = (RatingBar) rootView.findViewById(R.id.rating_ukupno);
+            RatingBar g = (RatingBar) rootView.findViewById(R.id.rating_guzva);
+            RatingBar k = (RatingBar) rootView.findViewById(R.id.rating_klimatizovanost);
+            RatingBar u = (RatingBar) rootView.findViewById(R.id.rating_ukupno);
 
-            guzva.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener()
-            {
-                @Override
-                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser)
-                {
-                    otac.ukupniDojam = (klima.getRating() + rating )/ 2.0;
-                    ukupno.setRating((float) otac.ukupniDojam);
-                }
-            });
+            postaviListenerZaRatingBar(g, k, u);
 
-            klima.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener()
-            {
-                @Override
-                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser)
-                {
-                    otac.ukupniDojam = (guzva.getRating() + rating )/ 2.0;
-                    ukupno.setRating((float) otac.ukupniDojam);
-                }
-            });
+
+
 
         }
 
@@ -1332,6 +1394,16 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 googleMap = null;
 
             }
+
+            RatingBar g = (RatingBar) otac.findViewById(R.id.rating_guzva);
+            RatingBar k = (RatingBar) otac.findViewById(R.id.rating_klimatizovanost);
+            RatingBar u = (RatingBar) otac.findViewById(R.id.rating_ukupno);
+            if (g != null)
+                g.setOnRatingBarChangeListener(null);
+            if (k != null)
+                k.setOnRatingBarChangeListener(null);
+            if (u != null)
+                u.setOnRatingBarChangeListener(null);
         }
 
         public static void removeAllFromMap()
