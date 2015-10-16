@@ -1,0 +1,53 @@
+<resources>
+    <string name="app_name">Bus++</string>
+
+    <string name="action_settings">Podešavanja</string>
+    <string name="title_activity_glavna__aktivnost">Glavna_Aktivnost</string>
+
+    <string name="title_section1">Linije</string>
+    <string name="title_section2">Mapa</string>
+    <string name="title_section3">Informacije</string>
+
+    <string name="view_red_voznje">Red Vožnje</string>
+    <string name="show_linija">Prikaži Liniju</string>
+    <string name="pocetak">Početak</string>
+    <string name="finish_marker">Odredište</string>
+    <string name="vreme_dolaska">Vreme dolaska</string>
+    <string name="vreme_polaska">Vreme polaska</string>
+    <string name="napomena">Napomena</string>
+    <string name="linija">Linija</string>
+    <string name="smer">Smer</string>
+    <string name="naziv">Naziv</string>
+    <string name="stanica">Stanica</string>
+
+    <string name="ekonomicni">Ekonomični</string>
+    <string name="polazna_stanica">Polazna stanica</string>
+    <string name="zavrsna_stanica">Završna stanica</string>
+    <string name="postavi_start">Postavi početnu poziciju</string>
+    <string name="clean_map">Očisti mapu</string>
+    <string name="pesacenje">Pešačenje</string>
+    <string name="cilj">Cilj</string>
+    <string name="title_activity_podesavanja">Podešavanja</string>
+    <string name="minwalk">Minimalno pešacenje</string>
+    <string name="optimalni">Najbrži</string>
+    <string name="ekoopt">Najbrži ekonomični</string>
+    <string name="choose_mode">Izaberite navigacioni mod:</string>
+    <string name="nadji_put">Nađi put</string>
+    <string name="izaberi_cilj">Izaberi cilj na mapi</string>
+    <string name="show_on_map">Prikaži na mapi</string>
+    <string name="cancel">Otkaži</string>
+    <string name="bus_informations">Informacije u autobusu:</string>
+    <string name="smerA">Smer A</string>
+    <string name="smerB">Smer B</string>
+    <string name="address">Potraži adresu</string>
+
+    <string name="guzva">Gužva</string>
+    <string name="klimatizovanost">Zagušljivost</string>
+    <string name="kontrola">Kontrola</string>
+    <string name="send_info">Pošalji informacije</string>
+    <string name="ukupno">Ukupno</string>
+    <string name="presedanje">Presedanje</string>
+
+    <string name="hello_world">Hello world!</string>
+
+</resources>
