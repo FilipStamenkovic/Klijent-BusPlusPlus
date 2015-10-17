@@ -1,12 +1,20 @@
 package rs.mosis.diplomski.bus;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioButton;
+
+import java.util.Locale;
 
 public class Podesavanja extends AppCompatActivity
 {
@@ -19,20 +27,29 @@ public class Podesavanja extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_podesavanja);
+        this.setTitle(R.string.action_settings);
         preferences = Glavna_Aktivnost.preferences;
+
+        int jez = preferences.getInt("jezik", -1);
+       // Constants.jezik = -1;
+        if (jez != -1)
+        {
+            // Constants.jezik = jez;
+            Podesavanja.setLocale(this, 2, jez);
+        }
         switch (Constants.mode)
         {
             case 4:
-                ((RadioButton)findViewById(R.id.ekonomicni)).setChecked(true);
+                ((RadioButton) findViewById(R.id.ekonomicni)).setChecked(true);
                 break;
             case 7:
-                ((RadioButton)findViewById(R.id.minwalk)).setChecked(true);
+                ((RadioButton) findViewById(R.id.minwalk)).setChecked(true);
                 break;
             case 6:
-                ((RadioButton)findViewById(R.id.optimalni)).setChecked(true);
+                ((RadioButton) findViewById(R.id.optimalni)).setChecked(true);
                 break;
             case 5:
-                ((RadioButton)findViewById(R.id.ekoopt)).setChecked(true);
+                ((RadioButton) findViewById(R.id.ekoopt)).setChecked(true);
                 break;
         }
 
@@ -43,8 +60,34 @@ public class Podesavanja extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         // Inflate the menu; this adds items to the action bar if it is present.
-      //  getMenuInflater().inflate(R.menu.menu_podesavanja, menu);
+        getMenuInflater().inflate(R.menu.menu_podesavanja, menu);
         return true;
+    }
+
+    public static void setLocale(Activity aktivnost, int num,int jezik)
+    {
+        if (jezik == Constants.jezik)
+            return;
+        else
+            Constants.jezik = jezik;
+
+        String lang = "en";
+        if (Constants.jezik == 2)
+            lang = "sr";
+        Locale myLocale = new Locale(lang);
+        Resources res = aktivnost.getResources();
+        DisplayMetrics dm = res.getDisplayMetrics();
+        Configuration conf = res.getConfiguration();
+        conf.locale = myLocale;
+        res.updateConfiguration(conf, dm);
+        Intent refresh;
+
+        if (num == 1)
+            refresh = new Intent(aktivnost, Glavna_Aktivnost.class);
+        else
+            refresh = new Intent(aktivnost, Podesavanja.class);
+        aktivnost.startActivity(refresh);
+        aktivnost.finish();
     }
 
     public void onRadioButtonClicked(View view)
@@ -102,9 +145,26 @@ public class Podesavanja extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings)
+        if (id == R.id.action_english)
         {
+
+            //Constants.jezik = 1;
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("jezik", 1);
+            editor.commit();
+            setLocale(this, 2,1);
+
             return true;
+        } else if (id == R.id.action_serbian)
+        {
+
+           // Constants.jezik = 2;
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("jezik", 2);
+            editor.commit();
+            setLocale(this, 2,2);
+            return true;
+
         }
 
         return super.onOptionsItemSelected(item);

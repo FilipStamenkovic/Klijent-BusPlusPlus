@@ -2,13 +2,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="rs.mosis.diplomski.bus.Glavna_Aktivnost">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
-
     <item android:id="@+id/action_nadji_put" android:title="@string/nadji_put"
-          android:orderInCategory="100" app:showAsAction="never" />
+          android:icon="@android:drawable/ic_menu_directions"
+          android:orderInCategory="100" app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_settings" android:title="@string/action_settings" android:icon="@android:drawable/ic_menu_preferences"
+        android:orderInCategory="100" app:showAsAction="ifRoom" />
+
+
     <item android:id="@+id/action_set_start" android:title="@string/postavi_start"
           android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_clean_map" android:title="@string/clean_map"
-          android:orderInCategory="100" app:showAsAction="never" />
+          android:icon="@android:drawable/ic_menu_delete"
+          android:orderInCategory="100" app:showAsAction="ifRoom" />
 </menu>

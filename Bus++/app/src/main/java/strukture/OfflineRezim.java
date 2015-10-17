@@ -383,7 +383,7 @@ public class OfflineRezim
                                     tempTime.get(Calendar.SECOND), tempTime.get(Calendar.MINUTE),
                                     tempTime.get(Calendar.HOUR_OF_DAY),
                                     tempTime.get(Calendar.DAY_OF_WEEK),
-                                    tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR));
+                                    tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR), null);
 
                             tempCvor.vremeDolaskaAutobusaNaPrethodnuStanicu = vremeDolaska;
                         } else
@@ -804,7 +804,7 @@ public class OfflineRezim
                         tempTime.get(Calendar.SECOND), tempTime.get(Calendar.MINUTE),
                         tempTime.get(Calendar.HOUR_OF_DAY),
                         tempTime.get(Calendar.DAY_OF_WEEK),
-                        tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR));
+                        tempTime.get(Calendar.MONTH), tempTime.get(Calendar.YEAR),null);
 
                 vremenaDolaska.add(vremeDolaska);
             }

@@ -47,7 +47,13 @@
     <string name="send_info">Pošalji informacije</string>
     <string name="ukupno">Ukupno</string>
     <string name="presedanje">Presedanje</string>
+    <string name="english">English</string>
+    <string name="srpski">Srpski</string>
+    <string name="komentari">Unesi komentar</string>
+    <string name="start">Start</string>
 
     <string name="hello_world">Hello world!</string>
+    <string name="info_kontrole">Nema informacija o kontrolama</string>
+    <string name="last_seen">Poslednji put viđena:</string>
 
 </resources>

@@ -3,6 +3,8 @@ package rs.mosis.diplomski.bus;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import strukture.CSInfo;
+
 /**
  * Created by filip on 9/15/15.
  */
@@ -15,15 +17,14 @@ public class Request {
     public Double destLat = null;
     public Double destLon = null;
     public Integer linija = null;
-    public String smer = null;
+    //public String smer = null;
     public Double dbVer = null;
 
-
-    public Request() {
-    }
+    public CSInfo crowdSensing = null;
+    public Request() {}
 
     public Request(Integer type, Double srcLat, Double srcLon, Double destLat,
-                   Double destLon, Integer linija, String smer,Double dbVer)
+                   Double destLon, Integer linija, Double dbVer,CSInfo crowdSensing)
     {
         this.type = type;
         this.srcLat = srcLat;
@@ -31,11 +32,15 @@ public class Request {
         this.destLat = destLat;
         this.destLon = destLon;
         this.linija = linija;
-        this.smer = smer;
         this.dbVer = dbVer;
+        this.crowdSensing = crowdSensing;
     }
 
-    public String toString() {
+
+
+    @Override
+    public String toString()
+    {
         Gson gson = new GsonBuilder().create();
 
         return gson.toJson(this);

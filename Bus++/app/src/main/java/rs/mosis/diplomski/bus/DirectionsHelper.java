@@ -260,6 +260,66 @@ public class DirectionsHelper
         }
     }
 
+    public List<LatLng> preurediTacke(double udalj, List<LatLng> tacke)
+    {
+        /*ArrayList<LatLng> tacke = new ArrayList<>();
+        tacke.add(ulice[0]);
+        tacke.add(ulice[1]);*/
+
+        ArrayList<LatLng> preuredjene = new ArrayList<>();
+        LatLng trenutna = tacke.get(0);
+        //tacke.remove(0);
+        preuredjene.add(trenutna);
+        int size = tacke.size();
+        for (int i = 1; i < size; i++)
+        {
+            LatLng radna = tacke.get(i);
+            double udaljenost = OfflineRezim.calcDistance(trenutna.latitude, trenutna.longitude, radna.latitude, radna.longitude);
+            //tacke.remove(0);
+            if (udaljenost >udalj * 2)
+            {
+                preuredjene.addAll(vratiTackeIzmedju(trenutna, radna, udalj));
+                trenutna = radna;
+            } else if (udaljenost > udalj)
+            {
+                preuredjene.add(radna);
+                trenutna = radna;
+            }
+        }
+        size = preuredjene.size();
+        ArrayList<LatLng> indeksi = new ArrayList<>();
+        for (int i = 0; i < size; i++)
+            for (int j = i + 1; j < size; j++)
+            {
+                double udaljenost = OfflineRezim.calcDistance(
+                        preuredjene.get(i).latitude, preuredjene.get(i).longitude,
+                        preuredjene.get(j).latitude, preuredjene.get(j).longitude);
+                if (udaljenost < udalj)
+                    for (int l = i + 1; l < j; l++)
+                        indeksi.add(preuredjene.get(l));
+            }
+        int j = 0;
+        while (indeksi.size() > 0)
+        {
+            size = preuredjene.size();
+            int i;
+            for (i = j; i < size; i++)
+                if (preuredjene.get(i) == indeksi.get(0))
+                {
+                    preuredjene.remove(i);
+                    indeksi.remove(0);
+                    j = i;
+                    break;
+                }
+            if (i == size)
+                indeksi.remove(0);
+        }
+
+        return preuredjene;
+
+    }
+
+
     private List<LatLng> vratiTackeIzmedju(LatLng source,LatLng dest, double razmak)
     {
         double udaljenost = OfflineRezim.calcDistance(source.latitude,source.longitude,dest.latitude,dest.longitude);

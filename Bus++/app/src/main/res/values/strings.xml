@@ -49,5 +49,11 @@
     <string name="presedanje">Stopover</string>
 
     <string name="hello_world">Hello world!</string>
+    <string name="english">English</string>
+    <string name="srpski">Srpski</string>
+    <string name="komentari">Enter comment</string>
+    <string name="start">Start</string>
+    <string name="info_kontrole">No informations about controls</string>
+    <string name="last_seen">Last seen:</string>
 
 </resources>

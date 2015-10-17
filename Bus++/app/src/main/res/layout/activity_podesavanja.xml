@@ -25,13 +25,21 @@
         android:orientation="vertical"
         android:layout_height="wrap_content">
 
+        <RadioButton
+            android:id="@+id/ekoopt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ekoopt"
+            android:drawableRight="@mipmap/ic_time_money"
+            android:onClick="onRadioButtonClicked"/>
+
             <RadioButton
                 android:id="@+id/ekonomicni"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/ekonomicni"
                 android:onClick="onRadioButtonClicked"
-                android:drawableRight="@mipmap/ic_linija_4"
+                android:drawableRight="@mipmap/ic_money"
                 />
             <RadioButton
                 android:id="@+id/minwalk"
@@ -39,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/minwalk"
                 android:onClick="onRadioButtonClicked"
-                android:drawableRight="@mipmap/ic_linija_5"
+                android:drawableRight="@mipmap/ic_sloth2"
                 />
             <RadioButton
                 android:id="@+id/optimalni"
@@ -47,15 +55,9 @@
                 android:layout_height="wrap_content"
                 android:text="@string/optimalni"
                 android:onClick="onRadioButtonClicked"
-                android:drawableRight="@mipmap/ic_linija_6"
+                android:drawableRight="@mipmap/ic_time"
                 />
-            <RadioButton
-                android:id="@+id/ekoopt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/ekoopt"
-                android:drawableRight="@mipmap/ic_linija_7"
-                android:onClick="onRadioButtonClicked"/>
+
 
     </RadioGroup>
 

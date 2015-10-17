@@ -12,7 +12,6 @@ public class Linija
 	public String broj = null;
 	public String smer = null;
 	public String naziv = null;
-	public transient String podlinija = null;
 	public transient Cvor pocetnaStanica = null;
 
 	public transient int matRadni[][] = null;         	//mat[i][j]==-1 znaci prazno
@@ -55,24 +54,8 @@ public class Linija
 		//return id + " " +broj +" " +smer + " " +naziv + " <<" + pocetnaStanica.id +">>";
 	}
 
-	private void setPodlinija()
-	{
-		podlinija = "";
-		String brojke = broj.replaceAll("[0-9]", "");
-		for(int i = 0; i < broj.length() - brojke.length(); i++)
-			podlinija += "*";
-	}
-
-	public String getPodlinija()
-	{
-		return podlinija;
-	}
-
 	public ArrayList<Integer> getVremena(int korekcija)
 	{
-		//String vreme = "";
-
-		setPodlinija();
 
 		Calendar now = Calendar.getInstance();
 		int day = now.get(Calendar.DAY_OF_WEEK);
@@ -89,6 +72,11 @@ public class Linija
 			minute += 60;
 		}
 
+        if (hour < 0)
+        {
+            hour += 24;
+            day--;
+        }
 
 		if(day == Calendar.SUNDAY)
         {
@@ -182,9 +170,7 @@ public class Linija
 
 	public ArrayList<Integer> getVremena(int korekcija, int size)
 	{
-		//String vreme = "";
 
-		setPodlinija();
 
 		Calendar now = Calendar.getInstance();
 		int day = now.get(Calendar.DAY_OF_WEEK);

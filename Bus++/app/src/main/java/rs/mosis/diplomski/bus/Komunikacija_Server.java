@@ -1,9 +1,10 @@
 package rs.mosis.diplomski.bus;
 
-import android.content.res.ColorStateList;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -26,9 +27,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import strukture.BusDBAdapter;
+import strukture.CSInfo;
+import strukture.Cvor;
 import strukture.GradskeLinije;
 import strukture.Graf;
+import strukture.Linija;
 import strukture.OfflineRezim;
+import strukture.StruktureConsts;
+import strukture.Veza;
 
 /**
  * Created by filip on 9/22/15.
@@ -53,11 +60,11 @@ public class Komunikacija_Server
             double verzija = busDatabasesHelper.getVersions(baza);
             Request request;
             if (baza == 'S')
-                request = new Request(0, null, null, null, null, null, null, new Double(verzija));
+                request = new Request(0, null, null, null, null, null, new Double(verzija),null);
             else if (baza == 'R')
-                request = new Request(1, null, null, null, null, null, null, new Double(verzija));
+                request = new Request(1, null, null, null, null, null, new Double(verzija),null);
             else
-                request = new Request(2, null, null, null, null, null, null, new Double(verzija));
+                request = new Request(2, null, null, null, null, null, new Double(verzija),null);
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
 //            Socket socket = new Socket(inetAddress, Constants.PORT);
@@ -80,6 +87,7 @@ public class Komunikacija_Server
             if (poruka == null)
             {
                 is.close();
+                input.close();
                 printWriter.close();
                 out.close();
                 socket.close();
@@ -93,6 +101,7 @@ public class Komunikacija_Server
             {
                 is.close();
                 printWriter.close();
+                input.close();
                 out.close();
                 socket.close();
                 MainActivity.aplikacija.namestiProgres();
@@ -152,6 +161,7 @@ public class Komunikacija_Server
             bos.close();
             printWriter.close();
             out.close();
+            input.close();
             socket.close();
 
         } catch (SocketTimeoutException e)
@@ -222,7 +232,7 @@ public class Komunikacija_Server
     {
         Response odgovor = null;
         Request request = new Request(new Integer(3), new Double(latLng.latitude),
-                new Double(latLng.longitude), null, null, linija_id, null, null);
+                new Double(latLng.longitude), null, null, linija_id, null,null);
         try
         {
 
@@ -250,6 +260,7 @@ public class Komunikacija_Server
             {
                 is.close();
                 printWriter.close();
+                input.close();
                 out.close();
                 socket.close();
                 return null;
@@ -257,6 +268,11 @@ public class Komunikacija_Server
 
             Gson gson = new GsonBuilder().create();
             odgovor = gson.fromJson(poruka, Response.class);
+            is.close();
+            printWriter.close();
+            input.close();
+            out.close();
+            socket.close();
         } catch (UnknownHostException e)
         {
             e.printStackTrace();
@@ -497,7 +513,7 @@ public class Komunikacija_Server
         Response odgovor = null;
         Request request = new Request(new Integer(Constants.mode), new Double(source.latitude),
                 new Double(source.longitude), new Double(destination.latitude),
-                new Double(destination.longitude), null, null, null);
+                new Double(destination.longitude), null, null,null);
         try
         {
 
@@ -525,12 +541,18 @@ public class Komunikacija_Server
                 is.close();
                 printWriter.close();
                 out.close();
+                input.close();
                 socket.close();
                 return null;
             }
 
             Gson gson = new GsonBuilder().create();
             odgovor = gson.fromJson(poruka, Response.class);
+            is.close();
+            printWriter.close();
+            out.close();
+            input.close();
+            socket.close();
         } catch (UnknownHostException e)
         {
             e.printStackTrace();
@@ -562,4 +584,253 @@ public class Komunikacija_Server
 
     }
 
+    private static ArrayList<Cvor> getNajblizeStanice(String linija, String smer, LatLng source,Integer linijaId)
+    {
+
+        Linija [] linije = MainActivity.graf.getGl().linije;
+        BusDBAdapter.setPolilinije();
+        int minUdaljenost = 1000000000;
+        ArrayList<Cvor> povratak = null;
+        for (int i = 0; i < linije.length; i++)
+        {
+            if (linije[i] != null)
+                if ((linija.equals(linije[i].broj.replace("*", ""))) && (smer.equals(linije[i].smer)))
+                {
+                    Linija l = linije[i];
+
+                    Cvor c = l.pocetnaStanica;
+
+                    //cvorovi.add(c);
+                    Cvor pocetna = c;
+                    Veza v = null;
+
+
+                    while ((v = c.vratiVezu(l)) != null)
+                    {
+                       // Log.e("provera", c.naziv);
+                        if ((c.status == StruktureConsts.CVOR_OBRADJEN)
+                                && (v.destination.status == StruktureConsts.CVOR_OBRADJEN))
+                        {
+                            c = v.destination;
+                            if (c == pocetna)
+                                break;
+                        }
+                        else
+                        {
+                            LatLngBounds.Builder builder = LatLngBounds.builder();
+                                    //.include(new LatLng(c.lat, c.lon))
+                                  //  .include(new LatLng(v.destination.lat, v.destination.lon));
+
+                            boolean b = false;
+
+                            DirectionsHelper directionsHelper = new DirectionsHelper
+                                    (new LatLng(c.lat,c.lon), new LatLng(v.destination.lat,v.destination.lon));
+                            List<LatLng> lista = directionsHelper.preurediTacke(Constants.udaljenostPesacenje / 5,v.putanje);
+
+                            int size = lista.size();
+
+                            for (int j = 0; j < size; j++)
+                            {
+                                builder.include(lista.get(j));
+                            }
+
+                            LatLngBounds granice = builder.build();
+
+                            if (granice.contains(source))
+                            {
+                                ArrayList<Cvor> temp = new ArrayList<>();
+                                for (int j = 0; j < size; j++)
+                                {
+                                    //builder.include(v.putanje.get(j));
+                                    double minimum = OfflineRezim.calcDistance(source.latitude,
+                                            source.longitude,lista.get(j).latitude,
+                                            lista.get(j).longitude);
+
+                                    if (minUdaljenost > minimum)
+                                    {
+                                        b = true;
+                                        minUdaljenost = (int) minimum;
+                                    }
+                                }
+                                if (b)
+                                {
+                                    //minUdaljenost = odPrve + doDruge;
+                                    temp.add(c);
+                                    temp.add(v.destination);
+                                    povratak = temp;
+                                   // Log.e("0. stanica", temp.get(0).naziv);
+                                   // Log.e("1. stanica", temp.get(1).naziv);
+                                 //   Log.e("lokacija", Glavna_Aktivnost.MyLocation.toString());
+
+                                }
+                                linijaId = i;
+
+                            }
+                            c.status = StruktureConsts.CVOR_OBRADJEN;
+                            c = v.destination;
+                            c.status = StruktureConsts.CVOR_OBRADJEN;
+                            if (c == pocetna)
+                                break;
+                        }
+                    }
+                }
+        }
+        return povratak;
+    }
+
+    public static void sendInfo(String linija, String smer, int guzva, int klimatizovanost,
+                                LatLng source, boolean kontrola, String komentar)
+    {
+        Integer linijaId = 0;
+        ArrayList<Cvor> stanice = getNajblizeStanice(linija,smer,source,linijaId);
+
+
+        final String sekvenca;
+        if(stanice != null)
+        {
+            int udaljenost = izracunajUdaljenost(stanice,source);
+
+            sekvenca = stanice.get(0).naziv + "\n" + stanice.get(1).naziv + "\n" + udaljenost;
+
+            CSInfo crowdSource = new CSInfo(source.latitude, source.longitude,guzva, klimatizovanost,
+                    linija, smer, stanice.get(0).id, udaljenost, komentar,kontrola);
+            Request request = new Request(10,null,null,null,null,null,null,crowdSource);
+
+            try
+            {
+
+                String poruka = request.toString();
+                InetAddress inetAddress = InetAddress.getByName(Constants.IP);
+//            Socket socket = new Socket(inetAddress, Constants.PORT);
+                Socket socket = new Socket();
+                socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
+                OutputStream out = socket.getOutputStream();
+                PrintWriter printWriter = new PrintWriter(out);
+
+
+                printWriter.print(poruka + "\n");
+                printWriter.flush();
+
+
+
+                printWriter.close();
+                out.close();
+                socket.close();
+
+            } catch (UnknownHostException e)
+            {
+                e.printStackTrace();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+        }
+        else
+        {
+            sekvenca = "Nema tih stanica";
+            //Log.e("stanice", "nema");
+            //Toast.makeText(Glavna_Aktivnost.otac,"Nema tih stanica",Toast.LENGTH_LONG).show();
+        }
+
+
+
+        Glavna_Aktivnost.UIHandler.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                Toast.makeText(Glavna_Aktivnost.otac,sekvenca,Toast.LENGTH_LONG).show();
+            }
+        });
+
+
+
+        MainActivity.graf.resetujCvorove();
+    }
+
+    private static int izracunajUdaljenost(ArrayList<Cvor> stanice, LatLng source)
+    {
+        int izmedjuStanica,odPrve,doDruge;
+
+        izmedjuStanica = 0;
+
+        Cvor c = stanice.get(0);
+        Veza v = null;
+
+        int size = c.veze.size();
+
+
+        for(int i = 0; i < size; ++i)
+        {
+            v = c.veze.get(i);
+            if (v.destination == stanice.get(1))
+            {
+                izmedjuStanica = v.weight;
+                break;
+            }
+        }
+
+        odPrve = (int) OfflineRezim.calcDistance(stanice.get(0),source.latitude,source.longitude);
+        doDruge = (int) OfflineRezim.calcDistance(stanice.get(1),source.latitude,source.longitude);
+
+        double procenat = ((double) odPrve) / (odPrve + doDruge);
+
+
+
+        return (int) (procenat * izmedjuStanica);
+    }
+
+    public static Response zatraziKontrole()
+    {
+        Response odgovor = null;
+        Request request = new Request(new Integer(11), null,
+                null, null, null, null, null,null);
+        try
+        {
+            String poruka = request.toString();
+            InetAddress inetAddress = InetAddress.getByName(Constants.IP);
+//            Socket socket = new Socket(inetAddress, Constants.PORT);
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
+
+            InputStream is = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
+            PrintWriter printWriter = new PrintWriter(out);
+
+
+            printWriter.print(poruka + "\n");
+            printWriter.flush();
+
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(is));
+            poruka = input.readLine();
+            if (poruka == null)
+            {
+                is.close();
+                printWriter.close();
+                input.close();
+                out.close();
+                socket.close();
+                return null;
+            }
+
+            Gson gson = new GsonBuilder().create();
+            odgovor = gson.fromJson(poruka, Response.class);
+            is.close();
+            printWriter.close();
+            input.close();
+            out.close();
+            socket.close();
+        } catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+
+        return odgovor;
+    }
 }

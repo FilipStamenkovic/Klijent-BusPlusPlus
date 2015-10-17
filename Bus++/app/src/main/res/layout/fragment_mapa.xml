@@ -1,4 +1,5 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:focusable="true"
@@ -24,7 +25,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-
         android:layout_alignParentRight="true"
         android:layout_below="@+id/search_adresa"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -38,9 +38,21 @@
         android:id="@+id/fab"
         android:clickable="true"
         android:onClick="prikaziCrowdSourcing"
+        android:paddingBottom="15dp"
         android:src="@android:drawable/ic_dialog_info"
-
         android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/kontrolaButton"
+        android:clickable="true"
+        android:onClick="prikaziKontrole"
+        android:src="@android:drawable/stat_sys_warning"
+        app:backgroundTint="#FF0000"
+        android:layout_below="@+id/fab"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"/>
 
@@ -55,6 +67,7 @@
         android:layout_alignTop="@+id/fab"
         android:layout_marginLeft="15dp"
         android:layout_marginBottom="15dp"
+        android:padding="5dp"
         android:background="@drawable/pozadina"
         android:theme="@style/Animation.AppCompat.DropDownUp"
         android:layout_alignParentBottom="true"
@@ -62,10 +75,12 @@
         android:layout_alignParentStart="true">
         <ScrollView
             android:layout_width="match_parent"
+            android:layout_margin="5dp"
             android:layout_height="match_parent">
         <LinearLayout
             android:layout_width="match_parent"
             android:orientation="vertical"
+
             android:layout_height="match_parent">
 
             <TextView
@@ -215,8 +230,18 @@
                 </RelativeLayout>
             </LinearLayout>
 
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/komentar"
+                android:imeOptions="actionDone"
+                android:background="@drawable/pozadina"
+                android:hint="@string/komentari"
+                />
+
             <CheckBox
                 android:layout_width="wrap_content"
+                android:id="@+id/kontrola"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="@string/kontrola"
@@ -226,8 +251,8 @@
                 android:layout_width="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="@string/send_info"
+                android:id="@+id/sendInfo"
                 android:layout_height="wrap_content"/>
-
 
         </LinearLayout>
         </ScrollView>
