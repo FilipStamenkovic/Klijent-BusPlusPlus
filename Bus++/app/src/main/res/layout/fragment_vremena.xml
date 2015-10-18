@@ -8,7 +8,6 @@
         android:layout_width="0dp"
         android:layout_weight="4"
         android:gravity="center"
-        android:background="@drawable/pozadina"
         android:layout_height="wrap_content"
         android:tag="vreme_dolaska"
         />
@@ -17,7 +16,6 @@
         android:layout_width="0dp"
         android:layout_weight="4"
         android:tag="vreme_polaska"
-        android:background="@drawable/pozadina"
         android:gravity="center"
         android:layout_height="wrap_content"
         />

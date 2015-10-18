@@ -18,12 +18,12 @@ public class OfflineRezim
     public Response handleRequest3(Request req)
     {
         Linija linije[] = MainActivity.graf.getGl().linije;
-      //  ArrayList<CSInfo> targetCrowdInfo = new ArrayList<>();
+        //ArrayList<CSInfo> targetCrowdInfo = new ArrayList<>();
         //Graf g = owner.getGraf();
         //ArrayList<Cvor> stanice = g.getStanice();
         ArrayList<Linija> targetLinije = new ArrayList<>();
 
-        if(req.linija < 1 || req.linija >= linije.length)
+        if(req.linija<1 || req.linija>=linije.length)
             return null;
 
         String brojLinije = linije[req.linija].broj.replace("*", "");
@@ -45,7 +45,9 @@ public class OfflineRezim
 
         Integer linijeId[] = new Integer[targetLinije.size()];
         Integer staniceId[] = new Integer[targetLinije.size()];
-        Integer korekcije[] = new Integer[targetLinije.size()];
+        //Integer korekcije[] = new Integer[targetLinije.size()];
+        ArrayList<Integer> targetKorekcije = new ArrayList<>();
+        int korekcija = 0;
 
         for(int i = 0; i < targetLinije.size(); ++i)
         {
@@ -86,18 +88,27 @@ public class OfflineRezim
 
             staniceId[i] = minDistanceStanice[i].id;
 
-            korekcije[i] = izracunajKorekciju(l, minDistanceStanice[i], predjeniPutBusaDoNajblizeStanice);
+            korekcija = izracunajKorekciju(l, minDistanceStanice[i], predjeniPutBusaDoNajblizeStanice);
 
-            //ubaci i crowd sensing
-           // targetCrowdInfo.addAll(this.getCrowdInfo(l, korekcije[i]));
+            Calendar calendar = Calendar.getInstance();
+            int saaati = calendar.get(Calendar.HOUR_OF_DAY);
+
+            for(int k = saaati; k < 27; ++k)
+            {
+                targetKorekcije.add(izracunajKorekcijuZaCas(l, minDistanceStanice[i], predjeniPutBusaDoNajblizeStanice, k%24));
+            }
+
         }
 
-       // String responseStr = (new Response(req.type, staniceId, linijeId, korekcije, null, null, null, targetCrowdInfo)).toString();
+       Response response = new Response(req.type, staniceId, linijeId, targetKorekcije.toArray(new Integer[targetKorekcije.size()]), null, null, null);
 
-        Response response = new Response(req.type, staniceId, linijeId, korekcije, null, null, null);
-        return response;
+        return  response;
 
+    }
 
+    private int izracunajKorekcijuZaCas(Linija linija, Cvor stanica, int predjeniPut, int cas)
+    {
+        return (int) (predjeniPut/this.brzinaAutobusaZaCas(linija, cas));
     }
 
     public static double calcDistance(Cvor cvor1, Cvor cvor2)
@@ -143,6 +154,14 @@ public class OfflineRezim
             return Constants.brzinaPesaka;
         else
             return linija.vratiTrenutnuBrzinu();
+    }
+
+    private double brzinaAutobusaZaCas(Linija linija, int cas)
+    {
+        if(linija == null)
+            return Constants.brzinaPesaka;
+        else
+            return linija.vratiBrzinu(cas);
     }
 
     private int izracunajKorekciju(Linija linija, Cvor targetStanica)
@@ -288,6 +307,8 @@ public class OfflineRezim
 
         Graf graf = MainActivity.graf;
         graf.resetujCvorove();
+
+        graf.inicijalizujMatricu();
 
         Double[][] matricaUdaljenosti = graf.matricaUdaljenosti;
 

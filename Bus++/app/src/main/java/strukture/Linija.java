@@ -364,4 +364,12 @@ public class Linija
 
         return raspodelaBrzina[currentTime.get(Calendar.HOUR_OF_DAY)];
     }
+
+    public double vratiBrzinu(int cas)
+    {
+        if(cas<0 || cas>24)
+            return 0.0;
+        else
+            return raspodelaBrzina[cas];
+    }
 }

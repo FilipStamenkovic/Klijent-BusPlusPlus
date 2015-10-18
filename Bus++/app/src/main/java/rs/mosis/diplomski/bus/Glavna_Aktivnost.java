@@ -117,6 +117,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
     public boolean landscape = true;
     public boolean promena = true;
+    private static boolean promenaJezina = true;
     public static ArrayList<CoordTimestamp> kontrole;
 
     /**
@@ -137,7 +138,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         if (jez != -1)
         {
             // Constants.jezik = jez;
-            Podesavanja.setLocale(this, 1, jez);
+            if(promenaJezina)
+                Podesavanja.setLocale(this, 1, jez);
+            promenaJezina = !promenaJezina;
         }
 
         this.setTitle(getString(R.string.app_name));
@@ -199,6 +202,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             this.promena = otac.promena;
             this.locationManager = otac.locationManager;
             this.listener = otac.listener;
+            this.mapaFragment = otac.mapaFragment;
+            this.linijeFragment = otac.linijeFragment;
+            this.odgovor_servera = otac.odgovor_servera;
         }
 
         otac = this;
@@ -209,6 +215,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
     {
         super.onConfigurationChanged(newConfig);
         // landscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE;
+        //mSectionsPagerAdapter.getItem(trenutniTab);
         // promena = true;
     }
 
@@ -386,7 +393,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
                         if (odgovor.type == 4)
                         {
-                            odgovor_servera.pripremiEkonomicni(odgovor, source, destination);
+                            odgovor_servera.pripremiEkonomicni(odgovor, source, destination, -1);
                         } else if (odgovor.type == 6)
                         {
                             odgovor_servera.pripremiOptimalni(odgovor, source, destination);
@@ -739,15 +746,15 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             {
                 case 0:
                     fragment = Linije.newInstance();
-                   // otac.linijeFragment = (Linije) fragment;
+                    otac.linijeFragment = (Linije) fragment;
                     break;
                 case 1:
                     fragment = MapaFragment.newInstance();
-                    //otac.mapaFragment = (MapaFragment) fragment;
+                    otac.mapaFragment = (MapaFragment) fragment;
                     break;
                 case 2:
                     fragment = Odgovor_Servera.newInstance();
-                   // otac.odgovor_servera = (Odgovor_Servera) fragment;
+                    otac.odgovor_servera = (Odgovor_Servera) fragment;
                     break;
             }
 
@@ -815,7 +822,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             boolean b = otac.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
 
             popuniLayout(b, rootView, inflater, container);
-            otac.linijeFragment = this;
+           // otac.linijeFragment = this;
             return rootView;
         }
 
@@ -1000,6 +1007,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         {
             if (inicijalizacija)
             {
+                if(otac.findViewById(R.id.rating_bars) == null)
+                    return;
                 int maxSirina = otac.findViewById(R.id.rating_bars).getWidth();
                 if (maxSirina == 0)
                     return;
@@ -1342,7 +1351,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             setUpMap();
             setUpSearch(rootView);
             setUpInfo(rootView);
-            otac.mapaFragment = this;
+           // otac.mapaFragment = this;
             return rootView;
         }
 
@@ -1943,7 +1952,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     ((RelativeLayout) rootView).addView(v);
                 }
 
-            otac.odgovor_servera = this;
+           // otac.odgovor_servera = this;
             return rootView;
         }
 
@@ -2145,31 +2154,14 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                             //redVoznje(id);
                         }
                     })
-                /*    .setNegativeButton(R.string.show_linija, new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog, int which)
-                        {
-                            prikaziNaMapi(id);
-                        }
-                    })
-                    .setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener()
-                    {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which)
-                        {
-
-                        }
-                    })*/
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .show();
+
         }
 
-        public void prikazekonomicnog(Response odgovor, ArrayList<String> vremenaPolaska,
-                                      ArrayList<String> vremenaDolaska)
+        public void prikazekonomicnog(final Response odgovor, ArrayList<String> vremenaPolaska,
+                                      ArrayList<String> vremenaDolaska, final LatLng source, final LatLng destination)
         {
-            Calendar now = Calendar.getInstance();
-            int hour = now.get(Calendar.HOUR_OF_DAY);
-            int minute = now.get(Calendar.MINUTE);
             if (v != null)
                 ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
             LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -2208,6 +2200,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
                 String dolazak = vremenaDolaska.get(i);
                 String polazak = vremenaPolaska.get(i);
+                boolean []izostavi = new boolean[odgovor.linije.length];
+                for(int ii = 0; ii < izostavi.length; ii++)
+                    izostavi[i] = false;
                 for (j = l + 1; j <= kraj; j++)
                 {
                     int brojZvezdica = j - l;
@@ -2216,7 +2211,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         zvezdice += "*";
                     String proba = dolazak.replace(zvezdice, "");
                     if (proba.length() == dolazak.length())
-                        odgovor.linije[j] = -1;
+                        izostavi[j] = true;
                 }
                 j = l;
                 StringTokenizer tokenizerDolazak = new StringTokenizer(dolazak, "\n");
@@ -2229,7 +2224,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     int pomak = dolazak.length() - dolazak.replace("*", "").length();
 
 
-                    if (odgovor.linije[j + pomak] != -1)
+                    if (!izostavi[j + pomak])
                     {
                         LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.slicke, null);
                         LinearLayout ikone = (LinearLayout) info.findViewById(R.id.slicice);
@@ -2237,17 +2232,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         imageView.setImageResource(R.mipmap.ic_walking);
 
 
-                        String sati, minuti;
-                        if (hour >= 10)
-                            sati = hour + "";
-                        else
-                            sati = "0" + hour;
-                        if (minute >= 10)
-                            minuti = "" + minute;
-                        else
-                            minuti = "0" + minute;
-                        dodajDeonicu(R.mipmap.ic_walking, otac.getString(R.string.start), polazna.naziv, sati + ":" + minuti,
-                                dolazak, otac.getString(R.string.pesacenje),
+                        dodajDeonicu(R.mipmap.ic_walking, otac.getString(R.string.start), polazna.naziv, "",
+                                "", otac.getString(R.string.pesacenje),
                                 (LinearLayout) info.findViewById(R.id.kontenjer));
 
                         ikone.addView(imageView);
@@ -2263,16 +2249,48 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                         imageView = new ImageView(otac);
                         imageView.setImageResource(R.mipmap.ic_walking);
 
-                        dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj), sati + ":" + minuti,
-                                dolazak, otac.getString(R.string.pesacenje),
+                        dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj), "",
+                                "", otac.getString(R.string.pesacenje),
                                 (LinearLayout) info.findViewById(R.id.kontenjer));
 
                         ikone.addView(imageView);
 
-                        ((TextView) info.findViewById(R.id.vremena)).setText(polazak + " - " + dolazak);
+                        ((TextView) info.findViewById(R.id.vremena)).setText(dolazak);
 
 
                         kontenjer.addView(info);
+
+                        RadioButton button = (RadioButton) layoutInflater
+                                .inflate(R.layout.show_on_map, null).findViewById(R.id.dugme);
+                        ((LinearLayout) button.getParent()).removeAllViewsInLayout();
+                        if (i == 0)
+                            button.setChecked(true);
+                        dugmici.add(button);
+
+                        button.setOnClickListener(new View.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                int size = dugmici.size();
+                                for (int i = 0; i < size; i++)
+                                {
+                                    RadioButton radio = dugmici.get(i);
+                                    if (radio.isChecked())
+                                        radio.setChecked(false);
+                                    RadioButton dugme = (RadioButton) v;
+                                    if (dugme == radio)
+                                    {
+                                        dugme.setChecked(true);
+                                        pripremiEkonomicni(odgovor, source, destination, i);
+                                        otac.getSupportActionBar().setSelectedNavigationItem(1);
+                                    }
+                                }
+                            }
+                        });
+
+                        ((LinearLayout) info.findViewById(R.id.kontenjer)).addView(button);
+
                     }
                 }
 
@@ -2351,7 +2369,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         }
 
         public void pripremiEkonomicni(final Response odgovor,
-                                              final LatLng source, final LatLng destination)
+                                              final LatLng source, final LatLng destination,int linija)
         {
             if (odgovor != null)
             {
@@ -2359,61 +2377,168 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 final ArrayList<Integer> linije_id = new ArrayList<>();
                 if (odgovor != null)
                 {
-                    for (int i = 0; i < odgovor.linije.length; i++)
-                        listaCvorova.add(MainActivity.graf.pratiLiniju(odgovor.linije[i], odgovor.stanice[0], odgovor.stanice[1]));
-
-                    int index = 0;
-
-                    for (int i = 0; i < odgovor.linije.length; i++)
-                        linije_id.add(new Integer(odgovor.linije[i]));
-
-                    for (int i = 0; i < odgovor.linije.length - 1; i++)
-                    {
-                        if ((GradskeLinije.istaOsnovna(odgovor.linije[index], odgovor.linije[index + 1]))
-                                && (listaCvorova.get(index).size() == listaCvorova.get(index + 1).size()))
+                    listaCvorova.add(MainActivity.graf.pratiLiniju(odgovor.linije[0], odgovor.stanice[0], odgovor.stanice[1]));
+                    linije_id.add(Integer.valueOf(odgovor.linije[0]));
+                    for (int i = 1; i < odgovor.linije.length; i++)
+                        if (!GradskeLinije.istaOsnovna(odgovor.linije[i],odgovor.linije[i-1]))
                         {
-                            listaCvorova.remove(index + 1);
-                            linije_id.remove(index + 1);
-                        } else
-                            index++;
+                            listaCvorova.add(MainActivity.graf.pratiLiniju(odgovor.linije[i], odgovor.stanice[0], odgovor.stanice[1]));
+                            linije_id.add(Integer.valueOf(odgovor.linije[i]));
+                        }
 
-                    }
+
                     Cvor pocetna = MainActivity.graf.getStanica(odgovor.stanice[0]);
                     otac.mapaFragment.nacrtajPesacenje(source, new LatLng(pocetna.lat, pocetna.lon));
                     int size = listaCvorova.size();
                     Cvor krajnja = MainActivity.graf.getStanica(odgovor.stanice[1]);
                     otac.mapaFragment.nacrtajPesacenje(new LatLng(krajnja.lat, krajnja.lon), destination);
 
-                    int pesacenje = (int) OfflineRezim.calcDistance(MainActivity.graf.getStanica(odgovor.stanice[0]),
-                            source.latitude, source.longitude);
 
-                    for (int i = 0; i < odgovor.korekcije.length; i++)
-                        odgovor.korekcije[i] -= (int) ((double) pesacenje / Constants.brzinaPesaka);
+                    if (linija == -1)
+                    {
+                        otac.mapaFragment.pratiLiniju(linije_id.get(0),
+                                listaCvorova.get(0), 0, Constants.GoogleBlue);
+                        if (dugmici != null)
+                            dugmici.clear();
+                        dugmici = new ArrayList<>();
+                    }
+                    else
+                    {
+                        otac.mapaFragment.obrisiPutovanje();
+                        for (int i = 0; i < size; i++)
+                            if (linija == i)
+                            {
+                                otac.mapaFragment.pratiLiniju(linije_id.get(i),
+                                        listaCvorova.get(i), 0, Constants.GoogleBlue);
+                                break;
+                            }
+                    }
+                }
+                if (linija == -1)
+                {
 
-                    for (int i = 0; i < size; i++)
-                        otac.mapaFragment.pratiLiniju(linije_id.get(i).intValue(),
-                                listaCvorova.get(i), 0,Constants.GoogleBlue);
+                    UIHandler.post(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
 
+                            prikazEkonomicnog(odgovor, source, destination, linije_id);
+
+
+                        }
+                    });
+                }
+            }
+        }
+
+        private void prikazEkonomicnog(final Response odgovor, final LatLng source, final LatLng destination, ArrayList<Integer> linijeId)
+        {
+            if (v != null)
+                ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
+            LayoutInflater layoutInflater = (LayoutInflater) otac.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            ViewGroup container = (ViewGroup) otac.findViewById(R.id.pager).getRootView();
+            Cvor polazna = MainActivity.graf.getStanica(odgovor.stanice[0]);
+            Cvor dolazna = MainActivity.graf.getStanica(odgovor.stanice[odgovor.stanice.length - 1]);
+            View view = layoutInflater.inflate(R.layout.fragment_ekonomicni, container, false);
+
+            int size = linijeId.size();
+            for (int i = 0; i < size; i++)
+            {
+                int LINIJAID = linijeId.get(i);
+                LinearLayout kontenjer;
+                if (i == 0)
+                    kontenjer = (LinearLayout) view.findViewById(R.id.kontenjer);
+                else
+                {
+                    View kopija = layoutInflater.inflate(R.layout.fragment_odgovor_servera, null);
+                    kontenjer = (LinearLayout) kopija.findViewById(R.id.kontenjer);
+                    ((ScrollView) kontenjer.getParent()).removeAllViewsInLayout();
                 }
 
-                UIHandler.post(new Runnable()
+                LinearLayout info = (LinearLayout) layoutInflater.inflate(R.layout.slicke, null);
+                LinearLayout ikone = (LinearLayout) info.findViewById(R.id.slicice);
+                ImageView imageView = new ImageView(otac);
+                imageView.setImageResource(R.mipmap.ic_walking);
+
+
+                dodajDeonicu(R.mipmap.ic_walking, otac.getString(R.string.start), polazna.naziv, "",
+                        "", otac.getString(R.string.pesacenje),
+                        (LinearLayout) info.findViewById(R.id.kontenjer));
+
+                ikone.addView(imageView);
+                int resurs = MainActivity.ikonice[LINIJAID];
+                imageView = new ImageView(otac);
+                imageView.setImageResource(resurs);
+
+                dodajDeonicu(resurs, polazna.naziv, dolazna.naziv, "",
+                        "", MainActivity.graf.getGl().linije[LINIJAID].naziv,
+                        (LinearLayout) info.findViewById(R.id.kontenjer));
+
+                ikone.addView(imageView);
+                imageView = new ImageView(otac);
+                imageView.setImageResource(R.mipmap.ic_walking);
+
+                dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj), "",
+                        "", otac.getString(R.string.pesacenje),
+                        (LinearLayout) info.findViewById(R.id.kontenjer));
+
+                ikone.addView(imageView);
+
+                ((TextView) info.findViewById(R.id.vremena)).setText("");
+
+
+                kontenjer.addView(info);
+
+                RadioButton button = (RadioButton) layoutInflater
+                        .inflate(R.layout.show_on_map, null).findViewById(R.id.dugme);
+                ((LinearLayout) button.getParent()).removeAllViewsInLayout();
+                if (size > 1)
                 {
-                    @Override
-                    public void run()
+                    if (i == 0)
+                        button.setChecked(true);
+                    dugmici.add(button);
+
+                    button.setOnClickListener(new View.OnClickListener()
                     {
-                        if (odgovor == null)
+                        @Override
+                        public void onClick(View v)
                         {
-                            Toast.makeText(otac.getApplicationContext(), "UPS, greska", Toast.LENGTH_LONG).show();
-                        } else
-                        {
-                            ArrayList<String> vremena = otac.komunikacija.vremenaPolaska(odgovor, 60);
-                            ArrayList<String> korekcije = otac.komunikacija.vremenaDolaska(odgovor, vremena);
-                            prikazekonomicnog(odgovor, vremena, korekcije);
+                            int size = dugmici.size();
+                            for (int i = 0; i < size; i++)
+                            {
+                                RadioButton radio = dugmici.get(i);
+                                if (radio.isChecked())
+                                    radio.setChecked(false);
+                                RadioButton dugme = (RadioButton) v;
+                                if (dugme == radio)
+                                {
+                                    dugme.setChecked(true);
+                                    pripremiEkonomicni(odgovor, source, destination, i);
+                                    otac.getSupportActionBar().setSelectedNavigationItem(1);
+                                }
+                            }
                         }
+                    });
+                }
+
+                ((LinearLayout) info.findViewById(R.id.kontenjer)).addView(button);
 
 
-                    }
-                });
+                if (i > 0)
+                    ((LinearLayout) view.findViewById(R.id.kontenjer)).addView(kontenjer);
+
+            }
+            v = view;
+            if (otac.findViewById(R.id.wraper) != null)
+            {
+                if (v.getParent() != null)
+                {
+                    ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
+                    ((RelativeLayout) otac.findViewById(R.id.wraper)).removeAllViewsInLayout();
+                }
+
+                ((RelativeLayout) otac.findViewById(R.id.wraper)).addView(v);
             }
         }
 
@@ -2492,8 +2617,10 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             imageView.setImageResource(R.mipmap.ic_walking);
 
             ikone.addView(imageView);
+            boolean bb = false;
             for (int i = 2; i < odgovor.linije.length - 1; i++)
             {
+                bb = true;
                 if (odgovor.linije[i] == odgovor.linije[i + 1])
                     continue;
                 if (odgovor.linije[i] == null)
@@ -2510,13 +2637,16 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 }
             }
 
+            if (!bb)
+            {
+                ((TextView) info.findViewById(R.id.vremena)).setText(otac.getString(R.string.pesacenje));
+            }
+
             imageView = new ImageView(otac);
             imageView.setImageResource(R.mipmap.ic_walking);
 
-
-            ikone.addView(imageView);
-
-            ((TextView) info.findViewById(R.id.vremena)).setText("");
+            if (bb)
+                ikone.addView(imageView);
 
 
             ((LinearLayout) view.findViewById(R.id.kontenjer)).addView(info);
@@ -2574,10 +2704,11 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 else
                     b = true;
             }
+            if (bb)
+                dodajDeonicu(R.mipmap.ic_walking, polazna.naziv, otac.getString(R.string.cilj)
+                        , "", "", otac.getString(R.string.pesacenje),
+                        (LinearLayout) info.findViewById(R.id.kontenjer));
 
-            dodajDeonicu(R.mipmap.ic_walking, dolazna.naziv, otac.getString(R.string.cilj)
-                    , "", "", otac.getString(R.string.pesacenje),
-                    (LinearLayout) info.findViewById(R.id.kontenjer));
             v = view;
             if (otac.findViewById(R.id.wraper) != null)
             {

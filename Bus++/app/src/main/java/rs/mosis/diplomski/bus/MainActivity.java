@@ -38,6 +38,13 @@ public class MainActivity extends AppCompatActivity {
         preferences = getSharedPreferences(Constants.rezim, MODE_PRIVATE);
         Constants.numberTokens = preferences.getInt("tokens", 1000);
 
+        int jez = preferences.getInt("jezik", -1);
+        if (jez != -1)
+        {
+            // Constants.jezik = jez;
+                Podesavanja.setLocale(this, 1, jez);
+        }
+
 
         aplikacija = this;
 

@@ -19,6 +19,7 @@ public class Podesavanja extends AppCompatActivity
 {
 
     SharedPreferences preferences;
+    private static boolean promenaJezina = true;
 
 
     @Override
@@ -34,7 +35,9 @@ public class Podesavanja extends AppCompatActivity
         if (jez != -1)
         {
             // Constants.jezik = jez;
-            Podesavanja.setLocale(this, 2, jez);
+            if(promenaJezina)
+                Podesavanja.setLocale(this, 2, jez);
+            promenaJezina = !promenaJezina;
         }
         switch (Constants.mode)
         {
@@ -65,10 +68,7 @@ public class Podesavanja extends AppCompatActivity
 
     public static void setLocale(Activity aktivnost, int num,int jezik)
     {
-        if (jezik == Constants.jezik)
-            return;
-        else
-            Constants.jezik = jezik;
+        Constants.jezik = jezik;
 
         String lang = "en";
         if (Constants.jezik == 2)
@@ -78,15 +78,18 @@ public class Podesavanja extends AppCompatActivity
         DisplayMetrics dm = res.getDisplayMetrics();
         Configuration conf = res.getConfiguration();
         conf.locale = myLocale;
-        res.updateConfiguration(conf, dm);
+        //res.updateConfiguration(conf, dm);
+        aktivnost.getBaseContext().getResources().updateConfiguration(conf, aktivnost.getBaseContext().getResources().getDisplayMetrics());
         Intent refresh;
 
         if (num == 1)
             refresh = new Intent(aktivnost, Glavna_Aktivnost.class);
         else
+        {
             refresh = new Intent(aktivnost, Podesavanja.class);
-        aktivnost.startActivity(refresh);
-        aktivnost.finish();
+            aktivnost.startActivity(refresh);
+            aktivnost.finish();
+        }
     }
 
     public void onRadioButtonClicked(View view)

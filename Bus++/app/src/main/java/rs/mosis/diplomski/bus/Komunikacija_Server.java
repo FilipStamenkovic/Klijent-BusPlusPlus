@@ -25,6 +25,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -304,14 +305,9 @@ public class Komunikacija_Server
         ArrayList<String> povratniString = new ArrayList<>();
 
         for (int i = 0; i < odgovor.linije.length; i++)
-            vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i]));
+            vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].
+                    getVremena(odgovor.korekcije[i * odgovor.korekcije.length / odgovor.linije.length]));
 
-
-     /*   for (int i = 0; i < vremena.size(); i++)
-        {
-            if (vremena.get(i).size() == 0)
-                odgovor.linije[i] = -1;
-        }*/
 
         int pocetak = 0;
         int kraj;
@@ -387,19 +383,13 @@ public class Komunikacija_Server
             vremena.add(MainActivity.graf.getGl().linije[odgovor.linije[i]].getVremena(odgovor.korekcije[i], size));
 
 
-        for (int i = 0; i < vremena.size(); i++)
-        {
-            if (vremena.get(i).size() == 0)
-                odgovor.linije[i] = -1;
-        }
 
         int pocetak = 0;
         int kraj;
-        while (pocetak < odgovor.stanice.length - 1)
+        while (pocetak < odgovor.linije.length - 1)
         {
             kraj = pocetak;
             for (int i = pocetak; i < odgovor.linije.length - 1; i++)
-                if ((odgovor.linije[i] > -1) && (odgovor.linije[i + 1] > -1))
                     if (GradskeLinije.istaOsnovna(odgovor.linije[i], odgovor.linije[i + 1]))
                         kraj++;
                     else
@@ -441,7 +431,7 @@ public class Komunikacija_Server
                         s += sati + ":" + min % 100;
                     else
                         s += sati + ":0" + min % 100;
-                    for (int l = 0; l < indeks + pocetak; l++)
+                    for (int l = 0; l < indeks; l++)
                         s += "*";
                     s += "\n";
                     vremena.get(indeks + pocetak).remove(0);
@@ -458,7 +448,7 @@ public class Komunikacija_Server
     }
 
 
-    public ArrayList<String> vremenaDolaska(Response odgovor, ArrayList<String> vremenaDolaska)
+    public ArrayList<String> vremenaDolaska(Response odgovor, ArrayList<String> vremenaPolaska)
     {
         ArrayList<String> povratniString = new ArrayList<>();
 
@@ -477,22 +467,35 @@ public class Komunikacija_Server
             }
         }
 
-        int size = vremenaDolaska.size();
+        Calendar calendar = Calendar.getInstance();
+        int trenutniSati = calendar.get(Calendar.HOUR_OF_DAY);
+        boolean b = true;
+        int size = vremenaPolaska.size();
         for (int i = 0; i < size; i++)
-            if (!vremenaDolaska.get(i).equals(""))
+            if (!vremenaPolaska.get(i).equals(""))
             {
-                StringTokenizer tokenizer = new StringTokenizer(vremenaDolaska.get(i), "\n");
+                StringTokenizer tokenizer = new StringTokenizer(vremenaPolaska.get(i), "\n");
                 String s = "";
                 while (tokenizer.hasMoreTokens())
                 {
+
                     String token = tokenizer.nextToken();
                     int sati, minuti, korekcija_id;
                     sati = Integer.parseInt(token.substring(0, 2));
                     minuti = Integer.parseInt(token.substring(3, 5));
                     korekcija_id = token.length() - 5;
+                    if ((trenutniSati < sati) && (b))
+                    {
+                        trenutniSati = sati;
+                        b = false;
+                    } else
+                        b = false;
 
-                    sati += sati_korekcija[korekcija_id];
-                    minuti += minuti_korekcija[korekcija_id];
+                    int korekcijaIndex = korekcija_id * odgovor.korekcije.length / odgovor.linije.length;
+
+
+                    sati += sati_korekcija[korekcijaIndex + sati - trenutniSati];
+                    minuti += minuti_korekcija[korekcijaIndex + sati - trenutniSati];
                     while (minuti > 59)
                     {
                         sati++;

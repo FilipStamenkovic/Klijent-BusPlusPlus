@@ -22,6 +22,7 @@ public class Graf
 	public static int stanicaMaxId;
 	public  Double [][]  matricaUdaljenosti;
 	private HashMap<Integer, Cvor> hashMap = new HashMap<>();
+	private boolean inicijalizacija = false;
 
 	
 	public Graf(String grafDBName, String redVoznjeDBName,String putanjeDBName) throws Exception
@@ -67,6 +68,9 @@ public class Graf
 	
 	public ArrayList<Cvor> pratiLiniju(int linijaId,int pocetna_id,int krajnja_id)
 	{
+		if (linijaId < 0)
+			return new ArrayList<Cvor>();
+
 		Linija l = gl.linije[linijaId];
 		ArrayList<Cvor> cvorovi = new ArrayList<>();
 
@@ -135,12 +139,13 @@ public class Graf
 				l.prioritet = Double.MAX_VALUE;
 	}
 
-	public void inicijalizujMatricu()
+	public synchronized boolean inicijalizujMatricu()
 	{
+		if(inicijalizacija)
+			return true;
 
 		matricaUdaljenosti = new Double[stanicaMaxId + 3][stanicaMaxId + 3];
-		synchronized (matricaUdaljenosti)
-		{
+
 			ArrayList<Cvor> stanice = cvorovi;
 
 			for (int i = 0; i < stanice.size(); ++i)
@@ -150,7 +155,9 @@ public class Graf
 					Cvor finish = stanice.get(j);
 					matricaUdaljenosti[start.id][finish.id] = calcDistance(start, finish);
 				}
-		}
+		inicijalizacija = true;
+
+		return inicijalizacija;
 	}
 
 	private double calcDistance(Cvor c1, Cvor c2)

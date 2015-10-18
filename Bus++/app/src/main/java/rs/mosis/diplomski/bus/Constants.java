@@ -8,7 +8,7 @@ import android.graphics.Color;
 public class Constants
 {
     //public static final String IP = "aleksatr.ddns.net";
-    public static final String IP = "192.168.1.2";
+    public static final String IP = "192.168.0.2";
     public static final int PORT = 4000;
     public static final int TIMEOUT = 1000;
     public static final double brzinaAutobusa = 5.4;
