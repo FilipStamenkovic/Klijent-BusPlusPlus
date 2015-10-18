@@ -1,5 +1,6 @@
 package rs.mosis.diplomski.bus;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -42,8 +43,18 @@ import strukture.Veza;
  */
 public class Komunikacija_Server
 {
+    private OfflineRezim offline;
+    public Komunikacija_Server()
+    {
+        offline = new OfflineRezim();
+    }
 
-    public static boolean proveriVerzije(final char baza)
+    public OfflineRezim getOffline()
+    {
+        return offline;
+    }
+
+    public boolean proveriVerzije(final char baza)
     {
         boolean b = false;
         try
@@ -188,7 +199,7 @@ public class Komunikacija_Server
         return b;
     }
 
-    public static Graf loadGraf()
+    public Graf loadGraf()
     {
         BusDatabasesHelper busDatabasesHelper = BusDatabasesHelper.getInstance();
        /* String []files = busDatabasesHelper.checkDatabase();
@@ -228,7 +239,7 @@ public class Komunikacija_Server
         return graf;
     }
 
-    public static Response ObicanRedVoznje(LatLng latLng, int linija_id)
+    public Response ObicanRedVoznje(LatLng latLng, int linija_id)
     {
         Response odgovor = null;
         Request request = new Request(new Integer(3), new Double(latLng.latitude),
@@ -282,12 +293,12 @@ public class Komunikacija_Server
         }
 
         if (odgovor == null)
-            return OfflineRezim.handleRequest3(request);
+            odgovor = offline.handleRequest3(request);
 
         return odgovor;
     }
 
-    public static ArrayList<String> vremenaPolaska(Response odgovor)
+    public ArrayList<String> vremenaPolaska(Response odgovor)
     {
         List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
@@ -365,7 +376,7 @@ public class Komunikacija_Server
         return povratniString;
     }
 
-    public static ArrayList<String> vremenaPolaska(Response odgovor, int size)
+    public ArrayList<String> vremenaPolaska(Response odgovor, int size)
     {
         List<List<Integer>> vremena = new ArrayList<List<Integer>>(odgovor.linije.length);
         ArrayList<String> povratniString = new ArrayList<>();
@@ -447,7 +458,7 @@ public class Komunikacija_Server
     }
 
 
-    public static ArrayList<String> vremenaDolaska(Response odgovor, ArrayList<String> vremenaDolaska)
+    public ArrayList<String> vremenaDolaska(Response odgovor, ArrayList<String> vremenaDolaska)
     {
         ArrayList<String> povratniString = new ArrayList<>();
 
@@ -508,12 +519,18 @@ public class Komunikacija_Server
         return povratniString;
     }
 
-    public static Response napredniRezim(LatLng source, LatLng destination)
+    public Response napredniRezim(LatLng source, LatLng destination)
     {
         Response odgovor = null;
         Request request = new Request(new Integer(Constants.mode), new Double(source.latitude),
                 new Double(source.longitude), new Double(destination.latitude),
                 new Double(destination.longitude), null, null,null);
+        if (Constants.numberTokens < 1)
+        {
+            odgovor = new Response(-1,null,null,null,null,null,null,null);
+            return odgovor;
+        }
+
         try
         {
 
@@ -565,26 +582,30 @@ public class Komunikacija_Server
             switch (Constants.mode)
             {
                 case 4:
-                    odgovor = OfflineRezim.handleRequest4(request);
+                    odgovor = offline.handleRequest4(request);
                     break;
                 case 6:
-                    odgovor = OfflineRezim.handleRequest6(request,
-                            Constants.brzinaAutobusa, Constants.brzinaPesaka);
+                    odgovor = offline.handleRequest6(request, Constants.brzinaPesaka);
                     break;
                 case 5:
-                    odgovor = OfflineRezim.handleRequest5(request,
-                            Constants.brzinaAutobusa, Constants.brzinaPesaka);
+                    odgovor = offline.handleRequest5(request, Constants.brzinaPesaka);
                     break;
                 case 7:
-                    odgovor = OfflineRezim.handleRequest6(request, Constants.brzinaAutobusa,
-                            Constants.brzinaPesakaZaMinWalk);
+                    odgovor = offline.handleRequest6(request, Constants.brzinaPesakaZaMinWalk);
                     break;
             }
+        if (odgovor != null)
+        {
+            SharedPreferences.Editor editor = MainActivity.preferences.edit();
+            Constants.numberTokens--;
+            editor.putInt("tokens", Constants.numberTokens);
+            editor.commit();
+        }
         return odgovor;
 
     }
 
-    private static ArrayList<Cvor> getNajblizeStanice(String linija, String smer, LatLng source,Integer linijaId)
+    private ArrayList<Cvor> getNajblizeStanice(String linija, String smer, LatLng source,Integer linijaId)
     {
 
         Linija [] linije = MainActivity.graf.getGl().linije;
@@ -642,7 +663,7 @@ public class Komunikacija_Server
                                 for (int j = 0; j < size; j++)
                                 {
                                     //builder.include(v.putanje.get(j));
-                                    double minimum = OfflineRezim.calcDistance(source.latitude,
+                                    double minimum = offline.calcDistance(source.latitude,
                                             source.longitude,lista.get(j).latitude,
                                             lista.get(j).longitude);
 
@@ -678,7 +699,7 @@ public class Komunikacija_Server
         return povratak;
     }
 
-    public static void sendInfo(String linija, String smer, int guzva, int klimatizovanost,
+    public void sendInfo(String linija, String smer, int guzva, int klimatizovanost,
                                 LatLng source, boolean kontrola, String komentar)
     {
         Integer linijaId = 0;
@@ -717,6 +738,11 @@ public class Komunikacija_Server
                 out.close();
                 socket.close();
 
+                SharedPreferences.Editor editor = MainActivity.preferences.edit();
+                Constants.numberTokens += 3;
+                editor.putInt("tokens", Constants.numberTokens);
+                editor.commit();
+
             } catch (UnknownHostException e)
             {
                 e.printStackTrace();
@@ -749,7 +775,7 @@ public class Komunikacija_Server
         MainActivity.graf.resetujCvorove();
     }
 
-    private static int izracunajUdaljenost(ArrayList<Cvor> stanice, LatLng source)
+    private int izracunajUdaljenost(ArrayList<Cvor> stanice, LatLng source)
     {
         int izmedjuStanica,odPrve,doDruge;
 
@@ -771,8 +797,8 @@ public class Komunikacija_Server
             }
         }
 
-        odPrve = (int) OfflineRezim.calcDistance(stanice.get(0),source.latitude,source.longitude);
-        doDruge = (int) OfflineRezim.calcDistance(stanice.get(1),source.latitude,source.longitude);
+        odPrve = (int) offline.calcDistance(stanice.get(0),source.latitude,source.longitude);
+        doDruge = (int) offline.calcDistance(stanice.get(1),source.latitude,source.longitude);
 
         double procenat = ((double) odPrve) / (odPrve + doDruge);
 
@@ -781,7 +807,7 @@ public class Komunikacija_Server
         return (int) (procenat * izmedjuStanica);
     }
 
-    public static Response zatraziKontrole()
+    public Response zatraziKontrole()
     {
         Response odgovor = null;
         Request request = new Request(new Integer(11), null,

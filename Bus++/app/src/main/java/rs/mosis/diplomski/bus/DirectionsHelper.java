@@ -34,14 +34,9 @@ import strukture.Veza;
 public class DirectionsHelper
 {
     InputStream is = null;
-    JSONObject jObj = null;
     String json = "";
     ArrayList<Cvor>  cvorovi = null;
     LatLng [] ulice = null;
-    double [] ugao;
-    int udaljenost;
-
-    boolean [] uzmi;
 
     public DirectionsHelper(ArrayList<Cvor> lista)
     {
@@ -202,7 +197,7 @@ public class DirectionsHelper
         if (tacke == null)
         {
 
-            tacke = new ArrayList<LatLng>();
+            tacke = new ArrayList<>();
             tacke.addAll(vratiTackeIzmedju(ulice[0], ulice[1], Constants.udaljenostPesacenje));
             return tacke;
         } else

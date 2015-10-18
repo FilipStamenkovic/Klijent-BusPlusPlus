@@ -20,11 +20,11 @@ public class Graf
 	private ArrayList<Cvor> cvorovi = new ArrayList<>();
 	private GradskeLinije gl;
 	public static int stanicaMaxId;
-	public double [][] matricaUdaljenosti;
+	public  Double [][]  matricaUdaljenosti;
 	private HashMap<Integer, Cvor> hashMap = new HashMap<>();
 
 	
-	public Graf(String grafDBName, String redVoznjeDBName,String putanjeDBName) throws ClassNotFoundException, SQLException, Exception
+	public Graf(String grafDBName, String redVoznjeDBName,String putanjeDBName) throws Exception
 	{
 		int maxId = 0;
 		Cvor tempArray[] = null;
@@ -34,7 +34,7 @@ public class Graf
 		gl = new GradskeLinije();
 		
 		// load the sqlite-JDBC driver using the current class loader
-		((MainActivity)MainActivity.aplikacija).namestiProgres();
+		MainActivity.aplikacija.namestiProgres();
 	    tempArray = BusDBAdapter.getAllCvorovi(hashMap);
 	    
 	    for(int i = 0; i < gl.linije.length; ++i)
@@ -42,7 +42,7 @@ public class Graf
 	    	if(gl.linije[i] != null)
 	    		gl.linije[i].pocetnaStanica = tempArray[gl.linije[i].pocetnaStanica.id];
 	    }
-		((MainActivity)MainActivity.aplikacija).namestiProgres();
+		MainActivity.aplikacija.namestiProgres();
 	    boolean b = BusDBAdapter.podesiVeze(tempArray,gl.linije);
 
 	    
@@ -56,7 +56,7 @@ public class Graf
 	    }
 
 		BusDatabasesHelper.setDbName(redVoznjeDBName);
-		((MainActivity)MainActivity.aplikacija).namestiProgres();
+		MainActivity.aplikacija.namestiProgres();
 
 		for(int i = 0; i < gl.linije.length; ++i)
 			if(gl.linije[i] != null)
@@ -127,22 +127,30 @@ public class Graf
 
 	public void resetujCvorove()
 	{
-		for(int i = 0; i < cvorovi.size(); ++i)
-			cvorovi.get(i).resetStatus();
+		for(Cvor c : cvorovi)
+			c.resetStatus();
+
+		for(Linija l : gl.linije)
+			if(l != null)
+				l.prioritet = Double.MAX_VALUE;
 	}
 
 	public void inicijalizujMatricu()
 	{
-		matricaUdaljenosti = new double[stanicaMaxId + 3][stanicaMaxId + 3];
-		ArrayList<Cvor> stanice = cvorovi;
 
-		for(int i = 0; i < stanice.size(); ++i)
-			for(int j = 0; j < stanice.size(); ++j)
-			{
-				Cvor start = stanice.get(i);
-				Cvor finish = stanice.get(j);
-				matricaUdaljenosti[start.id][finish.id] = calcDistance(start, finish);
-			}
+		matricaUdaljenosti = new Double[stanicaMaxId + 3][stanicaMaxId + 3];
+		synchronized (matricaUdaljenosti)
+		{
+			ArrayList<Cvor> stanice = cvorovi;
+
+			for (int i = 0; i < stanice.size(); ++i)
+				for (int j = 0; j < stanice.size(); ++j)
+				{
+					Cvor start = stanice.get(i);
+					Cvor finish = stanice.get(j);
+					matricaUdaljenosti[start.id][finish.id] = calcDistance(start, finish);
+				}
+		}
 	}
 
 	private double calcDistance(Cvor c1, Cvor c2)

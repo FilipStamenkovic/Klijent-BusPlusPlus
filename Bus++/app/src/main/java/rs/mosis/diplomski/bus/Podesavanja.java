@@ -1,7 +1,6 @@
 package rs.mosis.diplomski.bus;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -28,7 +27,7 @@ public class Podesavanja extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_podesavanja);
         this.setTitle(R.string.action_settings);
-        preferences = Glavna_Aktivnost.preferences;
+        preferences = MainActivity.preferences;
 
         int jez = preferences.getInt("jezik", -1);
        // Constants.jezik = -1;

@@ -55,5 +55,7 @@
     <string name="start">Start</string>
     <string name="info_kontrole">No informations about controls</string>
     <string name="last_seen">Last seen:</string>
+    <string name="no_more_tokens">No more tokens</string>
+    <string name="number_tokens">Remaining number of tokens</string>
 
 </resources>

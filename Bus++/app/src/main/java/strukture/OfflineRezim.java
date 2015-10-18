@@ -1,15 +1,10 @@
 package strukture;
 
-
-
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
 import rs.mosis.diplomski.bus.Constants;
-import rs.mosis.diplomski.bus.Komunikacija_Server;
 import rs.mosis.diplomski.bus.MainActivity;
 import rs.mosis.diplomski.bus.Request;
 import rs.mosis.diplomski.bus.Response;
@@ -19,14 +14,16 @@ import rs.mosis.diplomski.bus.Response;
  */
 public class OfflineRezim
 {
-    public static Response handleRequest3(Request req)
+    public OfflineRezim(){}
+    public Response handleRequest3(Request req)
     {
         Linija linije[] = MainActivity.graf.getGl().linije;
+      //  ArrayList<CSInfo> targetCrowdInfo = new ArrayList<>();
         //Graf g = owner.getGraf();
         //ArrayList<Cvor> stanice = g.getStanice();
         ArrayList<Linija> targetLinije = new ArrayList<>();
 
-        if(req.linija<1 || req.linija>=linije.length)
+        if(req.linija < 1 || req.linija >= linije.length)
             return null;
 
         String brojLinije = linije[req.linija].broj.replace("*", "");
@@ -90,7 +87,12 @@ public class OfflineRezim
             staniceId[i] = minDistanceStanice[i].id;
 
             korekcije[i] = izracunajKorekciju(l, minDistanceStanice[i], predjeniPutBusaDoNajblizeStanice);
+
+            //ubaci i crowd sensing
+           // targetCrowdInfo.addAll(this.getCrowdInfo(l, korekcije[i]));
         }
+
+       // String responseStr = (new Response(req.type, staniceId, linijeId, korekcije, null, null, null, targetCrowdInfo)).toString();
 
         Response response = new Response(req.type, staniceId, linijeId, korekcije, null, null, null);
         return response;
@@ -130,12 +132,20 @@ public class OfflineRezim
         return 6371000 * c;
     }
 
-    private static int izracunajKorekciju(Linija linija, Cvor stanica, int predjeniPut)
+    private int izracunajKorekciju(Linija linija, Cvor stanica, int predjeniPut)
     {
-        return (int) (predjeniPut/Constants.brzinaAutobusa);
+        return (int) (predjeniPut/this.brzinaAutobusa(linija));
     }
 
-    private static int izracunajKorekciju(Linija linija, Cvor targetStanica)
+    private double brzinaAutobusa(Linija linija)
+    {
+        if(linija == null)
+            return Constants.brzinaPesaka;
+        else
+            return linija.vratiTrenutnuBrzinu();
+    }
+
+    private int izracunajKorekciju(Linija linija, Cvor targetStanica)
     {
         int predjeniPut = 0;
 
@@ -161,7 +171,7 @@ public class OfflineRezim
 
         return izracunajKorekciju(linija, targetStanica, predjeniPut);
     }
-    public static Response handleRequest4(Request req)
+    public Response handleRequest4(Request req)
     {
         Graf g = MainActivity.graf;
         Cvor stanice[] = g.getStanice().toArray(new Cvor[g.getStanice().size()]);
@@ -247,12 +257,13 @@ public class OfflineRezim
 
         return response;
     }
-    public static Response handleRequest6(Request req, double brzinaAutobusa, double brzinaPesacenja)
+    public Response handleRequest6(Request req, double brzinaPesacenja)
     {
         boolean nadjenPut = false;
         Calendar currentTime = Calendar.getInstance();
         Calendar calendar = Calendar.getInstance();
         Calendar tempTime = Calendar.getInstance();
+        Response response = null;
         ;
 
         /*calendar.set(Calendar.HOUR_OF_DAY,14);
@@ -270,7 +281,7 @@ public class OfflineRezim
         pseudoEnd.linijom = null;
         pseudoEnd.prethodnaStanica = pseudoStart;
         pseudoEnd.cenaPutanje = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / brzinaPesacenja;
-        pseudoStart.heuristika = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / brzinaAutobusa;
+        pseudoStart.heuristika = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / Constants.brzinaAutobusa;
         pseudoStart.linijom = null;
         pseudoStart.prethodnaStanica = null;
         pseudoStart.cenaPutanje = 0.0;
@@ -278,7 +289,7 @@ public class OfflineRezim
         Graf graf = MainActivity.graf;
         graf.resetujCvorove();
 
-        double[][] matricaUdaljenosti = graf.matricaUdaljenosti;
+        Double[][] matricaUdaljenosti = graf.matricaUdaljenosti;
 
         //izvuci sve stanice u niz
         Cvor stanice[] = graf.getStanice().toArray(new Cvor[graf.getStanice().size()]);
@@ -290,8 +301,8 @@ public class OfflineRezim
         {
             if (stanice[i] != null)
             {
-                stanice[i].heuristika = calcDistance(stanice[i], req.destLat, req.destLon) / brzinaAutobusa;
-                stanice[i].cenaPutanje = calcDistance(stanice[i], req.srcLat, req.srcLon) / brzinaPesacenja;
+                stanice[i].heuristika = calcDistance(stanice[i], req.destLat, req.destLon)/Constants.brzinaAutobusa;
+                stanice[i].cenaPutanje = calcDistance(stanice[i], req.srcLat, req.srcLon)/brzinaPesacenja;
 
                 stanice[i].linijom = null;
                 stanice[i].prethodnaStanica = pseudoStart;
@@ -335,24 +346,25 @@ public class OfflineRezim
                 if (tempCvor.status == StruktureConsts.CVOR_OBRADJEN)
                     continue;
 
+                double brzinaAutobusa = this.brzinaAutobusa(v.linija);
+
                 if (v.linija == radniCvor.linijom)
                 {
-                    if (tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight / brzinaAutobusa)
+                    if(tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight/brzinaAutobusa)
                     {
                         lista.remove(tempCvor);
                         tempCvor.linijom = v.linija;
                         tempCvor.prethodnaStanica = radniCvor;
-                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight / brzinaAutobusa;
+                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight/brzinaAutobusa;
                         tempCvor.vremeDolaskaAutobusaNaPrethodnuStanicu = null;
                         lista.pushPriority(tempCvor);
                     }
                 } else
                 {
-                    if (req.type == 7)
-                        kasnjenje = 10;        //za min_walk je kasnjenje konstanta
+                    if(req.type == 7)
+                        kasnjenje = (long) v.linija.prioritet;		//za min_walk se koristi prioritet linije
                     else
-                        kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor, brzinaAutobusa);
-
+                        kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor/*, brzinaAutobusa*/);
                     if (tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight / brzinaAutobusa + kasnjenje)
                     {
                         lista.remove(tempCvor);
@@ -427,71 +439,66 @@ public class OfflineRezim
             }
 
 
-            if (nadjenPut)
+        if(nadjenPut)
+        {
+            if(req.type == 7)
+                minWalkPostProcessing(pseudoStart, pseudoEnd);
+
+            Cvor c = pseudoEnd;
+
+            response = new Response();
+            response.type = req.type;
+
+            if(req.type == 6)
+                response.size = (int) pseudoEnd.cenaPutanje;	//procenjena cena putovanja
+
+            ArrayList<Integer> responseStanice = new ArrayList<>();
+            ArrayList<Integer> responseLinije = new ArrayList<>();
+            ArrayList<DatumVremeStanica> responseVremenaDolaska = new ArrayList<>();
+
+            while(c != null)
             {
-                if (req.type == 7)
-                    minWalkPostProcessing(pseudoStart, pseudoEnd);
+                responseStanice.add(c.id);
 
-                Cvor c = pseudoEnd;
+                if(c.linijom != null)
+                    responseLinije.add(c.linijom.id);
+                else
+                    responseLinije.add(null);
 
-                Response response = new Response();
-                response.type = req.type;
+                if(c.vremeDolaskaAutobusaNaPrethodnuStanicu != null)
+                    responseVremenaDolaska.add(c.vremeDolaskaAutobusaNaPrethodnuStanicu);
 
-                if (req.type == 6)
-                    response.size = (int) pseudoEnd.cenaPutanje;    //procenjena cena putovanja
-
-                ArrayList<Integer> responseStanice = new ArrayList<>();
-                ArrayList<Integer> responseLinije = new ArrayList<>();
-                ArrayList<DatumVremeStanica> responseVremenaDolaska = new ArrayList<>();
-
-                while (c != null)
-                {
-                    responseStanice.add(c.id);
-
-                    if (c.linijom != null)
-                        responseLinije.add(c.linijom.id);
-                    else
-                        responseLinije.add(null);
-
-                    if (c.vremeDolaskaAutobusaNaPrethodnuStanicu != null)
-                        responseVremenaDolaska.add(c.vremeDolaskaAutobusaNaPrethodnuStanicu);
-
-                    //moze da se doda u response i Estimated Time of Arrival (dodao sam ga u Response.size)
-                    c = c.prethodnaStanica;
-                }
-
-                response.stanice = new Integer[responseStanice.size()];
-                response.linije = new Integer[responseLinije.size()];
-                response.vremenaDolaska = new ArrayList<>();
-
-                int arraySize = responseStanice.size();
-                for (int i = arraySize - 1; i >= 0; --i)
-                {
-                    response.stanice[arraySize - 1 - i] = responseStanice.get(i);
-                    response.linije[arraySize - 1 - i] = responseLinije.get(i);
-                }
-
-                arraySize = responseVremenaDolaska.size();
-                if (arraySize > 0)
-                {
-                    for (int i = arraySize - 1; i >= 0; --i)
-                        response.vremenaDolaska.add(responseVremenaDolaska.get(i));
-                } else
-                    response.vremenaDolaska = null;
-
-                return response;
-
-                //log.write("Thread [" + owner.getId() + "] client=" +clientSocket.getInetAddress().toString()+ " RESPONSE= " + responseStr);
-                // out.write(responseStr + "\n");
-
-            } else
-            {
-                return null;
+                //moze da se doda u response i Estimated Time of Arrival (dodao sam ga u Response.size)
+                c = c.prethodnaStanica;
             }
+
+            response.stanice = new Integer[responseStanice.size()];
+            response.linije = new Integer[responseLinije.size()];
+            response.vremenaDolaska = new ArrayList<>();
+
+            int arraySize = responseStanice.size();
+            for(int i = arraySize-1; i >= 0; --i)
+            {
+                response.stanice[arraySize-1-i] = responseStanice.get(i);
+                response.linije[arraySize-1-i] = responseLinije.get(i);
+            }
+
+            arraySize = responseVremenaDolaska.size();
+            if(arraySize > 0)
+            {
+                for(int i = arraySize-1; i >= 0; --i)
+                    response.vremenaDolaska.add(responseVremenaDolaska.get(i));
+            }
+            else
+                response.vremenaDolaska = null;
+
+        }
+
+        return  response;
 
     }
 
-    private static void minWalkPostProcessing(Cvor pseudoStart, Cvor pseudoEnd)
+    private void minWalkPostProcessing(Cvor pseudoStart, Cvor pseudoEnd)
     {
         double koeficijentUbrzanjaBuseva = 1.0;
         ArrayList<Cvor> putanja = new ArrayList<>();
@@ -597,7 +604,7 @@ public class OfflineRezim
 
     }
 
-    private static long izracunajKasnjenjeLinije2(Linija l, Cvor c, double brzinaAutobusa)
+    private long izracunajKasnjenjeLinije2(Linija l, Cvor c)
     {
         //double secondsToWaitForBus = 0.0;
 
@@ -698,7 +705,7 @@ public class OfflineRezim
         return targetSeconds - sourceSeconds;
     }
 
-    public static Response handleRequest5(Request req, double brzinaAutobusa, double brzinaPesacenja)
+    public Response handleRequest5(Request req, double brzinaPesacenja)
     {
 
         Linija linije[] = MainActivity.graf.getGl().linije;
@@ -756,12 +763,12 @@ public class OfflineRezim
                 linijeResenja[i][1] = stop.id;
                 if(start != stop)
                 {
-                    linijeResenja[i][2] = (int) ((startnaUdaljenost + zavrsnaUdaljenost)/brzinaPesacenja + (endPredjeniPut - startPredjeniPut)/brzinaAutobusa); //na ovo treba da se doda jos i vreme cekanja busa na stanici
+                    linijeResenja[i][2] = (int) ((startnaUdaljenost + zavrsnaUdaljenost)/brzinaPesacenja + (endPredjeniPut - startPredjeniPut)/this.brzinaAutobusa(linije[i])); //na ovo treba da se doda jos i vreme cekanja busa na stanici
                     linijeResenja[i][3] = (int) (startnaUdaljenost/brzinaPesacenja);
 
                     start.cenaPutanje = startnaUdaljenost/brzinaPesacenja;
 
-                    linijeResenja[i][4] = (int) izracunajKasnjenjeLinije2(linije[i], start, brzinaAutobusa);
+                    linijeResenja[i][4] = (int) izracunajKasnjenjeLinije2(linije[i], start/*, this.brzinaAutobusa(linije[i])*/);
 
                     linijeResenja[i][2] += linijeResenja[i][4];
                 } else
@@ -823,7 +830,7 @@ public class OfflineRezim
 
     }
 
-    private static boolean nijeLazniStart(Cvor stanica, Linija linija,
+    private boolean nijeLazniStart(Cvor stanica, Linija linija,
                                           double startnaUdaljenost, double zavrsnaUdaljenost, Request req)
     {
         boolean p = false;

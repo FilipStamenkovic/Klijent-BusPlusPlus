@@ -55,5 +55,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="info_kontrole">Nema informacija o kontrolama</string>
     <string name="last_seen">Poslednji put viđena:</string>
+    <string name="no_more_tokens">Nemate više tokena</string>
+    <string name="number_tokens">Broj preostalih tokena</string>
 
 </resources>

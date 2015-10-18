@@ -1,37 +1,15 @@
 package rs.mosis.diplomski.bus;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
 
 import strukture.BusDBAdapter;
 import strukture.Graf;
@@ -43,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
     public static int[] ikonice;
     public static int progres;
     public ProgressBar mProgress;
+    public static Komunikacija_Server komunikacija;
+    public static SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +31,13 @@ public class MainActivity extends AppCompatActivity {
 
         mProgress = (ProgressBar) findViewById(R.id.progressBar);
 
+        komunikacija = new Komunikacija_Server();
+
         progres = 0;
+
+        preferences = getSharedPreferences(Constants.rezim, MODE_PRIVATE);
+        Constants.numberTokens = preferences.getInt("tokens", 1000);
+
 
         aplikacija = this;
 
@@ -81,13 +67,13 @@ public class MainActivity extends AppCompatActivity {
             public void run()
             {
                 graf = null;
-                boolean b = Komunikacija_Server.proveriVerzije('S');
+                boolean b = komunikacija.proveriVerzije('S');
                 if (b)
-                    b = Komunikacija_Server.proveriVerzije('R');
+                    b = komunikacija.proveriVerzije('R');
                 if (b)
-                    b = Komunikacija_Server.proveriVerzije('P');
+                    b = komunikacija.proveriVerzije('P');
                 if (b)
-                    graf = Komunikacija_Server.loadGraf();
+                    graf = komunikacija.loadGraf();
                 else
                     graf = null;
                 runOnUiThread(new Runnable()
@@ -99,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
                         {
                             Toast.makeText(getApplicationContext(), "Greska, konektuj se na internet", Toast.LENGTH_LONG).show();
 
+                            progres = 0;
+
                             File[] fajlovi = (new File(BusDatabasesHelper.getDatabasePath())).listFiles();
                             for (int i = 0; i < fajlovi.length; i++)
                             {
@@ -107,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
                         }else
                         {
-                            ((MainActivity)MainActivity.aplikacija).namestiProgres();
+                            aplikacija.namestiProgres();
 
                             Intent i = new Intent(getApplicationContext(), Glavna_Aktivnost.class);
                             finish();
@@ -117,11 +105,8 @@ public class MainActivity extends AppCompatActivity {
                 });
 
 
-
                 if (graf != null)
                 {
-
-
                     ikonice = new int[graf.getGl().linije.length];
                     for (int i = 0; i < graf.getGl().linije.length; i++)
                         if (graf.getGl().linije[i] != null)
