@@ -667,7 +667,9 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         klimatizovanost = (int) ((RatingBar) crowdSourcing.findViewById(R.id.rating_klimatizovanost)).getRating();
 
         Spinner s = (Spinner) crowdSourcing.findViewById(R.id.broj_linije);
-        final String linija = (String) s.getSelectedItem();
+        String naziv = (String) s.getSelectedItem();
+
+        final String linija = MainActivity.graf.getGl().getLinija(naziv);
         final String komentar = ((EditText)crowdSourcing.findViewById(R.id.komentar)).getText().toString();
 
         final LatLng source = mapaFragment.getMyPosition();
@@ -2640,7 +2642,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             if (!bb)
             {
                 ((TextView) info.findViewById(R.id.vremena)).setText(otac.getString(R.string.pesacenje));
-            }
+            }else
+                ((TextView) info.findViewById(R.id.vremena)).setText("");
 
             imageView = new ImageView(otac);
             imageView.setImageResource(R.mipmap.ic_walking);
@@ -2724,6 +2727,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
 
         public void prikaziOptimalni(Response odgovor, LatLng source, LatLng destination)
         {
+            zadnjiResponse = odgovor;
             if (v != null)
                 ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
             Calendar now = Calendar.getInstance();

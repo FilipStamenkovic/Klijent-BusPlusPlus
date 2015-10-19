@@ -27,9 +27,18 @@ public class GradskeLinije
 		String prva = MainActivity.graf.getGl().linije[id1].broj;
 		String druga = MainActivity.graf.getGl().linije[id2].broj;
 		prva = prva.replace("*","");
-		druga = druga.replace("*","");
+		druga = druga.replace("*", "");
 		return prva.equals(druga);
 
 	}
 
+	public String getLinija(String naziv)
+	{
+		int size = linije.length;
+		for (int i = 0; i < size; i++)
+			if (linije[i] != null)
+				if (linije[i].naziv.equals(naziv))
+					return linije[i].broj.replace("*","");
+		return null;
+	}
 }

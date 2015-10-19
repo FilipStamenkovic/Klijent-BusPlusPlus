@@ -20,6 +20,6 @@ public class Constants
     public static final int BROJ_PROGRES = 13;
     public static int jezik = 1;
     public static final int GoogleBlue = Color.parseColor("#05b1fb");
-    public static boolean zahvetKontrola = true;
+    public static boolean zahvetKontrola = false;
     public static int numberTokens = 10;
 }
