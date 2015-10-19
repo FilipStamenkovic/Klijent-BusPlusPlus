@@ -1,11 +1,14 @@
 package rs.mosis.diplomski.bus;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -14,7 +17,8 @@ import java.io.File;
 import strukture.BusDBAdapter;
 import strukture.Graf;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity
+{
 
     public static Graf graf;
     public static MainActivity aplikacija;
@@ -26,7 +30,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+      //  this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+      //  this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_main);
 
         mProgress = (ProgressBar) findViewById(R.id.progressBar);
