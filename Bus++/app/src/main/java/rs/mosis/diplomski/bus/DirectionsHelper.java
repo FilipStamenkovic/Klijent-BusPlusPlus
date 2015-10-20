@@ -3,6 +3,7 @@ package rs.mosis.diplomski.bus;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.JsonObject;
@@ -150,6 +151,18 @@ public class DirectionsHelper
                 routeArray = json.getJSONArray("routes");
                 JSONObject routes = routeArray.getJSONObject(0);
                 JSONObject overviewPolylines = routes.getJSONObject("overview_polyline");
+
+               /* final int udaljenost = routes.getJSONArray("legs").getJSONObject(0).getJSONObject("distance").getInt("value");
+
+                Glavna_Aktivnost.UIHandler.post(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        Toast.makeText(Glavna_Aktivnost.otac, udaljenost + "m", Toast.LENGTH_LONG).show();
+                    }
+                });*/
+
 
                 String encodedString = overviewPolylines.getString("points");
                 if(list == null)

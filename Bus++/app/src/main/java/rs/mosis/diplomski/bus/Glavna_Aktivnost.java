@@ -1788,7 +1788,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
             if((kontrole == null) || (kontrole.size() == 0))
             {
                 Toast.makeText(otac, otac.getString(R.string.info_kontrole), Toast.LENGTH_LONG).show();
-                Constants.zahvetKontrola = !Constants.zahvetKontrola;
                 return;
             }
             obrisiKontrole();
