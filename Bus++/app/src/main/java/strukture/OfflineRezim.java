@@ -276,6 +276,40 @@ public class OfflineRezim
 
         return response;
     }
+
+    private void izracunajPrioriteteLinija(GradskeLinije gradskeLinije)
+    {
+        Veza v = null;
+        Cvor c = null;
+        double minPrioritet = Double.MAX_VALUE;
+
+        for(Linija l : gradskeLinije.linije)
+            if(l != null)
+            {
+                c = l.pocetnaStanica;
+                l.prioritet = c.heuristika;
+
+                while((v = c.vratiVezu(l)) != null)
+                {
+                    c = v.destination;
+
+                    if(c == l.pocetnaStanica)
+                        break;
+
+                    if(c.heuristika < l.prioritet)
+                    {
+                        l.prioritet = c.heuristika;
+                        if(l.prioritet < minPrioritet)
+                            minPrioritet = l.prioritet;
+                    }
+                }
+            }
+
+        for(Linija l : gradskeLinije.linije)
+            if(l != null)
+                l.prioritet /= minPrioritet;
+    }
+
     public Response handleRequest6(Request req, double brzinaPesacenja)
     {
         boolean nadjenPut = false;
@@ -299,18 +333,17 @@ public class OfflineRezim
         pseudoEnd.heuristika = 0.0;
         pseudoEnd.linijom = null;
         pseudoEnd.prethodnaStanica = pseudoStart;
-        pseudoEnd.cenaPutanje = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / brzinaPesacenja;
-        pseudoStart.heuristika = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon) / Constants.brzinaAutobusa;
+        pseudoEnd.cenaPutanje = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon)/brzinaPesacenja;
+        pseudoStart.heuristika = calcDistance(req.srcLat, req.srcLon, req.destLat, req.destLon)/Constants.brzinaAutobusa;
         pseudoStart.linijom = null;
         pseudoStart.prethodnaStanica = null;
         pseudoStart.cenaPutanje = 0.0;
 
         Graf graf = MainActivity.graf;
+
         graf.resetujCvorove();
 
-        graf.inicijalizujMatricu();
-
-        Double[][] matricaUdaljenosti = graf.matricaUdaljenosti;
+        Double [][] matricaUdaljenosti = graf.matricaUdaljenosti;
 
         //izvuci sve stanice u niz
         Cvor stanice[] = graf.getStanice().toArray(new Cvor[graf.getStanice().size()]);
@@ -318,9 +351,9 @@ public class OfflineRezim
         PrioritetnaListaCvorova lista = new PrioritetnaListaCvorova();
 
         //izracunaj heuristike
-        for (int i = 0; i < stanice.length; ++i)
+        for(int i = 0; i < stanice.length; ++i)
         {
-            if (stanice[i] != null)
+            if(stanice[i] != null)
             {
                 stanice[i].heuristika = calcDistance(stanice[i], req.destLat, req.destLon)/Constants.brzinaAutobusa;
                 stanice[i].cenaPutanje = calcDistance(stanice[i], req.srcLat, req.srcLon)/brzinaPesacenja;
@@ -338,6 +371,12 @@ public class OfflineRezim
         pseudoEnd.status = StruktureConsts.CVOR_SMESTEN;
         lista.pushPriority(pseudoEnd); //dodaj i pseudoEnd u priority list
 
+        //izracunaj prioritete linija (koliko linija vodi blizu cilju) ako je zahtevan min walk
+        //ovaj korak mora posle racunanja heuristike, jer pretpostavlja da je heuristika izracunata za svaki cvor
+        if(req.type == 7)
+            izracunajPrioriteteLinija(graf.getGl());
+
+
         Cvor radniCvor = null;
         Cvor tempCvor = null;
         ArrayList<Veza> potomciVeze = null;
@@ -345,13 +384,13 @@ public class OfflineRezim
         Linija l = null;
         long kasnjenje = 0;
 
-        while (!lista.isEmpty())
+        while(!lista.isEmpty())
         {
             radniCvor = lista.remove(0);
 
             radniCvor.status = StruktureConsts.CVOR_OBRADJEN;
 
-            if (radniCvor == pseudoEnd)
+            if(radniCvor == pseudoEnd)
             {
                 nadjenPut = true;
                 break;
@@ -359,17 +398,17 @@ public class OfflineRezim
 
             //pokupi decu cvorove i update statistike
             potomciVeze = radniCvor.veze;
-            for (int i = 0; i < potomciVeze.size(); ++i)
+            for(int i = 0; i < potomciVeze.size(); ++i)
             {
                 v = potomciVeze.get(i);
                 tempCvor = v.destination;
 
-                if (tempCvor.status == StruktureConsts.CVOR_OBRADJEN)
+                if(tempCvor.status == StruktureConsts.CVOR_OBRADJEN)
                     continue;
 
                 double brzinaAutobusa = this.brzinaAutobusa(v.linija);
 
-                if (v.linija == radniCvor.linijom)
+                if(v.linija == radniCvor.linijom)
                 {
                     if(tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight/brzinaAutobusa)
                     {
@@ -382,18 +421,22 @@ public class OfflineRezim
                     }
                 } else
                 {
+					/*if(req.type == 7)
+						kasnjenje = 10;		//za min_walk je kasnjenje konstanta
+					else
+						kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor, brzinaAutobusa);*/
+
                     if(req.type == 7)
                         kasnjenje = (long) v.linija.prioritet;		//za min_walk se koristi prioritet linije
                     else
                         kasnjenje = izracunajKasnjenjeLinije2(v.linija, radniCvor/*, brzinaAutobusa*/);
-                    if (tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight / brzinaAutobusa + kasnjenje)
+
+                    if(tempCvor.cenaPutanje > radniCvor.cenaPutanje + v.weight/brzinaAutobusa + kasnjenje)
                     {
                         lista.remove(tempCvor);
                         tempCvor.linijom = v.linija;
                         tempCvor.prethodnaStanica = radniCvor;
-                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight / brzinaAutobusa + kasnjenje;
-
-                        if (req.type == 6) //ako je MIN_WALK ne racunaj vremena dolaska autobusa na stanicu
+                        tempCvor.cenaPutanje = radniCvor.cenaPutanje + v.weight/brzinaAutobusa + kasnjenje;                        if (req.type == 6) //ako je MIN_WALK ne racunaj vremena dolaska autobusa na stanicu
                         {
 
                        /* tempTime = currentTime.plusDays(((long) radniCvor.cenaPutanje + kasnjenje) / 86400);
@@ -428,42 +471,47 @@ public class OfflineRezim
             }
 
                 //obradi pesacenje do svih stanica
-                for (int j = 0; j < stanice.length; ++j)
+            for(int j = 0; j < stanice.length; ++j)
+            {
+                if(stanice[j] != radniCvor && stanice[j].status != StruktureConsts.CVOR_OBRADJEN)
                 {
-                    if (stanice[j] != radniCvor && stanice[j].status != StruktureConsts.CVOR_OBRADJEN)
-                    {
-                        double udaljenost = matricaUdaljenosti[radniCvor.id][stanice[j].id];
-                        if (req.type == 7 && radniCvor.linijom != null)
+                    double udaljenost = matricaUdaljenosti[radniCvor.id][stanice[j].id];
 
-                            udaljenost += 150;
-                        if (stanice[j].cenaPutanje > radniCvor.cenaPutanje + udaljenost / brzinaPesacenja)
-                        {
-                            lista.remove(stanice[j]);
-                            stanice[j].linijom = null;
-                            stanice[j].prethodnaStanica = radniCvor;
-                            stanice[j].cenaPutanje = radniCvor.cenaPutanje + udaljenost / brzinaPesacenja;
-                            stanice[j].vremeDolaskaAutobusaNaPrethodnuStanicu = null;
-                            lista.pushPriority(stanice[j]);
-                        }
+                    //ovo je korekcija za MIN_WALK (treba, popraviti)
+                    if(req.type == 7 && radniCvor.linijom != null)
+                        udaljenost += 150;
+
+
+                    if(stanice[j].cenaPutanje > radniCvor.cenaPutanje + udaljenost/brzinaPesacenja)
+                    {
+                        lista.remove(stanice[j]);
+                        stanice[j].linijom = null;
+                        stanice[j].prethodnaStanica = radniCvor;
+                        stanice[j].cenaPutanje = radniCvor.cenaPutanje + udaljenost/brzinaPesacenja;
+                        stanice[j].vremeDolaskaAutobusaNaPrethodnuStanicu = null;
+                        lista.pushPriority(stanice[j]);
                     }
                 }
-                //pesacenje do cilja jer on nije u nizu stanice[]
-                double udaljenost = calcDistance(radniCvor, pseudoEnd.lat, pseudoEnd.lon);
-                if (pseudoEnd.cenaPutanje > radniCvor.cenaPutanje + udaljenost / brzinaPesacenja)
-                {
-                    lista.remove(pseudoEnd);
-                    pseudoEnd.linijom = null;
-                    pseudoEnd.prethodnaStanica = radniCvor;
-                    pseudoEnd.cenaPutanje = radniCvor.cenaPutanje + udaljenost / brzinaPesacenja;
-                    lista.pushPriority(pseudoEnd);
-                }
             }
-
+            //pesacenje do cilja jer on nije u nizu stanice[]
+            double udaljenost = calcDistance(radniCvor, pseudoEnd.lat, pseudoEnd.lon);
+            if(pseudoEnd.cenaPutanje > radniCvor.cenaPutanje + udaljenost/brzinaPesacenja)
+            {
+                lista.remove(pseudoEnd);
+                pseudoEnd.linijom = null;
+                pseudoEnd.prethodnaStanica = radniCvor;
+                pseudoEnd.cenaPutanje = radniCvor.cenaPutanje + udaljenost/brzinaPesacenja;
+                lista.pushPriority(pseudoEnd);
+            }
+        }
 
         if(nadjenPut)
         {
-            if(req.type == 7)
-                minWalkPostProcessing(pseudoStart, pseudoEnd);
+			/*if(req.type == 7)
+				minWalkPostProcessing(pseudoStart, pseudoEnd);*/
+
+			/*if(req.type == 6)
+				optimalPostProcessing(pseudoStart, pseudoEnd);*/
 
             Cvor c = pseudoEnd;
 
