@@ -118,9 +118,7 @@ public class MainActivity extends Activity
                     }
                 });
 
-                int rezim = preferences.getInt("mode", -1);
-                if (rezim != -1)
-                    Constants.mode = rezim;
+                Constants.mode = preferences.getInt("mode", Constants.mode);
 
 
                 if (graf != null)
