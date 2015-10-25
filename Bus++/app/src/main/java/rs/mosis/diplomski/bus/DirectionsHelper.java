@@ -52,8 +52,10 @@ public class DirectionsHelper
     }
 
 
-    private String makeURL(int pocetak, int kraj, String mode)
+    private String makeURL()
     {
+        int pocetak = 0;
+        int kraj = ulice.length - 1;
         StringBuilder urlString = new StringBuilder();
         urlString.append("https://maps.googleapis.com/maps/api/directions/json");
         urlString.append("?origin=");// from
@@ -66,21 +68,8 @@ public class DirectionsHelper
                 .append(Double.toString(ulice[kraj].latitude));
         urlString.append(",");
         urlString.append(Double.toString(ulice[kraj].longitude));
-        if(mode.equals("driving"))
-        {
-            urlString.append("&waypoints=optimize:true");
 
-            for (int i = pocetak + 1; i < kraj - 1; i++)
-            {
-                String umetni;
-                umetni = "|via:" + ulice[i].latitude + "," + ulice[i].longitude;
-
-                urlString.append(umetni);
-
-            }
-        }
-
-        urlString.append("&sensor=false&mode=" + mode);
+        urlString.append("&sensor=false&mode=walking");
        // urlString.append("&key=AIzaSyC0d76hl9vJDNrNmW5GWTHqQJfutc4OcoQ");
         return urlString.toString();
     }
@@ -122,63 +111,27 @@ public class DirectionsHelper
         return json;
     }
 
-    public List<LatLng> getTacke(String mode)
+    public List<LatLng> getTacke()
     {
-        int pocetak = 0;
-        int granica = 10;
-        int kraj = ulice.length - 1;
-
-
         List<LatLng> list = null;
         JSONArray routeArray = null;
-        try {
+        try
+        {
             String odgovor = "";
-            while(pocetak < kraj) {
-               // if (granica >= kraj)
-               //     odgovor = getJSONFromUrl(makeURL(pocetak, kraj));
-             //   else
-             //       odgovor = getJSONFromUrl(makeURL(pocetak, granica));
-                odgovor = getJSONFromUrl(makeURL(pocetak, kraj, mode));
-                pocetak = granica;
-                pocetak = 1999;
-                if (granica + 10 < kraj)
-                    granica += 10;
-                else
-                    granica = kraj;
+            odgovor = getJSONFromUrl(makeURL());
+            final JSONObject json = new JSONObject(odgovor);
+            routeArray = json.getJSONArray("routes");
+            JSONObject routes = routeArray.getJSONObject(0);
+            JSONObject overviewPolylines = routes.getJSONObject("overview_polyline");
+            String encodedString = overviewPolylines.getString("points");
+            list = decodePoly(encodedString);
 
-
-                final JSONObject json = new JSONObject(odgovor);
-                routeArray = json.getJSONArray("routes");
-                JSONObject routes = routeArray.getJSONObject(0);
-                JSONObject overviewPolylines = routes.getJSONObject("overview_polyline");
-
-               /* final int udaljenost = routes.getJSONArray("legs").getJSONObject(0).getJSONObject("distance").getInt("value");
-
-                Glavna_Aktivnost.UIHandler.post(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        Toast.makeText(Glavna_Aktivnost.otac, udaljenost + "m", Toast.LENGTH_LONG).show();
-                    }
-                });*/
-
-
-                String encodedString = overviewPolylines.getString("points");
-                if(list == null)
-                    list = decodePoly(encodedString);
-                else
-                    list.addAll(decodePoly(encodedString));
-            }
-        } catch (JSONException e) {
+        } catch (JSONException e)
+        {
             e.printStackTrace();
         }
 
-        if (mode.equals("walking"))
-            return preurediTacke(list);
-        else
-            return list;
-
+        return preurediTacke(list);
     }
 
     public List<LatLng> getDriving()

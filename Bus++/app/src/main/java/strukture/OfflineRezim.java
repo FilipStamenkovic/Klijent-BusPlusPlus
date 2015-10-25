@@ -343,7 +343,9 @@ public class OfflineRezim
 
         graf.resetujCvorove();
 
-        Double [][] matricaUdaljenosti = graf.matricaUdaljenosti;
+        Double [][] matricaUdaljenosti = null;
+        if (graf.inicijalizujMatricu())
+            matricaUdaljenosti = graf.matricaUdaljenosti;
 
         //izvuci sve stanice u niz
         Cvor stanice[] = graf.getStanice().toArray(new Cvor[graf.getStanice().size()]);

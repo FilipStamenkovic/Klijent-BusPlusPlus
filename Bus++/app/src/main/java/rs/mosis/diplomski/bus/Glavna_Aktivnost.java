@@ -1188,7 +1188,7 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                     final List<LatLng> lista;
 
                     directionsHelper = new DirectionsHelper(source, dest);
-                    lista = directionsHelper.getTacke("walking");
+                    lista = directionsHelper.getTacke();
                     UIHandler.post(new Runnable()
                     {
                         @Override
