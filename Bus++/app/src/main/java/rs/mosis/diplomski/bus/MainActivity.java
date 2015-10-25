@@ -44,7 +44,7 @@ public class MainActivity extends Activity
         progres = 0;
 
         preferences = getSharedPreferences(Constants.rezim, MODE_PRIVATE);
-        Constants.numberTokens = preferences.getInt("tokens", 1000);
+        Constants.numberTokens = preferences.getInt("tokens", Constants.numberTokens);
 
         int jez = preferences.getInt("jezik", -1);
         if (jez != -1)
@@ -117,6 +117,10 @@ public class MainActivity extends Activity
                         }
                     }
                 });
+
+                int rezim = preferences.getInt("mode", -1);
+                if (rezim != -1)
+                    Constants.mode = rezim;
 
 
                 if (graf != null)

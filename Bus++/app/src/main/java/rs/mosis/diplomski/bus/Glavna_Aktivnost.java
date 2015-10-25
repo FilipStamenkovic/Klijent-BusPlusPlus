@@ -144,10 +144,6 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
         fragmentManager = getSupportFragmentManager();
 
 
-        int rezim = preferences.getInt("mode", -1);
-        if (rezim != -1)
-            Constants.mode = rezim;
-
         komunikacija = MainActivity.komunikacija;
 
 
