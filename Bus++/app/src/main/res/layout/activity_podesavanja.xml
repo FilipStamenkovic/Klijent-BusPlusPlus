@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/minwalk"
                 android:onClick="onRadioButtonClicked"
-                android:drawableRight="@mipmap/ic_sloth2"
+                android:drawableRight="@mipmap/ic_min_walk"
                 />
             <RadioButton
                 android:id="@+id/optimalni"

@@ -361,14 +361,14 @@ public class OfflineRezim
                 stanice[i].linijom = null;
                 stanice[i].prethodnaStanica = pseudoStart;
 
-                stanice[i].status = StruktureConsts.CVOR_SMESTEN;
+                stanice[i].status = Constants.CVOR_SMESTEN;
             }
 
             lista.pushPriority(stanice[i]);
         }
 
-        pseudoStart.status = StruktureConsts.CVOR_OBRADJEN;
-        pseudoEnd.status = StruktureConsts.CVOR_SMESTEN;
+        pseudoStart.status = Constants.CVOR_OBRADJEN;
+        pseudoEnd.status = Constants.CVOR_SMESTEN;
         lista.pushPriority(pseudoEnd); //dodaj i pseudoEnd u priority list
 
         //izracunaj prioritete linija (koliko linija vodi blizu cilju) ako je zahtevan min walk
@@ -388,7 +388,7 @@ public class OfflineRezim
         {
             radniCvor = lista.remove(0);
 
-            radniCvor.status = StruktureConsts.CVOR_OBRADJEN;
+            radniCvor.status = Constants.CVOR_OBRADJEN;
 
             if(radniCvor == pseudoEnd)
             {
@@ -403,7 +403,7 @@ public class OfflineRezim
                 v = potomciVeze.get(i);
                 tempCvor = v.destination;
 
-                if(tempCvor.status == StruktureConsts.CVOR_OBRADJEN)
+                if(tempCvor.status == Constants.CVOR_OBRADJEN)
                     continue;
 
                 double brzinaAutobusa = this.brzinaAutobusa(v.linija);
@@ -473,7 +473,7 @@ public class OfflineRezim
                 //obradi pesacenje do svih stanica
             for(int j = 0; j < stanice.length; ++j)
             {
-                if(stanice[j] != radniCvor && stanice[j].status != StruktureConsts.CVOR_OBRADJEN)
+                if(stanice[j] != radniCvor && stanice[j].status != Constants.CVOR_OBRADJEN)
                 {
                     double udaljenost = matricaUdaljenosti[radniCvor.id][stanice[j].id];
 

@@ -8,7 +8,7 @@ import android.graphics.Color;
 public class Constants
 {
     //public static final String IP = "aleksatr.ddns.net";
-    public static final String IP = "192.168.1.15";
+    public static final String IP = "192.168.0.15";
     public static final int PORT = 4000;
     public static final int TIMEOUT = 1000;
     public static final double brzinaAutobusa = 5.4;
@@ -22,4 +22,11 @@ public class Constants
     public static final int GoogleBlue = Color.parseColor("#05b1fb");
     public static boolean zahvetKontrola = false;
     public static int numberTokens = 10;
+    // StruktureConst
+    public static final int CVOR_NEOBRADJEN = 0;
+    public static final int CVOR_SMESTEN = 1;
+    public static final int CVOR_OBRADJEN = 2;
+    public static final int MIN_PESACENJE_START_NUM = 5;
+    public static final int MIN_PESACENJE_END_NUM = 5;
+
 }

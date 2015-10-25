@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import rs.mosis.diplomski.bus.Constants;
+
 public class Cvor
 {
 	public Integer id = null;								//jedinstveni id stanice
@@ -14,7 +16,7 @@ public class Cvor
 	public transient ArrayList<Veza> veze;					//veze ka drugim stanicama
 
 	//pomocne promenljive za algoritme obilaska grafa
-	public transient int status = StruktureConsts.CVOR_NEOBRADJEN; 	//da li je cvor obradjen prilikom obilaska grafa
+	public transient int status = Constants.CVOR_NEOBRADJEN; 	//da li je cvor obradjen prilikom obilaska grafa
 	public transient Cvor prethodnaStanica = null;					//sa koje stanice se doslo na ovu stanicu 				[cvor roditelj]
 	public transient Linija linijom = null;							//kojom linijom se doslo sa prethodne stanice na ovu	[akcija primenjena na roditelju da bi se generisalo ovo stanje]
 	public transient double cenaPutanje = 0.0;						//cena putanje od pocetnog cvora do ovog cvora, putanjom koja je oznacenja pokazivacima na roditelje (prethodnaStanica), u sekundama
@@ -73,7 +75,7 @@ public class Cvor
 
 	public void resetStatus()
 	{
-		this.status = StruktureConsts.CVOR_NEOBRADJEN;
+		this.status = Constants.CVOR_NEOBRADJEN;
 		this.prethodnaStanica = null;
 		this.linijom = null;
 		this.cenaPutanje = 0.0;

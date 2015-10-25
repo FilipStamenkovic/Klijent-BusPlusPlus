@@ -36,7 +36,6 @@ import strukture.GradskeLinije;
 import strukture.Graf;
 import strukture.Linija;
 import strukture.OfflineRezim;
-import strukture.StruktureConsts;
 import strukture.Veza;
 
 /**
@@ -632,8 +631,8 @@ public class Komunikacija_Server
                     while ((v = c.vratiVezu(l)) != null)
                     {
                        // Log.e("provera", c.naziv);
-                        if ((c.status == StruktureConsts.CVOR_OBRADJEN)
-                                && (v.destination.status == StruktureConsts.CVOR_OBRADJEN))
+                        if ((c.status == Constants.CVOR_OBRADJEN)
+                                && (v.destination.status == Constants.CVOR_OBRADJEN))
                         {
                             c = v.destination;
                             if (c == pocetna)
@@ -690,9 +689,9 @@ public class Komunikacija_Server
                                 linijaId = i;
 
                             }
-                            c.status = StruktureConsts.CVOR_OBRADJEN;
+                            c.status = Constants.CVOR_OBRADJEN;
                             c = v.destination;
-                            c.status = StruktureConsts.CVOR_OBRADJEN;
+                            c.status = Constants.CVOR_OBRADJEN;
                             if (c == pocetna)
                                 break;
                         }
