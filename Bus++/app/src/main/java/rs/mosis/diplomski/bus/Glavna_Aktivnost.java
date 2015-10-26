@@ -1886,6 +1886,8 @@ public class Glavna_Aktivnost extends AppCompatActivity implements ActionBar.Tab
                 for (int i = 0; i < odgovor.crowdInfo.size(); i++)
                     Toast.makeText(otac,i + 1 + ". crowd   " + odgovor.crowdInfo.get(i).toString(),Toast.LENGTH_LONG).show();
             }*/
+            if (odgovor.crowdInfo != null)
+                crowdIndeks = 0;
             if (v != null)
                 ((RelativeLayout) v.getParent()).removeAllViewsInLayout();
             v = layoutInflater.inflate(R.layout.fragment_odgovor_servera, null);

@@ -468,13 +468,14 @@ public class Komunikacija_Server
 
         Calendar calendar = Calendar.getInstance();
         int trenutniSati = calendar.get(Calendar.HOUR_OF_DAY);
-        boolean b = true;
+
         int size = vremenaPolaska.size();
         for (int i = 0; i < size; i++)
             if (!vremenaPolaska.get(i).equals(""))
             {
                 StringTokenizer tokenizer = new StringTokenizer(vremenaPolaska.get(i), "\n");
                 String s = "";
+                boolean b = true;
                 while (tokenizer.hasMoreTokens())
                 {
 
@@ -524,9 +525,8 @@ public class Komunikacija_Server
     public Response napredniRezim(LatLng source, LatLng destination)
     {
         Response odgovor = null;
-        Request request = new Request(new Integer(Constants.mode), new Double(source.latitude),
-                new Double(source.longitude), new Double(destination.latitude),
-                new Double(destination.longitude), null, null,null);
+        Request request = new Request(Constants.mode, source.latitude, source.longitude,
+                destination.latitude, destination.longitude, null, null,null);
         if (Constants.numberTokens < 1)
         {
             odgovor = new Response(-1,null,null,null,null,null,null,null);
@@ -535,36 +535,20 @@ public class Komunikacija_Server
 
         try
         {
-
             String poruka = request.toString();
             InetAddress inetAddress = InetAddress.getByName(Constants.IP);
-//            Socket socket = new Socket(inetAddress, Constants.PORT);
             Socket socket = new Socket();
             socket.connect(new InetSocketAddress(inetAddress, Constants.PORT), Constants.TIMEOUT);
-            int bytesRead = 0;
-            int current = 0;
 
             InputStream is = socket.getInputStream();
             OutputStream out = socket.getOutputStream();
             PrintWriter printWriter = new PrintWriter(out);
 
-
             printWriter.print(poruka + "\n");
             printWriter.flush();
 
-
             BufferedReader input = new BufferedReader(new InputStreamReader(is));
             poruka = input.readLine();
-            if (poruka == null)
-            {
-                is.close();
-                printWriter.close();
-                out.close();
-                input.close();
-                socket.close();
-                return null;
-            }
-
             Gson gson = new GsonBuilder().create();
             odgovor = gson.fromJson(poruka, Response.class);
             is.close();
