@@ -484,18 +484,28 @@ public class Komunikacija_Server
                     sati = Integer.parseInt(token.substring(0, 2));
                     minuti = Integer.parseInt(token.substring(3, 5));
                     korekcija_id = token.length() - 5;
-                    if ((trenutniSati < sati) && (b))
+                    if ((trenutniSati != sati) && (b))
                     {
                         trenutniSati = sati;
                         b = false;
                     } else
                         b = false;
 
+
+
                     int korekcijaIndex = korekcija_id * odgovor.korekcije.length / odgovor.linije.length;
 
 
-                    sati += sati_korekcija[korekcijaIndex + sati - trenutniSati];
-                    minuti += minuti_korekcija[korekcijaIndex + sati - trenutniSati];
+                    if ((sati - trenutniSati) < 0)
+                    {
+                        sati += sati_korekcija[korekcijaIndex + sati - trenutniSati + 24];
+                        minuti += minuti_korekcija[korekcijaIndex + sati - trenutniSati + 24];
+                    }
+                    else
+                    {
+                        sati += sati_korekcija[korekcijaIndex + sati - trenutniSati];
+                        minuti += minuti_korekcija[korekcijaIndex + sati - trenutniSati];
+                    }
                     while (minuti > 59)
                     {
                         sati++;
@@ -503,7 +513,7 @@ public class Komunikacija_Server
                     }
                     String sSati;
                     if (sati >= 10)
-                        sSati = sati + "";
+                        sSati = sati % 24 + "";
                     else
                         sSati = "0" + sati;
                     if (minuti >= 10)
